@@ -27,6 +27,11 @@ claude-pipeline/
 │   ├── fix-with-verify/      # 安全修正+自動リバート
 │   ├── quick-test/           # 差分ベース高速テスト
 │   └── checkpoint/           # セッション引き継ぎ
+├── hooks/            # Claude Code Hook スクリプト（設定は settings.json 参照）
+│   ├── pre-bash-safety.sh    # PreToolUse(Bash): 破壊的コマンドブロック
+│   ├── post-edit-lint.sh     # PostToolUse(Write/Edit): 編集毎の lint/型チェック
+│   ├── stop-verify.sh        # Stop: タスク完了時の検証ゲート（差分言語自動検出）
+│   └── session-start.sh      # SessionStart: プロジェクト種別・ツールチェーン検出
 └── plans/
     └── PLAN.md               # 自律開発パイプライン実装計画
 ```
@@ -73,6 +78,32 @@ git add skills/
 git commit -m "feat(skill): ..."
 git push
 ```
+
+## Hooks のインストール
+
+hooks/ は Claude Code の Hook 機能で使うシェルスクリプト集。`~/.claude/settings.json` から参照する。
+
+```bash
+# インストール（ホームの ~/.claude/hooks/ にコピー or junction）
+cp hooks/*.sh ~/.claude/hooks/
+chmod +x ~/.claude/hooks/*.sh
+
+# settings.json の例（ユーザーレベル ~/.claude/settings.json）
+{
+  "hooks": {
+    "PreToolUse":  [{"matcher": "Bash", "hooks": [{"type":"command","command":"bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-bash-safety.sh\"","timeout":5000}]}],
+    "PostToolUse": [{"matcher": "Write|Edit|MultiEdit", "hooks": [{"type":"command","command":"bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-edit-lint.sh\"","timeout":60000}]}],
+    "Stop":        [{"matcher": "", "hooks": [{"type":"command","command":"bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-verify.sh\"","timeout":180000}]}],
+    "SessionStart":[{"matcher": "", "hooks": [{"type":"command","command":"bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh\"","timeout":10000}]}]
+  }
+}
+```
+
+### 各 Hook の動作
+- **pre-bash-safety.sh**: `rm -rf /`, `git push --force main`, `DROP DATABASE`, `cargo/npm publish` 等を検出して exit 2 でブロック
+- **post-edit-lint.sh**: 編集ファイルの拡張子から `cargo clippy` / `tsc --noEmit` / `svelte-check` / `ruff` / `go vet` を自動選択して実行。エラーだけを additionalContext として返す
+- **stop-verify.sh**: `git diff` で変更言語を検出し、該当する検証ツールを一括実行。エラーがあれば `decision: block` で完了を止める
+- **session-start.sh**: Git ブランチ・未コミット数・Rust/Node/Python/Go/Java/Docker のバージョンを1行で表示
 
 ---
 
