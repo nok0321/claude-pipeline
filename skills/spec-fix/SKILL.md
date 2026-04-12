@@ -136,21 +136,21 @@ model: claude-opus-4-6
 ═══ 実装を修正 ═══
 
 [1] SPEC-1 | Missing → 実装追加
-  仕様: DESIGN/01_geo_core.md:42
-  追加: crates/geo_core/src/distance.rs — pub fn calculate_distance()
+  仕様: DESIGN/<component>.md:<N>
+  追加: <path/to/new_file> — pub fn <function_name>()
   検証: build:pass type:pass test:pass
 
 ═══ 仕様を更新 ═══
 
 [2] SPEC-2 | Diverged → 仕様更新（実装が堅牢）
-  実装: optimizer.rs:23 — fn optimize() -> Result<Vec<Point>, Error>
-  更新: DESIGN/01_geo_core.md:58 — 戻り値を Result 型に変更
+  実装: <path/to/file>:<N> — fn <function_name>() -> Result<<ReturnType>, Error>
+  更新: DESIGN/<component>.md:<N> — 戻り値を Result 型に変更
 
 ═══ スキップ（要ユーザー判断） ═══
 
 [S-1] SPEC-5 | Diverged | 修正方向不明
-  仕様: DESIGN/05_backend.md:90 — POST /api/routes
-  実装: handlers/routes.rs:15 — PUT /api/routes
+  仕様: DESIGN/<component>.md:<N> — POST /<api_path>
+  実装: <path/to/handler>:<N> — PUT /<api_path>
   質問: HTTPメソッドはPOSTとPUTのどちらが正しいですか？
 ```
 

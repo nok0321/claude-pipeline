@@ -59,17 +59,17 @@ Updated: {ISO 8601}
 
 #### 実装ステータスの更新例
 ```
-/pipeline-state update impl "geo_core | done | build:pass type:pass test:pass | security:clean robustness:clean spec:clean"
+/pipeline-state update impl "<component> | done | build:pass type:pass test:pass | security:clean robustness:clean spec:clean"
 ```
 
 #### エスカレーション項目の追加例
 ```
-/pipeline-state update escalation "add | design | must-escalate | DBスキーマにGeoJSON型カラムが必要"
+/pipeline-state update escalation "add | design | must-escalate | <設計判断が必要な内容>"
 ```
 
 #### エスカレーション項目の状態更新例
 ```
-/pipeline-state update escalation "resolve #1 | ユーザー承認済み、GeoJSON型で進める"
+/pipeline-state update escalation "resolve #1 | ユーザー承認済み、<決定した方針>で進める"
 ```
 
 ---

@@ -30,7 +30,7 @@ context: fork
 
 CLAUDE.md から以下を読み取る（存在する場合のみ）:
 
-1. **`## Critical Constraints`** — プロジェクト固有の制約（座標系順序、no_std、フレームワーク規約等）
+1. **`## Critical Constraints`** — プロジェクト固有の制約（データ形式順序、アーキテクチャ制約、フレームワーク規約等）
 2. **`## Project-Specific Checks`** — 追加のチェック項目
 3. **`## Component Mapping`** — コンポーネントと実装ディレクトリの対応（`all` 指定時に使用）
 
@@ -147,8 +147,8 @@ CLAUDE.md から以下を読み取る（存在する場合のみ）:
 CLAUDE.md の `## Critical Constraints` と `## Project-Specific Checks` に記載された制約を追加チェック項目として適用する。
 
 例:
-- `no_std` 制約 → `std::` import の検出 → **S-Critical**
-- 座標系順序制約 → 変換境界での順序違反検出 → **S-High**
+- アーキテクチャ制約（特定コンポーネントの禁止依存）→ 該当 import の検出 → **S-Critical**
+- データ形式順序制約 → 変換境界での順序違反検出 → **S-High**
 - フレームワーク規約 → ハンドラ引数順序等 → **S-Medium**
 
 各制約について、違反を検出した場合は該当する深刻度で Finding を生成する。

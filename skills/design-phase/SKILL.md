@@ -145,7 +145,7 @@ Glob: DESIGN/*.md, docs/design/*.md, spec/*.md
 
 コンポーネント間の依存関係を分析し、基盤から順に設計:
 ```
-例: core_types → domain_logic → db_layer → api_layer → frontend
+例: <基盤層> → <ドメイン層> → <永続化層> → <API層> → <UI層>
 ```
 
 ### 3-3: 設計書の生成（sonnet サブエージェント）
@@ -267,10 +267,10 @@ PIPELINE-STATE.md が存在する場合:
 1. 設計成果物セクションを更新:
    ```markdown
    ## 設計成果物
-   - [x] DESIGN/01_core_types.md
-   - [x] DESIGN/02_domain_logic.md
-   - [x] DESIGN/03_api_layer.md
-   - [ ] DESIGN/04_frontend.md  ← エスカレーション待ち
+   - [x] DESIGN/01_<component_a>.md
+   - [x] DESIGN/02_<component_b>.md
+   - [x] DESIGN/03_<component_c>.md
+   - [ ] DESIGN/04_<component_d>.md  ← エスカレーション待ち
    ```
 
 2. エスカレーションキューに Tier 1 項目を追加
@@ -279,7 +279,7 @@ PIPELINE-STATE.md が存在する場合:
    ```markdown
    ## 次フェーズへの引き継ぎ
    設計完了。エスカレーション #1 の回答後に実装フェーズへ遷移可能。
-   注意: frontend の認証フローは未確定（#1 待ち）。
+   注意: <component_d> の <未確定要素> は未確定（#1 待ち）。
    ```
 
 ### 6-2: Component Mapping の提案
@@ -299,10 +299,10 @@ CLAUDE.md に Component Mapping がない場合:
 ╚══════════════════════════════════════╝
 
 ■ 生成した設計書
-  [1] DESIGN/01_core_types.md    — 基本型定義
-  [2] DESIGN/02_domain_logic.md  — ドメインロジック
-  [3] DESIGN/03_api_layer.md     — REST API 層
-  [4] DESIGN/04_frontend.md      — フロントエンド
+  [1] DESIGN/01_<component_a>.md    — <責務の要約>
+  [2] DESIGN/02_<component_b>.md    — <責務の要約>
+  [3] DESIGN/03_<component_c>.md    — <責務の要約>
+  [4] DESIGN/04_<component_d>.md    — <責務の要約>
 
 ■ 矛盾チェック結果
   検出: {n} 件 → 自律修正: {n} / エスカレーション: {n}
@@ -310,15 +310,15 @@ CLAUDE.md に Component Mapping がない場合:
 ═══ 自律修正ログ ═══
 
 [1] AUDIT-2 | Warning | 型名揺れ
-  修正: RouteSegment / PathSegment → RouteSegment に統一
+  修正: <TypeA> / <TypeB> → <TypeA> に統一
   影響: DESIGN/01, DESIGN/03
 
 ═══ エスカレーション（ユーザー確認必要） ═══
 
-[E-1] AUDIT-5 | Critical | 認証フローの設計判断
-  DESIGN/03_api_layer.md — JWT vs Session
-  DESIGN/04_frontend.md — OAuth2 フローを前提
-  質問: 認証方式は JWT / Session / OAuth2 のどれを採用しますか？
+[E-1] AUDIT-5 | Critical | <設計判断が必要な箇所>
+  DESIGN/<component_x>.md — <選択肢A> vs <選択肢B>
+  DESIGN/<component_y>.md — <選択肢C> を前提
+  質問: <選択肢> のどれを採用しますか？
 
 ═══ Component Mapping 提案 ═══
 （CLAUDE.md に未定義の場合のみ）
@@ -326,10 +326,10 @@ CLAUDE.md に Component Mapping がない場合:
 ## Component Mapping
 | コンポーネント | 仕様書 | 実装ディレクトリ |
 |---------------|--------|-----------------|
-| core_types | DESIGN/01_core_types.md | src/types/ |
-| domain_logic | DESIGN/02_domain_logic.md | src/domain/ |
-| api_layer | DESIGN/03_api_layer.md | src/api/ |
-| frontend | DESIGN/04_frontend.md | frontend/src/ |
+| <component_a> | DESIGN/01_<component_a>.md | <path/to/component_a>/ |
+| <component_b> | DESIGN/02_<component_b>.md | <path/to/component_b>/ |
+| <component_c> | DESIGN/03_<component_c>.md | <path/to/component_c>/ |
+| <component_d> | DESIGN/04_<component_d>.md | <path/to/component_d>/ |
 
 → CLAUDE.md に追加しますか？ [y/n]
 ```

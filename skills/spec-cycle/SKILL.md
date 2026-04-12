@@ -156,14 +156,14 @@ CLAUDE.md の `## Commands` を優先使用。
 ═══ エスカレーション候補 ═══
 
 [E-1] SPEC-5 | Diverged | 修正方向不明
-  仕様: DESIGN/05_backend.md:90
-  実装: handlers/routes.rs:15
+  仕様: DESIGN/<component>.md:<N>
+  実装: <path/to/file>:<N>
   質問: {ユーザーへの具体的な質問}
 
 ═══ 残存差分（max_iterations 到達時） ═══
 
 [R-1] SPEC-8 | Missing | 大規模機能
-  仕様: DESIGN/03_optimizer.md:120
+  仕様: DESIGN/<component>.md:<N>
   推奨: 個別の実装タスクとして切り出し
 ```
 

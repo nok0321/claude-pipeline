@@ -98,14 +98,14 @@ Tier 1 の Finding がある場合:
 
 設計フェーズで以下の判断が必要です:
 
-[E-1] 認証方式の選定
-  内容: JWT / Session / OAuth2 のいずれを採用するか
-  影響: api_layer, frontend の設計に直結
+[E-1] <設計判断項目A>
+  内容: <選択肢A> / <選択肢B> / <選択肢C> のいずれを採用するか
+  影響: <影響を受けるコンポーネント> の設計に直結
   → どの方式を採用しますか？
 
-[E-2] DBスキーマにGeoJSON型カラムが必要
-  内容: 空間クエリのためにDB側でGeoJSON型をサポートする必要あり
-  → GeoJSON型の使用を承認しますか？
+[E-2] <設計判断項目B>
+  内容: <判断が必要な理由・背景>
+  → <新規要素>の採用を承認しますか？
 ```
 
 - ユーザーの回答を受けて設計書を修正
@@ -261,23 +261,23 @@ git diff --stat HEAD~{commits}
 
 ═══ 自律修正ログ（Tier 2: 事後報告） ═══
 
-[1] SEC-1 | S-Critical | handlers/routes.rs:45
+[1] SEC-1 | S-Critical | <path/to/handler>:<N>
   修正: format!() → .bind()（SQLインジェクション対策）
 
-[2] ROB-3 | S-Critical | geo_core/path.rs:78
+[2] ROB-3 | S-Critical | <path/to/file>:<N>
   修正: unwrap() → ? 変換
 
-[3] SPEC-2 | Diverged | DESIGN/01_geo_core.md:58
+[3] SPEC-2 | Diverged | DESIGN/<component>.md:<N>
   修正: 仕様を更新（Result ラップ追加を反映）
 
 ═══ エスカレーション履歴 ═══
 
-[E-1] Phase 1 | 認証方式選定 → resolved: JWT 採用
-[E-2] Phase 1 | GeoJSON型 → resolved: 承認済み
+[E-1] Phase 1 | <設計判断項目A> → resolved: <採用された選択肢>
+[E-2] Phase 1 | <設計判断項目B> → resolved: 承認済み
 
 ═══ 残存リスク ═══
 
-[R-1] ROB-8 | S-Medium | api/search.rs:33 — 空リスト未処理
+[R-1] ROB-8 | S-Medium | <path/to/file>:<N> — 空リスト未処理
 [R-2] SEC-4 | S-Low | .env.example にサンプル値が残存
 
 ═══ 推奨アクション ═══
