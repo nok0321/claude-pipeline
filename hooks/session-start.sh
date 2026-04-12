@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 # SessionStart: プロジェクト種別を自動検出しコンテキストを注入
+
+# Claude Code の Hook は最小 PATH で起動される場合がある
+# scoop / cargo / ~/.local/bin 等のユーザー環境を PATH に追加
+for d in "$HOME/scoop/shims" "$HOME/.cargo/bin" "$HOME/.local/bin" "/usr/local/bin"; do
+  [ -d "$d" ] && [[ ":$PATH:" != *":$d:"* ]] && PATH="$d:$PATH"
+done
+export PATH
+
 cd "${CLAUDE_PROJECT_DIR:-$(pwd)}" 2>/dev/null || exit 0
 
 context=""

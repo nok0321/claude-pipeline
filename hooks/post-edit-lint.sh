@@ -3,6 +3,13 @@
 # Strategy: silent success / error-only output (context window 汚染防止)
 set -euo pipefail
 
+# Claude Code の Hook は最小 PATH で起動される場合がある
+# scoop / cargo / ~/.local/bin 等のユーザー環境を PATH に追加
+for d in "$HOME/scoop/shims" "$HOME/.cargo/bin" "$HOME/.local/bin" "/usr/local/bin"; do
+  [ -d "$d" ] && [[ ":$PATH:" != *":$d:"* ]] && PATH="$d:$PATH"
+done
+export PATH
+
 input="$(cat)"
 file="$(echo "$input" | jq -r '.tool_input.file_path // .tool_input.path // empty')"
 

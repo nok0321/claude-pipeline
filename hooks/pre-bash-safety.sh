@@ -2,6 +2,13 @@
 # PreToolUse(Bash): 破壊的コマンドをブロックする汎用 Safety Gate
 set -euo pipefail
 
+# Claude Code の Hook は最小 PATH で起動される場合がある
+# scoop / cargo / ~/.local/bin 等のユーザー環境を PATH に追加
+for d in "$HOME/scoop/shims" "$HOME/.cargo/bin" "$HOME/.local/bin" "/usr/local/bin"; do
+  [ -d "$d" ] && [[ ":$PATH:" != *":$d:"* ]] && PATH="$d:$PATH"
+done
+export PATH
+
 input="$(cat)"
 cmd="$(echo "$input" | jq -r '.tool_input.command // empty')"
 

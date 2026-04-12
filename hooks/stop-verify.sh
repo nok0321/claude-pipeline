@@ -2,6 +2,13 @@
 # Stop: タスク完了時の検証ゲート（変更言語を自動検出して対応する検証を実行）
 set -euo pipefail
 
+# Claude Code の Hook は最小 PATH で起動される場合がある
+# scoop / cargo / ~/.local/bin 等のユーザー環境を PATH に追加
+for d in "$HOME/scoop/shims" "$HOME/.cargo/bin" "$HOME/.local/bin" "/usr/local/bin"; do
+  [ -d "$d" ] && [[ ":$PATH:" != *":$d:"* ]] && PATH="$d:$PATH"
+done
+export PATH
+
 # 無限ループ防止フラグ
 FLAG_FILE="/tmp/claude-stop-hook-active-${CLAUDE_SESSION_ID:-$$}"
 if [ -f "$FLAG_FILE" ]; then
