@@ -1,9 +1,9 @@
 ---
 name: impl-orchestrator
-description: DESIGN仕様書から自律的に実装→検証ゲート→並列レビュー→修正のループを実行するオーケストレーター。
+description: DESIGN/*.md から自律的に「実装(sonnet) → 検証ゲート(build/type/test) → 並列レビュー(security/robustness/spec の opus 3並列) → 指摘解決」を6ステージでループ実行するオーケストレーター。USE WHEN 仕様書がある状態でコンポーネントを丸ごと実装、dev-pipeline Phase 2、新機能の自律開発。SKIP 設計書がない状態は先に design-phase、単発バグ修正は fix-with-verify、純粋なレビューだけなら robust-review を使うこと。
 argument-hint: "[component-name or 'all']"
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, Agent
-model: claude-opus-4-6
+model: claude-opus-4-7
 ---
 
 # 実装オーケストレーター

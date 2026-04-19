@@ -1,9 +1,9 @@
 ---
 name: design-phase
-description: 計画サマリーからDESIGN/*.mdを自律生成し、spec-auditで自己検証する。既存仕様書のフォーマットを学習して統一。
+description: 計画サマリーから DESIGN/*.md を自律生成し spec-audit で自己検証する。既存仕様書のフォーマットを学習して統一する。USE WHEN dev-pipeline Phase 1、新規プロジェクトの設計起こし、複数コンポーネントの設計書を一度に作りたい時。SKIP 既存設計書の小修正は Edit で直接、仕様↔実装の整合性回復は spec-fix を使うこと。
 argument-hint: "[component-name or 'all'] [--from-scratch | --update]"
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent
-model: claude-opus-4-6
+model: claude-opus-4-7
 ---
 
 # 設計フェーズ自動化

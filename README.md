@@ -20,10 +20,9 @@ claude-pipeline/
 │   ├── robust-review/        # セキュリティ/堅牢性レビュー
 │   ├── robust-fix/           # S-Critical/S-High 自動修正
 │   ├── spec-check/           # 仕様↔実装差分検出
-│   ├── spec-fix/             # 仕様↔実装双方向修正
+│   ├── spec-fix/             # 仕様↔実装双方向修正（--loop で旧 spec-cycle 相当）
 │   ├── spec-audit/           # 仕様書間矛盾検出
-│   ├── spec-cycle/           # check→fix→re-check サイクル
-│   ├── code-review/          # 5軸統合レビュー
+│   ├── code-review/          # 5軸統合レビュー（軽量・PR向け）
 │   ├── fix-with-verify/      # 安全修正+自動リバート
 │   ├── quick-test/           # 差分ベース高速テスト
 │   └── checkpoint/           # セッション引き継ぎ
@@ -44,7 +43,7 @@ claude-pipeline/
 Phase 0: 計画（対話）      ← ユーザー承認必須
 Phase 1: 設計（自律）      ← design-phase
 Phase 2: 実装（自律）      ← impl-orchestrator + boundary-test
-Phase 3: テスト（自律）    ← spec-cycle + robust-review
+Phase 3: テスト（自律）    ← spec-fix --loop + robust-review
 Phase 4: 報告
 ```
 
@@ -83,12 +82,38 @@ git push
 
 hooks/ は Claude Code の Hook 機能で使うシェルスクリプト集。`~/.claude/settings.json` から参照する。
 
+参照方法は用途に応じて 2 パターンある。
+
+### パターン A: ユーザーレベル共有（推奨・デフォルト）
+
+全プロジェクトで同一の hooks を使いたい場合。`$HOME/.claude/hooks/` に実体を置き、`settings.json` から `$HOME` で参照する。
+
 ```bash
 # インストール（ホームの ~/.claude/hooks/ にコピー or junction）
 cp hooks/*.sh ~/.claude/hooks/
 chmod +x ~/.claude/hooks/*.sh
 
 # settings.json の例（ユーザーレベル ~/.claude/settings.json）
+{
+  "hooks": {
+    "PreToolUse":  [{"matcher": "Bash", "hooks": [{"type":"command","command":"bash \"$HOME/.claude/hooks/pre-bash-safety.sh\"","timeout":5000}]}],
+    "PostToolUse": [{"matcher": "Write|Edit|MultiEdit", "hooks": [{"type":"command","command":"bash \"$HOME/.claude/hooks/post-edit-lint.sh\"","timeout":60000}]}],
+    "Stop":        [{"matcher": "", "hooks": [{"type":"command","command":"bash \"$HOME/.claude/hooks/stop-verify.sh\"","timeout":180000}]}],
+    "SessionStart":[{"matcher": "", "hooks": [{"type":"command","command":"bash \"$HOME/.claude/hooks/session-start.sh\"","timeout":10000}]}]
+  }
+}
+```
+
+### パターン B: プロジェクトレベル上書き
+
+特定プロジェクトだけ独自の hooks を適用したい場合（例: プロジェクト固有の破壊的コマンドを追加ブロック）。各プロジェクトの `.claude/hooks/` に実体を置き、`$CLAUDE_PROJECT_DIR` で参照する。
+
+```bash
+# プロジェクト毎にインストール（コピー or junction）
+cp hooks/*.sh <project>/.claude/hooks/
+chmod +x <project>/.claude/hooks/*.sh
+
+# settings.json の例（該当プロジェクトの .claude/settings.json、もしくはユーザーレベルで全体適用）
 {
   "hooks": {
     "PreToolUse":  [{"matcher": "Bash", "hooks": [{"type":"command","command":"bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-bash-safety.sh\"","timeout":5000}]}],
@@ -98,6 +123,8 @@ chmod +x ~/.claude/hooks/*.sh
   }
 }
 ```
+
+`$CLAUDE_PROJECT_DIR` をユーザーレベル `settings.json` で使うと、各プロジェクトに `.claude/hooks/` が必須になる点に注意。junction で `claude-pipeline/hooks/` を指すのが真実源を一元化する一般的な運用。
 
 ### 各 Hook の動作
 - **pre-bash-safety.sh**: `rm -rf /`, `git push --force main`, `DROP DATABASE`, `cargo/npm publish` 等を検出して exit 2 でブロック

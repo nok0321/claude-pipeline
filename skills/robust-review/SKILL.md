@@ -1,9 +1,9 @@
 ---
 name: robust-review
-description: セキュリティ/堅牢性の深層レビュー。S-Critical〜S-Lowの4段階でFindingを報告。impl-orchestratorからもスタンドアロンでも使用可能。
+description: セキュリティ＋堅牢性の深層専門レビュー（S-Critical〜S-Low の4段階）。インジェクション/パニック源/データ整合性/エッジケース耐性/同時実行を網羅的に診断する。USE WHEN マージ前の最終ゲート、impl-orchestrator Stage 4、セキュリティ監査、リリース前検証。SKIP 軽量な PR レビューなら code-review（こちらの方が高速）、命名・構造のみのレビュー、仕様整合性チェックなら spec-check を使うこと。
 argument-hint: "[file-path, glob-pattern, or 'all']"
 allowed-tools: Read, Grep, Glob, Bash
-model: claude-opus-4-6
+model: claude-opus-4-7
 context: fork
 ---
 

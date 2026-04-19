@@ -92,8 +92,7 @@ impl-orchestrator (メイン, opus)
 ```
 ~/.claude/skills/spec-audit/SKILL.md    — 仕様書間矛盾検出
 ~/.claude/skills/spec-check/SKILL.md    — 仕様↔実装差分検出
-~/.claude/skills/spec-fix/SKILL.md      — 双方向自動修正
-~/.claude/skills/spec-cycle/SKILL.md    — check→fix→re-check統合ワークフロー
+~/.claude/skills/spec-fix/SKILL.md      — 双方向自動修正（--loop で check→fix→re-check）
 ~/.claude/skills/robust-review/SKILL.md — セキュリティ/堅牢性深層レビュー
 ~/.claude/skills/robust-fix/SKILL.md    — S-Critical/S-High自動修正
 ```
@@ -103,7 +102,7 @@ impl-orchestrator (メイン, opus)
 2. 言語固有チェックなし → CLAUDE.md の `## Project-Specific Checks` から動的取得
 3. 情報不在時は graceful degradation（エラーにせず汎用チェックで続行）
 4. レビュー系は `context: fork` でコンテキスト分離
-5. `model: claude-opus-4-6` 維持（単体実行時用）
+5. `model: claude-opus-4-7` 維持（単体実行時用）
 
 ### 検証
 - 未実施（テスト用プロジェクトでの動作確認は別途）
@@ -193,7 +192,7 @@ name: impl-orchestrator
 description: DESIGN仕様書から自律的に実装→検証ゲート→並列レビュー→修正のループを実行。
 argument-hint: "[component-name or 'all']"
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, Agent
-model: claude-opus-4-6
+model: claude-opus-4-7
 ---
 ```
 

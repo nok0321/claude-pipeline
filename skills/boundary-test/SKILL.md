@@ -1,9 +1,9 @@
 ---
 name: boundary-test
-description: コンポーネント間の境界契約（API型、座標変換、DB↔App、WASM↔TS等）を検出し、境界テストを自動生成する。
+description: コンポーネント間の境界契約（REST API↔Frontend、WASM↔TS、DB↔App、座標/単位/エンコーディング変換）を検出して境界テストを自動生成・実行する。USE WHEN 型不一致や変換ミスを機械的に検出したい、impl-orchestrator 完了後の最終ゲート、API/DB/WASM スキーマ変更後。SKIP 単一ファイル内のロジックバグ、UI 動作確認は対象外。
 argument-hint: "[detect | generate | run | all] [component-name]"
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
-model: claude-opus-4-6
+model: claude-opus-4-7
 ---
 
 # 境界契約テスト

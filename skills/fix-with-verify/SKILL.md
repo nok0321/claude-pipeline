@@ -1,6 +1,6 @@
 ---
 name: fix-with-verify
-description: バグ修正→コンパイル確認→回帰テスト→revertの安全パイプライン。修正が新たなバグを生まないことを保証。
+description: バグ修正→コンパイル確認→回帰テスト→失敗時 revert の安全修正パイプライン。修正が新たなバグを生まないことを機械的に保証する。USE WHEN 単発バグ修正、影響範囲が見えにくい変更、リファクタの安全確認。SKIP 大規模機能追加は impl-orchestrator、セキュリティ Finding 一括修正は robust-fix、仕様整合性回復は spec-fix を使うこと。
 argument-hint: "[issue-description or file:line]"
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 ---

@@ -1,9 +1,9 @@
 ---
 name: robust-fix
-description: robust-reviewのS-Critical/S-High Findingを自動修正し、検証ゲートで安全を確認する。
+description: robust-review の S-Critical/S-High Finding を定型修正パターン（unwrap除去、injection対策、未チェックインデックス等）で自動修正し、各修正後に検証ゲート（build/type/test）で安全を確認する。USE WHEN robust-review 直後、Tier 2 Finding の一括処理、リリース前の堅牢性ホットフィックス。SKIP 設計判断を伴う修正は Tier 1 エスカレーション、仕様乖離の修正は spec-fix、汎用バグは fix-with-verify を使うこと。
 argument-hint: "[file-path or 'all'] [--dry-run]"
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
-model: claude-opus-4-6
+model: claude-opus-4-7
 ---
 
 # 堅牢性 Finding 自動修正
