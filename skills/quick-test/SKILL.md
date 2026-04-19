@@ -1,6 +1,6 @@
 ---
 name: quick-test
-description: git diffから変更ファイルを検出し、関連テストのみを高速実行する。全テスト実行より大幅に短時間で完了。
+description: git diff の変更ファイルから関連テストのみ自動選択して高速実行する（フルテスト実行より大幅短縮）。USE WHEN 修正直後の素早い動作確認、impl-orchestrator や code-review 起動前の事前チェック、コミット前の軽量検証。SKIP リリース前のフルテストスイート、未コミット変更がない場合（git diff で対象が拾えない）。
 allowed-tools: Bash, Grep, Glob
 ---
 

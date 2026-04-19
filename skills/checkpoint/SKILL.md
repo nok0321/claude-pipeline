@@ -1,6 +1,6 @@
 ---
 name: checkpoint
-description: 長期タスクのセッション継続用チェックポイントを作成・復元。/clearや/compact前に使用。
+description: 長期タスクのセッション継続用チェックポイント（CHECKPOINT.md）を作成・復元する。USE WHEN /clear や /compact の直前、長時間セッションの区切り、明日続きをやる時。SKIP 数分で終わるタスク、構造化されたパイプライン状態は pipeline-state を使うこと。
 argument-hint: "[save|restore|status]"
 allowed-tools: Read, Write, Bash, Glob
 ---

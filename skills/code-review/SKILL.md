@@ -1,9 +1,9 @@
 ---
 name: code-review
-description: 静的解析+構造+セキュリティ+テスト影響の統合レビュー。コード変更後やPR作成前に使用。
+description: 軽量な統合コードレビュー（Critical/Warning/Info の3段階）。静的解析+セキュリティ+堅牢性+構造+テスト影響を一通り走らせる。USE WHEN PR 作成前、小〜中規模の変更レビュー、コード変更直後の品質確認。SKIP マージ前の深層セキュリティ監査が必要なら robust-review、仕様↔実装の整合性チェックなら spec-check、単発バグ修正の安全確認なら fix-with-verify を使うこと。
 argument-hint: "[file-path or git-range]"
 allowed-tools: Read, Grep, Glob, Bash
-model: claude-opus-4-6
+model: claude-opus-4-7
 context: fork
 ---
 

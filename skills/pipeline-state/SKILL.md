@@ -1,6 +1,6 @@
 ---
 name: pipeline-state
-description: パイプラインのフェーズ間状態管理。PIPELINE-STATE.mdの作成・更新・読み取り・フェーズ遷移を行う。
+description: dev-pipeline のフェーズ間状態管理。PIPELINE-STATE.md の init/update/read/transition を提供する。USE WHEN dev-pipeline 各フェーズ境界での進捗記録、複数セッションに跨る構造化進捗管理、エスカレーションキューの操作。SKIP 単一セッションの作業引き継ぎは checkpoint、自由形式のメモは別途。
 argument-hint: "[init <task-name>|update <section> <content>|read|transition <next-phase>]"
 allowed-tools: Read, Write, Bash, Glob
 ---

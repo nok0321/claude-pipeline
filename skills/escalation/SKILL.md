@@ -1,6 +1,6 @@
 ---
 name: escalation
-description: パイプライン全体で参照されるエスカレーション判断基準。Findingを3段階に分類し、自律対応かユーザー確認かを決定する。
+description: パイプライン全体で参照されるエスカレーション判断基準。Finding を Tier 1（必ずユーザー確認）/ Tier 2（自律対応＋事後報告）/ Tier 3（自律対応・報告不要）の3段階に分類する。USE WHEN 各スキル内の Finding 分類、CLAUDE.md の Escalation Overrides の検証、判断に迷った時の指針確認。SKIP 直接的な修正実行は別スキル（fix-with-verify, robust-fix, spec-fix）の領域。
 argument-hint: "[classify <finding-description>]"
 allowed-tools: Read, Grep, Glob
 ---

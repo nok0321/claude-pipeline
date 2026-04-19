@@ -1,9 +1,9 @@
 ---
 name: spec-fix
-description: spec-checkのFindingを元に、仕様書または実装を双方向に自動修正する。修正方向はFinding種別とヒューリスティクスで判定。
-argument-hint: "[component-name or 'all'] [--spec-wins | --impl-wins | --dry-run]"
+description: spec-check の Finding を元に仕様書または実装を双方向に自動修正する。修正方向は Finding 種別とヒューリスティクス（堅牢性、テスト存在、git blame 等）で判定。`--loop` で差分0まで反復可能（旧 spec-cycle 後継）。USE WHEN spec-check 直後の整合性回復、設計変更後の同期取り、Constraint 違反の一括修正。SKIP Missing が大規模機能なら impl-orchestrator で実装、設計判断を伴う Diverged は Tier 1 エスカレーション。
+argument-hint: "[component-name or 'all'] [--spec-wins | --impl-wins | --dry-run | --loop [N]]"
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
-model: claude-opus-4-6
+model: claude-opus-4-7
 ---
 
 # 仕様 ↔ 実装 双方向自動修正
@@ -22,6 +22,8 @@ model: claude-opus-4-6
 /spec-fix --spec-wins    # 常に実装側を修正（仕様が正）
 /spec-fix --impl-wins    # 常に仕様側を修正（実装が正）
 /spec-fix --dry-run      # 修正計画のみ出力
+/spec-fix --loop         # 差分が0になるか上限到達まで spec-check → spec-fix を反復（デフォルト3回）
+/spec-fix --loop 5       # 反復上限を指定
 ```
 
 ---
@@ -153,6 +155,36 @@ model: claude-opus-4-6
   実装: <path/to/handler>:<N> — PUT /<api_path>
   質問: HTTPメソッドはPOSTとPUTのどちらが正しいですか？
 ```
+
+---
+
+## ループモード（--loop）
+
+差分が解消されるか上限到達まで `spec-check` → `spec-fix` を反復実行する。
+旧 `spec-cycle` スキルの後継（廃止済み）。
+
+```
+iteration = 1
+while iteration <= max:
+    findings = spec-check(component)
+    if len(findings) == 0:
+        return "converged"
+    fix_results = spec-fix(findings)
+    if all(skipped):
+        return "stuck — escalate remaining"
+    if findings count not decreasing:
+        return "no progress — escalate"
+    iteration += 1
+return "max iterations reached"
+```
+
+収束保証:
+- max 上限（デフォルト3、`--loop N` で変更可）
+- 進捗チェック: Finding 数が減少しない場合は打ち切り
+- 全スキップ検出: 修正可能な Finding がない場合は即打ち切り
+- 同一 Finding 再出現: スキップに昇格
+
+impl-orchestrator から呼ばれる場合は Stage 6 のループが同等の役割を果たすため、`--loop` は不要。
 
 ---
 

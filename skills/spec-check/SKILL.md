@@ -1,9 +1,9 @@
 ---
 name: spec-check
-description: DESIGN仕様書と実装コードの整合性をチェックし、Missing/Diverged/Extra/Constraintの4分類で差分を報告する。
+description: DESIGN/*.md と実装コードの整合性チェック。差分を Missing（仕様にあるが未実装）/ Diverged（不一致）/ Extra（仕様外実装）/ Constraint（設計制約違反）の4分類で報告する。USE WHEN 実装完了後の整合性確認、impl-orchestrator Stage 4 の Spec Reviewer、PR 前の最終確認。SKIP 仕様書同士の矛盾検出は spec-audit、自動修正したい時は spec-fix を直接使うこと。
 argument-hint: "[component-name or 'all']"
 allowed-tools: Read, Grep, Glob, Bash
-model: claude-opus-4-6
+model: claude-opus-4-7
 context: fork
 ---
 

@@ -1,9 +1,9 @@
 ---
 name: spec-audit
-description: DESIGN仕様書間の矛盾（型名揺れ・依存不整合・API契約不一致・用語不統一）を検出する。
+description: DESIGN/*.md 仕様書間の矛盾（型名揺れ、フィールド不一致、API契約不一致、依存循環、DBスキーマ不整合、用語不統一、定数不整合）を検出する。USE WHEN 設計書を追加/更新した後の自己検証、design-phase からの自動呼び出し、PR で DESIGN/*.md 変更がある時の事前チェック。SKIP 仕様↔実装の差分検出は spec-check、自動修正は spec-fix を使うこと。
 argument-hint: "[component-name or 'all']"
 allowed-tools: Read, Grep, Glob, Bash
-model: claude-opus-4-6
+model: claude-opus-4-7
 context: fork
 ---
 
