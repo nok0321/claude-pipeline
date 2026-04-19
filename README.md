@@ -4,6 +4,8 @@ Claude Code 向け自律開発パイプラインのスキル集。
 
 `~/.claude/skills/` からシンボリックリンクされており、このリポジトリが唯一の真実源。
 
+設計原則・スキル間の関係は [ARCHITECTURE.md](ARCHITECTURE.md) を参照。
+
 ---
 
 ## 構成
