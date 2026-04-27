@@ -1,0 +1,22 @@
+[
+  {"query": "I just patched 3 files in src/auth/ (login.ts, session.ts, oauth.ts). Run only the tests related to those changes — full suite is too slow right now and I just need a sanity check before commit.", "should_trigger": true, "tag": "explicit"},
+  {"query": "Made some quick edits to handlers/order.ts and validators/order_validator.ts, want to make sure I didn't break anything obvious before I commit and push to the PR branch.", "should_trigger": true, "tag": "implicit"},
+  {"query": "Before I open this PR for the discount calculation refactor, can you sanity-check the diff with whatever tests are relevant? Don't run the full suite, just the ones that touch my changes.", "should_trigger": true, "tag": "implicit"},
+  {"query": "Use git diff to find what I touched in this last hour and run only those tests, please. Speed > coverage right now — I have a meeting in 10 min.", "should_trigger": true, "tag": "explicit"},
+  {"query": "fast test plz — ive only changed like 4 lines in handlers/payment.ts and i wanna make sure regression doesnt bite me before i commit", "should_trigger": true, "tag": "casual"},
+  {"query": "Run only the tests related to my git diff changes. Full suite is too heavy right now and I'm just doing a quick patch on the validator helpers.", "should_trigger": true, "tag": "explicit"},
+  {"query": "Before committing this small refactor in src/utils/format.ts, just run whatever tests cover that file or its callers — full suite would take 10 min and I don't have it.", "should_trigger": true, "tag": "implicit"},
+  {"query": "just changed handlers/order.ts and the related schema in schemas/order.ts. quick test on those touched bits before commit pls", "should_trigger": true, "tag": "casual"},
+  {"query": "Before opening this PR for the order validation refactor (touched 4 files in src/order/handlers/ and 2 in tests/order/), I want a quick regression check on whatever tests are relevant — full suite is overkill here.", "should_trigger": true, "tag": "implicit"},
+  {"query": "Run diff-based selective tests right now. I'm about to commit and have no time for the full pipeline — just the affected ones.", "should_trigger": true, "tag": "explicit"},
+  {"query": "Run the entire test suite, including integration tests and e2e, for the release preflight check on tag v2.3.0.", "should_trigger": false, "tag": "near-miss-full-test"},
+  {"query": "There's a failing test in tests/auth.test.ts — fix the bug that's causing it to fail and verify with the regression tests.", "should_trigger": false, "tag": "near-miss-fix-with-verify"},
+  {"query": "Write a new test case for the divide-by-zero edge case in src/calculator.ts — the existing tests don't cover it.", "should_trigger": false, "tag": "generic"},
+  {"query": "What testing framework should I use for a Rust project — cargo test, nextest, or something else? I care about speed and parallel execution.", "should_trigger": false, "tag": "generic"},
+  {"query": "Mock the database connection in tests/order.test.ts — currently it hits the real Postgres which is flaky in CI.", "should_trigger": false, "tag": "generic"},
+  {"query": "Generate test data for a 100-row CSV file with realistic-looking customer addresses and order amounts.", "should_trigger": false, "tag": "generic"},
+  {"query": "Pre-release verification — run the entire test suite end-to-end on tag v2.3.0 including integration tests and e2e on the staging environment.", "should_trigger": false, "tag": "near-miss-full-test"},
+  {"query": "Add boundary test cases (0, MAX, MIN, NaN) for the decimal handling in src/decimal.ts — current tests don't cover those edge values.", "should_trigger": false, "tag": "generic"},
+  {"query": "Recommend a mocking library — torn between jest mocks, vitest mocks, and sinon for our TypeScript project. We're on Vitest right now.", "should_trigger": false, "tag": "generic"},
+  {"query": "Explain TDD best practices for a junior dev who just joined the team. Looking for a 1-page summary.", "should_trigger": false, "tag": "generic"}
+]
