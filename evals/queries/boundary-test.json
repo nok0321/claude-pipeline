@@ -1,0 +1,22 @@
+[
+  {"query": "Just merged the new /api/orders endpoint and the frontend OrderList component that calls it. I want to detect any field name mismatch or type drift between the OpenAPI spec and the React fetch hooks before this hits prod.", "should_trigger": true, "tag": "explicit"},
+  {"query": "After the WASM rebuild, our TypeScript bindings to the geometry module might have drift on the Coord3D struct (x/y/z order vs y/x/z). Run boundary contract tests across the WASM↔TS interface.", "should_trigger": true, "tag": "explicit"},
+  {"query": "We just changed the DB schema for the events table — added 2 columns, renamed one. Need to verify the application layer reads/writes still match. Run boundary tests on the events table contract.", "should_trigger": true, "tag": "implicit"},
+  {"query": "I keep getting weird parsing errors after the API team renamed `userId` → `user_id` in some endpoints. Detect all the boundary mismatches between our API responses and the TypeScript types in src/types/api/.", "should_trigger": true, "tag": "implicit"},
+  {"query": "yo we shipped a postgres migration and im paranoid about app code drift. boundary check on the user_account / order_history tables pls", "should_trigger": true, "tag": "casual"},
+  {"query": "Generate and run boundary contract tests for the encoding conversion between our internal UTF-8 strings and the legacy SJIS export. Specifically the customer name + address fields in src/export/legacy.ts.", "should_trigger": true, "tag": "explicit"},
+  {"query": "impl-orchestrator just finished the inventory component. Run boundary-test as the final gate to catch any DB↔App schema drift or REST contract mismatch before I review.", "should_trigger": true, "tag": "explicit"},
+  {"query": "We have unit conversion (cm→mm) happening in 3 places between the parser and the renderer. Detect any boundary contract violations in the conversion path src/parser/ → src/render/.", "should_trigger": true, "tag": "implicit"},
+  {"query": "wasm <-> ts type contract check on the math module pls. just rebuilt geo.wasm and i bet something is off with the matrix layout", "should_trigger": true, "tag": "casual"},
+  {"query": "Run all boundary tests after the API schema update — REST↔Frontend and DB↔App layers. I want type mismatches surfaced as a list with file:line refs.", "should_trigger": true, "tag": "explicit"},
+  {"query": "There's a bug in the formatDate function — it's returning UTC instead of local time. Fix it and verify the regression tests don't break.", "should_trigger": false, "tag": "near-miss-fix-with-verify"},
+  {"query": "Implement the inventory component end-to-end from DESIGN/05_inventory.md, including the boundary tests if needed.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
+  {"query": "The login button on the homepage is misaligned on mobile breakpoint. Can you fix the CSS in src/components/Header.css?", "should_trigger": false, "tag": "generic"},
+  {"query": "Help me write integration tests for the search endpoint using Playwright — UI flow validation.", "should_trigger": false, "tag": "generic"},
+  {"query": "Compare DESIGN/05_inventory.md against the implementation in src/inventory/ and tell me what's missing or diverged.", "should_trigger": false, "tag": "near-miss-spec-check"},
+  {"query": "What's the best way to mock REST APIs in a React test suite? MSW vs nock vs custom?", "should_trigger": false, "tag": "generic"},
+  {"query": "Deep security review on the API authentication code in src/api/auth/. Find injection vectors and authorization issues.", "should_trigger": false, "tag": "near-miss-robust-review"},
+  {"query": "Quick PR review on the changes to handlers/order.ts — Critical/Warning/Info levels, 5 min max.", "should_trigger": false, "tag": "near-miss-code-review"},
+  {"query": "Add a logging middleware that captures request/response bodies for the /api/orders endpoint.", "should_trigger": false, "tag": "generic"},
+  {"query": "Audit the design docs under DESIGN/ for type name inconsistencies and constant drift between docs.", "should_trigger": false, "tag": "near-miss-spec-audit"}
+]

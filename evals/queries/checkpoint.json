@@ -1,0 +1,22 @@
+[
+  {"query": "I'm about to /clear this session — task is half done. Save a checkpoint so I can pick up tomorrow with full context. The work is the auth refactor (touched src/auth/, ~600 lines) and we're mid-tests.", "should_trigger": true, "tag": "explicit"},
+  {"query": "Long session today, I want to wrap up but the implementation isn't done. Need a way to hand off to my next session — what files I touched, what's next, what blockers exist.", "should_trigger": true, "tag": "implicit"},
+  {"query": "Create a CHECKPOINT.md for the current task. We've been working for 4 hours on the payment integration, halfway through the integration tests, and I need to come back to this in 2 days.", "should_trigger": true, "tag": "explicit"},
+  {"query": "save state pls, im about to /compact and dont wanna lose context. were in the middle of the search refactor, like 60% done", "should_trigger": true, "tag": "casual"},
+  {"query": "Tomorrow I'll continue this task — write down where we are, what files are dirty, what tests are passing/failing, and the next 3 things on the plate.", "should_trigger": true, "tag": "implicit"},
+  {"query": "Run /checkpoint save before I close my laptop. Git is dirty (12 files modified), tests are at 18/22 passing, and I want a written record of why I deviated from the original plan.", "should_trigger": true, "tag": "explicit"},
+  {"query": "I'm going to take a break for 3 hours — when I come back I want to know exactly where I left off without re-reading the entire conversation. The current task is the OAuth flow rewrite.", "should_trigger": true, "tag": "implicit"},
+  {"query": "long task, gonna take a nap. checkpoint the state so future-me knows whats up and which files are dirty", "should_trigger": true, "tag": "casual"},
+  {"query": "Restore the last checkpoint and tell me where we left off. CHECKPOINT.md should be in the project root.", "should_trigger": true, "tag": "explicit"},
+  {"query": "Save a checkpoint right now. The task is the OAuth flow rewrite, we just finished the token refresh logic but haven't tested it. Next step is integration tests against the staging IDP.", "should_trigger": true, "tag": "explicit"},
+  {"query": "Update PIPELINE-STATE.md with the current dev-pipeline phase — we just finished design, moving to implementation. Update the component table too.", "should_trigger": false, "tag": "near-miss-pipeline-state"},
+  {"query": "Initialize the pipeline state for the new task 'auth-rewrite'. Phase 0 starts now, components are oauth/session-mgmt/mfa.", "should_trigger": false, "tag": "near-miss-pipeline-state"},
+  {"query": "What's the difference between git stash and git checkout for saving work in progress?", "should_trigger": false, "tag": "generic"},
+  {"query": "How do I create a snapshot in Postgres for backup purposes before a risky migration?", "should_trigger": false, "tag": "generic"},
+  {"query": "Fix the failing test in tests/auth.test.ts and verify the regression tests still pass after.", "should_trigger": false, "tag": "near-miss-fix-with-verify"},
+  {"query": "Add a small comment to the formatDate function in src/utils/date.ts explaining the timezone handling.", "should_trigger": false, "tag": "generic"},
+  {"query": "Run the full test suite for the release preflight check — integration and e2e included.", "should_trigger": false, "tag": "generic"},
+  {"query": "Transition the pipeline to Phase 3 (test phase) and update PIPELINE-STATE.md accordingly.", "should_trigger": false, "tag": "near-miss-pipeline-state"},
+  {"query": "Rename the variable getUserData to fetchUser across the codebase, including all .ts and .tsx files.", "should_trigger": false, "tag": "generic"},
+  {"query": "Help me set up VSCode launch configuration for debugging Node.js apps with sourcemap support.", "should_trigger": false, "tag": "generic"}
+]
