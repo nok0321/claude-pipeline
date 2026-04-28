@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://claude-pipeline.local/skills/safe-fix/finding.schema.json",
+  "title": "safe-fix Finding",
+  "description": "Informal contract for findings consumed by safe-fix from spec-audit (--mode=conformance), robust-review, and code-review. Phase 3 / Sub-J version. The contract is hardened to a formal schema in Phase 4 of REDESIGN-PLAN.md.",
+  "type": "object",
+  "required": ["finding_id", "severity", "category", "file", "description"],
+  "additionalProperties": false,
+  "properties": {
+    "finding_id": {
+      "type": "string",
+      "description": "Stable identifier from the upstream skill. Examples: 'SPEC-1', 'AUDIT-3', 'SEC-1', 'ROB-3'.",
+      "pattern": "^(SPEC|AUDIT|SEC|ROB|CR)-[0-9]+$"
+    },
+    "severity": {
+      "type": "string",
+      "description": "Unified severity scale (Phase 1 Action A3). Mode B uses this directly to decide auto-fix vs report-only; Mode A uses it only for ordering.",
+      "enum": ["Critical", "High", "Medium", "Low"]
+    },
+    "category": {
+      "type": "string",
+      "description": "Semantic class. Conformance findings: Missing | Diverged | Extra | Constraint. Robust/security findings: free-form (e.g. 'SQL injection', 'unwrap', 'XSS', 'as cast').",
+      "examples": [
+        "Missing", "Diverged", "Extra", "Constraint",
+        "SQL injection", "XSS", "command injection", "path traversal",
+        "unwrap", "unchecked index", "division by zero",
+        "todo!", "unimplemented!", "hard-coded secret", "as cast"
+      ]
+    },
+    "file": {
+      "type": "string",
+      "description": "Implementation site of the finding, formatted as 'path:line'. Required even for spec-side findings — at minimum the dependent file that surfaces the issue.",
+      "pattern": "^[^:]+:[0-9]+$"
+    },
+    "spec_ref": {
+      "type": "string",
+      "description": "Spec-side reference, formatted as 'DESIGN/<file>.md:<line>'. Required for conformance findings (SPEC-*, AUDIT-*); ignored for robust/security findings.",
+      "pattern": "^.+\\.md:[0-9]+$"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable summary of the issue. One or two sentences.",
+      "minLength": 1
+    },
+    "fix_hint": {
+      "type": "string",
+      "description": "Optional concrete patch suggestion from the upstream reviewer. safe-fix uses this as the starting point but is allowed to deviate if the gate rejects the suggested patch.",
+      "minLength": 1
+    },
+    "attack": {
+      "type": "string",
+      "description": "Security findings only. Attack scenario for Critical / High severities. Mirrors the SEC-* output format from impl-orchestrator review-prompts.md."
+    },
+    "impact": {
+      "type": "string",
+      "description": "Robustness findings only. Failure scenario the finding can produce. Mirrors the ROB-* output format from impl-orchestrator review-prompts.md."
+    }
+  },
+  "examples": [
+    {
+      "finding_id": "SPEC-1",
+      "severity": "High",
+      "category": "Missing",
+      "file": "src/auth/handler.rs:42",
+      "spec_ref": "DESIGN/01_auth.md:88",
+      "description": "Public function refresh_token defined in spec is absent in code.",
+      "fix_hint": "Add fn refresh_token(token: RefreshToken) -> Result<AccessToken, AuthError>"
+    },
+    {
+      "finding_id": "SEC-1",
+      "severity": "Critical",
+      "category": "SQL injection",
+      "file": "src/users/repository.rs:120",
+      "description": "User-supplied name is interpolated into the SELECT query via format!().",
+      "attack": "An attacker can submit name=\"x' OR 1=1; --\" to dump all users.",
+      "fix_hint": "Replace format!() with sqlx::query!(...).bind(name)."
+    },
+    {
+      "finding_id": "ROB-3",
+      "severity": "High",
+      "category": "unwrap",
+      "file": "src/payment/processor.rs:55",
+      "description": "Result of charge() is unwrapped on the hot path.",
+      "impact": "Any payment-gateway transient will crash the worker.",
+      "fix_hint": "Replace .unwrap() with `?` and let the existing error path handle the gateway error."
+    }
+  ]
+}
