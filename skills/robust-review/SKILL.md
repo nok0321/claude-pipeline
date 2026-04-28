@@ -156,54 +156,22 @@ For each rule, emit a finding at the matching severity when violated.
 
 ## Output format
 
-```
-╔══════════════════════════════════════╗
-║  Robustness review                   ║
-║  Target: <target>                    ║
-╚══════════════════════════════════════╝
-
-■ Summary
-  Critical: <n>
-  High:     <n>
-  Medium:   <n>
-  Low:      <n>
-
-═══ Axis 1: Security ═══
-
-[SEC-1] Critical | Injection
-  File: <file:line>
-  Issue: <description>
-  Attack: <attack scenario>
-  Fix: <concrete patch>
-
-═══ Axis 2: Robustness ═══
-
-[ROB-1] Critical | Panic source
-  File: <file:line>
-  Issue: <description>
-  Impact: <failure scenario>
-  Fix: <concrete patch>
-
-═══ Project-specific constraints ═══
-
-[PRJ-1] High | <constraint name>
-  File: <file:line>
-  Issue: <description>
-  Rule: <CLAUDE.md reference>
-  Fix: <concrete patch>
-```
-
-When no findings exist, report "all checks clean".
+The full report block (Summary, Axis 1 Security findings, Axis 2
+Robustness findings, Project-specific constraints) is templated in
+[references/output-format.md](references/output-format.md). When no
+findings exist, report "all checks clean".
 
 ---
 
 ## Pipeline integration
 
-When called from `impl-orchestrator` Stage 4:
+When called from `impl-orchestrator` Stage 3 (Review & Remediate):
 - Target files arrive as `{target_files}` from the orchestrator
 - Project checks arrive as `{project_checks}`
-- The findings list feeds Stage 5 directly
+- The findings list feeds the Stage 3-5 dispatch (safe-fix or
+  escalation) directly
 
 When run standalone:
 - Read CLAUDE.md context independently
-- After output, recommend `robust-fix` to apply the auto-fixable subset
+- After output, recommend `safe-fix --mode=robust` to apply the
+  Critical / High auto-fixable subset
