@@ -1,16 +1,35 @@
 # Review-agent prompt templates
 
-The three parallel review agents spawned in `impl-orchestrator` Stage 4 use the prompt templates below. The orchestrator expands the placeholders at runtime.
+The three parallel review agents spawned in `impl-orchestrator` Stage 3
+use the prompt templates below. The orchestrator expands the
+placeholders at runtime.
+
+(Migrated from `REVIEW-AGENTS.md` in Phase 3 to live under
+`references/`.)
+
+---
 
 ## Placeholders
 
-| Placeholder | Source |
-|-------------|--------|
-| `{target_files}` | Implementation files identified in Stage 1 |
-| `{design_docs}` | Corresponding `DESIGN/*.md` files |
-| `{project_checks}` | CLAUDE.md `## Critical Constraints` + `## Project-Specific Checks` |
-| `{component_mapping}` | CLAUDE.md `## Component Mapping` |
-| `{build_commands}` | CLAUDE.md `## Commands` |
+| Placeholder           | Source                                                                |
+|-----------------------|-----------------------------------------------------------------------|
+| `{target_files}`      | Implementation files identified in Stage 1 (= `impl_files`)           |
+| `{design_docs}`       | Corresponding `DESIGN/*.md` files                                     |
+| `{project_checks}`    | CLAUDE.md `## Critical Constraints` + `## Project-Specific Checks`    |
+| `{component_mapping}` | CLAUDE.md `## Component Mapping`                                      |
+| `{build_commands}`    | CLAUDE.md `## Commands`                                               |
+
+---
+
+## Stage 3-2: dispatch (parallel)
+
+Send all three Agent calls in **one message** so they run in parallel:
+
+```
+Agent(description: "Security review: <component>",   model: "opus", prompt: "<Agent 1 template below>")
+Agent(description: "Robustness review: <component>", model: "opus", prompt: "<Agent 2 template below>")
+Agent(description: "Spec compliance: <component>",   model: "opus", prompt: "<Agent 3 template below>")
+```
 
 ---
 
@@ -24,12 +43,12 @@ Target files: {target_files}
 Project-specific constraints: {project_checks}
 
 ## Severity scale
-| Level | Definition |
-|-------|-----------|
+| Level    | Definition                                                                       |
+|----------|----------------------------------------------------------------------------------|
 | Critical | Malicious input could cause data destruction, privilege escalation, or info leak |
-| High | Anomalous input could cause service halt or data inconsistency |
-| Medium | Edge cases produce unexpected behavior or performance regression |
-| Low | Defensive-programming improvements |
+| High     | Anomalous input could cause service halt or data inconsistency                   |
+| Medium   | Edge cases produce unexpected behavior or performance regression                 |
+| Low      | Defensive-programming improvements                                               |
 
 ## Checks
 
@@ -134,12 +153,12 @@ Component mapping: {component_mapping}
 Project-specific constraints: {project_checks}
 
 ## Diff classes
-| Class | Definition |
-|-------|-----------|
-| Missing | Defined in spec, absent in code |
-| Diverged | Implementation exists but differs (signature, behavior, type) |
-| Extra | Implementation has surfaces the spec does not define |
-| Constraint | Design rule violation |
+| Class      | Definition                                                                 |
+|------------|----------------------------------------------------------------------------|
+| Missing    | Defined in spec, absent in code                                            |
+| Diverged   | Implementation exists but differs (signature, behavior, type)              |
+| Extra      | Implementation has surfaces the spec does not define                       |
+| Constraint | Design rule violation                                                      |
 
 ## Procedure
 
@@ -170,3 +189,16 @@ Emit each finding as:
   Code: {impl_file:line} — {actual state}
   Recommendation: {update spec / patch implementation / append to spec}
 ```
+
+---
+
+## Stage 3-5: dispatch table
+
+Classify each finding via ARCHITECTURE.md §A. Apply CLAUDE.md
+`## Escalation Overrides` first.
+
+| Tier                              | Action                                                                                                                                        |
+|-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| **Tier 1** (must escalate)        | Push to `escalation_queue`, mirror to `PIPELINE-STATE.md` (§B). **Do not block.** Continue handling other findings; report at end.            |
+| **Tier 2** (auto-fix + post-report) | Hand off to `safe-fix` via Agent (`--mode=robust` for SEC-*/ROB-*, `--mode=conformance` for SPEC-*/AUDIT-*). safe-fix re-runs the Stage 2 verification gate after each patch and reverts on failure. Log the auto-fix entry for the post-report. |
+| **Tier 3** (auto-fix silent)      | Same as Tier 2 but no log entry.                                                                                                              |
