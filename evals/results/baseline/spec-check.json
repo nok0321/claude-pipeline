@@ -5,82 +5,82 @@
     {
       "query": "Compare DESIGN/01_auth.md against the implementation in src/auth/. List Missing/Diverged/Extra/Constraint findings with file:line refs.",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 1.0,
+      "triggers": 3,
       "runs": 3,
-      "pass": false
-    },
-    {
-      "query": "diff check between DESIGN/05_inventory.md and src/inventory/. anything off? especially constants and field names",
-      "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
-      "runs": 3,
-      "pass": false
+      "pass": true
     },
     {
       "query": "Implementation is done for the order component. Verify it matches DESIGN/03_order.md before I open the PR. Any drift surfaces as a categorized list.",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 1.0,
+      "triggers": 3,
       "runs": 3,
-      "pass": false
+      "pass": true
     },
     {
       "query": "Run spec-check on all components — I want a full compliance report between DESIGN/*.md and src/*. Cap output at top 30 findings.",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 1.0,
+      "triggers": 3,
       "runs": 3,
-      "pass": false
+      "pass": true
     },
     {
-      "query": "Apply spec-check on the payment component. I want Constraint violations highlighted (we have a 'no direct DB access from handlers' rule defined in CLAUDE.md).",
+      "query": "diff check between DESIGN/05_inventory.md and src/inventory/. anything off? especially constants and field names",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
-      "runs": 3,
-      "pass": false
-    },
-    {
-      "query": "Pre-PR check: does my implementation in src/notification/ match DESIGN/07_notification.md? Categorize the gaps as Missing/Diverged/Extra/Constraint.",
-      "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
       "runs": 3,
       "pass": false
     },
     {
       "query": "We just finished impl-orchestrator on the search component. Stage 4 spec reviewer pass — find any drift from DESIGN/02_search.md.",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Apply spec-check on the payment component. I want Constraint violations highlighted (we have a 'no direct DB access from handlers' rule defined in CLAUDE.md).",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
       "runs": 3,
       "pass": false
     },
     {
-      "query": "Spec compliance audit on the auth component. DESIGN/01_auth.md vs src/auth/ — show me Missing items, divergences, and extra fields not in the spec.",
+      "query": "Pre-PR check: does my implementation in src/notification/ match DESIGN/07_notification.md? Categorize the gaps as Missing/Diverged/Extra/Constraint.",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 1.0,
+      "triggers": 3,
       "runs": 3,
-      "pass": false
-    },
-    {
-      "query": "I want to know if my implementation drifted from the design — find what's missing, what diverged, and what I added that wasn't in DESIGN/04_payment.md.",
-      "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
-      "runs": 3,
-      "pass": false
+      "pass": true
     },
     {
       "query": "is what i built actually what the spec says? check src/order/ against the DESIGN/03_order.md doc and tell me whats off",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
       "runs": 3,
-      "pass": false
+      "pass": true
+    },
+    {
+      "query": "Spec compliance audit on the auth component. DESIGN/01_auth.md vs src/auth/ — show me Missing items, divergences, and extra fields not in the spec.",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "I want to know if my implementation drifted from the design — find what's missing, what diverged, and what I added that wasn't in DESIGN/04_payment.md.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
     },
     {
       "query": "Audit the design docs under DESIGN/ for type inconsistencies between docs (no implementation involved). Constants, field names, that kind of thing.",
@@ -115,14 +115,6 @@
       "pass": true
     },
     {
-      "query": "Deep security review on src/auth/ — injection, panic sources, S-Critical findings.",
-      "should_trigger": false,
-      "trigger_rate": 0.0,
-      "triggers": 0,
-      "runs": 3,
-      "pass": true
-    },
-    {
       "query": "Help me write API documentation in OpenAPI 3.0 format for the order endpoints.",
       "should_trigger": false,
       "trigger_rate": 0.0,
@@ -139,7 +131,15 @@
       "pass": true
     },
     {
-      "query": "Add a new field `lastLoginAt` to the User type in DESIGN/01_user.md. Single field edit.",
+      "query": "Deep security review on src/auth/ — injection, panic sources, S-Critical findings.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Convert these JSON Schema definitions to TypeScript types automatically.",
       "should_trigger": false,
       "trigger_rate": 0.0,
       "triggers": 0,
@@ -155,7 +155,7 @@
       "pass": true
     },
     {
-      "query": "Convert these JSON Schema definitions to TypeScript types automatically.",
+      "query": "Add a new field `lastLoginAt` to the User type in DESIGN/01_user.md. Single field edit.",
       "should_trigger": false,
       "trigger_rate": 0.0,
       "triggers": 0,
@@ -165,7 +165,7 @@
   ],
   "summary": {
     "total": 20,
-    "passed": 10,
-    "failed": 10
+    "passed": 18,
+    "failed": 2
   }
 }
