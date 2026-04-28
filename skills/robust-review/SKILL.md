@@ -1,210 +1,209 @@
 ---
 name: robust-review
-description: セキュリティ＋堅牢性の深層専門レビュー（S-Critical〜S-Low の4段階）。インジェクション/パニック源/データ整合性/エッジケース耐性/同時実行を網羅的に診断する。USE WHEN マージ前の最終ゲート、impl-orchestrator Stage 4、セキュリティ監査、リリース前検証。SKIP 軽量な PR レビューなら code-review（こちらの方が高速）、命名・構造のみのレビュー、仕様整合性チェックなら spec-check を使うこと。
+description: Use this skill whenever the user wants a deep, dedicated security and robustness review on changed or specified code — looking for injection vectors, panic / crash sources, data-integrity issues, edge-case fragility, and concurrency hazards across two axes (Security and Robustness) with findings ranked Critical / High / Medium / Low. Trigger phrases include "deep security review", "robustness review", "audit this code for vulnerabilities", "find injection vectors", "check for unwrap or panic sources", "pre-merge security pass", "release-readiness review", or any explicit ask for a thorough hardening review beyond a lightweight PR check. Trigger even when the user does not say "robust-review" — phrases like "what could break this in production?", "how safe is this code?", or "audit before release" qualify.
 argument-hint: "[file-path, glob-pattern, or 'all']"
 allowed-tools: Read, Grep, Glob, Bash
 model: claude-opus-4-7
 context: fork
 ---
 
-# セキュリティ / 堅牢性 深層レビュー
+# Security and robustness deep review
 
-対象ファイルに対してセキュリティ（Axis 1）と堅牢性（Axis 2）の2軸で深層レビューを行い、Finding リストを出力する。
-
----
-
-## 準備
-
-### 対象ファイルの決定
-
-引数に応じて対象を決定:
-
-| 引数 | 動作 |
-|------|------|
-| ファイルパス | そのファイルのみ |
-| glob パターン | マッチしたファイル |
-| `all` | CLAUDE.md `## Component Mapping` の全実装ディレクトリ |
-| なし | `git diff --name-only HEAD` で変更ファイル |
-
-### プロジェクト固有情報の取得
-
-CLAUDE.md から以下を読み取る（存在する場合のみ）:
-
-1. **`## Critical Constraints`** — プロジェクト固有の制約（データ形式順序、アーキテクチャ制約、フレームワーク規約等）
-2. **`## Project-Specific Checks`** — 追加のチェック項目
-3. **`## Component Mapping`** — コンポーネントと実装ディレクトリの対応（`all` 指定時に使用）
-
-いずれも存在しない場合は汎用チェックのみで続行する（エラーにしない）。
+Run a two-axis deep review (Security + Robustness) over the target files and emit a ranked findings list.
 
 ---
 
-## 深刻度定義
+## Setup
 
-| レベル | 基準 | パイプライン上の扱い |
-|--------|------|---------------------|
-| **S-Critical** | 悪意ある入力でデータ破壊・権限昇格・情報漏洩、またはクラッシュが発生しうる | Tier 2: 自律修正 + 事後報告 |
-| **S-High** | 異常入力でサービス停止・データ不整合が発生しうる | Tier 2: 自律修正 + 事後報告 |
-| **S-Medium** | エッジケースで予期しない動作・性能劣化が発生しうる | Tier 3: 自律修正（報告不要） |
-| **S-Low** | 防御的プログラミングの改善余地 | Tier 3: 自律修正（報告不要） |
+### Determine scope
 
----
+| Argument | Behavior |
+|----------|----------|
+| File path | That file only |
+| Glob pattern | All matching files |
+| `all` | Every implementation directory listed in CLAUDE.md `## Component Mapping` |
+| (none) | `git diff --name-only HEAD` (changed files) |
 
-## Axis 1: セキュリティレビュー
+### Read project-specific context
 
-### 1-1. インジェクション
+From CLAUDE.md (when present):
 
-- **SQL / NoSQL インジェクション** — ユーザー入力をクエリに文字列結合していないか
-  - NG: `format!("SELECT ... WHERE name = '{}'", name)` / `` `SELECT ... WHERE name = '${name}'` ``
-  - OK: パラメータバインド / プリペアドステートメント / ORM のクエリビルダ
-  - 該当時: **S-Critical**
-- **XSS** — 未サニタイズ入力の HTML レンダリング
-  - `innerHTML`, `{@html}`, `v-html`, `dangerouslySetInnerHTML`, テンプレートリテラル→DOM
-  - 該当時: **S-Critical**
-- **コマンドインジェクション** — ユーザー入力を shell コマンドに渡していないか
-  - `exec()`, `spawn()`, `system()`, `Command::new()` の引数にユーザー入力
-  - 該当時: **S-Critical**
-- **パストラバーサル** — ユーザー入力がファイルパス構築に使用されていないか
-  - `../` を含む入力でのディレクトリ脱出
-  - 該当時: **S-High**
+1. `## Critical Constraints` — project rules (data-format ordering, architecture limits, framework conventions)
+2. `## Project-Specific Checks` — additional checks to apply
+3. `## Component Mapping` — used when scope is `all`
 
-### 1-2. 機密情報
-
-- パスワード・APIキー・接続文字列のハードコード → **S-Critical**
-- エラーレスポンスに内部情報（スタックトレース、クエリ、内部パス）が露出 → **S-High**
-- `.env` が `.gitignore` に含まれているか → **S-Medium**
-- ログに機密情報（トークン、個人情報）が出力されていないか → **S-High**
-
-### 1-3. アクセス制御
-
-- CORS 設定が過度に緩くないか (`allow_origin(*)` / `Access-Control-Allow-Origin: *`) → **S-High**
-- 認証が必要なエンドポイントに認証ミドルウェア / ガードがあるか → **S-Critical**
-- 認可チェック（リソースオーナー検証）が適切か → **S-Critical**
-- CSRF 対策（state token 等）が実装されているか → **S-High**
-
-### 1-4. リソース枯渇
-
-- アップロード / リクエストボディのサイズ制限 → **S-Medium**
-- 大量データ処理時のメモリ制御（ストリーミング / ページネーション） → **S-Medium**
-- レートリミットの設定 → **S-Medium**
-- 正規表現の ReDoS 脆弱性 → **S-High**
-
-### 1-5. 暗号・セッション
-
-- 非推奨アルゴリズム（MD5, SHA1 for hashing, ECB mode）の使用 → **S-High**
-- セッショントークンの生成に暗号学的乱数を使用しているか → **S-High**
-- HTTPS の強制 → **S-Medium**
+If none of these exist, proceed with generic checks (do not error out).
 
 ---
 
-## Axis 2: 堅牢性レビュー
+## Severity scale
 
-### 2-1. パニック / クラッシュ源
-
-- 本番コードの `unwrap()` / `expect()` (Rust) → **S-Critical**
-- 未チェックの配列 / Vec / Map インデックスアクセス → **S-Critical**
-- 0 除算の可能性 → **S-Critical**
-- `as` キャストでの数値オーバーフロー / 切り捨て → **S-High**
-- 未処理の例外 / エラー（`catch` なし、`?` 伝播先のハンドリング確認） → **S-High**
-- `todo!()` / `unimplemented!()` の残存 → **S-Critical**
-
-### 2-2. 入力バリデーション
-
-- 外部入力（API リクエスト、ファイル、環境変数）の型・範囲チェック → **S-High**
-- NaN / Infinity / 空文字列 / null のハンドリング → **S-Medium**
-- 文字列長・コレクションサイズの上限 → **S-Medium**
-- デシリアライズ時の不正データハンドリング → **S-High**
-
-### 2-3. データ整合性
-
-- 削除時の関連データ整合性（カスケード / トランザクション） → **S-High**
-- 浮動小数点の `==` 比較（epsilon 比較推奨） → **S-Medium**
-- 同時書き込み対策（楽観的ロック / トランザクション分離レベル） → **S-High**
-- 外部キー制約が DB レベルで設定されているか → **S-Medium**
-
-### 2-4. エッジケース耐性
-
-- 空リスト / 単一要素の処理 → **S-Medium**
-- 境界値（0, 最大値, 負数, i32::MAX, u64::MAX 等）の処理 → **S-Medium**
-- Unicode / マルチバイト文字の処理 → **S-Low**
-
-### 2-5. エラー伝播とリカバリ
-
-- エラー型が全ケースをカバーしているか（`_` catchall の濫用） → **S-Medium**
-- 外部 API のタイムアウト設定 → **S-High**
-- リトライ時のバックオフ戦略 → **S-Medium**
-- DB 接続失敗時のリカバリ → **S-High**
-
-### 2-6. リソース管理
-
-- 大量データ処理時のメモリ使用量（`.collect()` の不要な使用等） → **S-Medium**
-- コネクション / ファイルハンドルのライフサイクル管理 → **S-High**
-- 一時ファイルのクリーンアップ → **S-Low**
+| Level | Definition | Pipeline handling |
+|-------|-----------|-------------------|
+| **Critical** | Malicious input could cause data destruction, privilege escalation, info leak, or a crash | Tier 2: auto-fix + post-report |
+| **High** | Anomalous input could cause service halt or data inconsistency | Tier 2: auto-fix + post-report |
+| **Medium** | Edge cases that produce unexpected behavior or performance regression | Tier 3: auto-fix (silent) |
+| **Low** | Defensive-programming improvements | Tier 3: auto-fix (silent) |
 
 ---
 
-## プロジェクト固有チェックの適用
+## Axis 1: Security review
 
-CLAUDE.md の `## Critical Constraints` と `## Project-Specific Checks` に記載された制約を追加チェック項目として適用する。
+### 1-1. Injection
 
-例:
-- アーキテクチャ制約（特定コンポーネントの禁止依存）→ 該当 import の検出 → **S-Critical**
-- データ形式順序制約 → 変換境界での順序違反検出 → **S-High**
-- フレームワーク規約 → ハンドラ引数順序等 → **S-Medium**
+- **SQL / NoSQL injection** — user input concatenated into a query
+  - Bad: `format!("SELECT ... WHERE name = '{}'", name)` / `` `SELECT ... WHERE name = '${name}'` ``
+  - Good: parameter binding / prepared statements / ORM query builder
+  - Severity: **Critical**
+- **XSS** — unsanitized input rendered as HTML
+  - `innerHTML`, `{@html}`, `v-html`, `dangerouslySetInnerHTML`, template literals into the DOM
+  - Severity: **Critical**
+- **Command injection** — user input flows into a shell command
+  - `exec()`, `spawn()`, `system()`, `Command::new()` with user-controlled args
+  - Severity: **Critical**
+- **Path traversal** — user input used to construct a filesystem path
+  - Inputs containing `../` that escape the intended directory
+  - Severity: **High**
 
-各制約について、違反を検出した場合は該当する深刻度で Finding を生成する。
+### 1-2. Secrets
+
+- Hard-coded passwords, API keys, connection strings → **Critical**
+- Stack trace / raw query / internal path leaked through error responses → **High**
+- `.env` not in `.gitignore` → **Medium**
+- Tokens or PII written into logs → **High**
+
+### 1-3. Access control
+
+- Permissive CORS (`allow_origin(*)`, `Access-Control-Allow-Origin: *`) → **High**
+- Authenticated endpoints lacking auth middleware / guard → **Critical**
+- Resource-owner authorization (resource belongs to caller) → **Critical**
+- CSRF protection (state token) → **High**
+
+### 1-4. Resource exhaustion
+
+- Upload / request body size limits → **Medium**
+- Memory control for large data (streaming, pagination) → **Medium**
+- Rate limiting → **Medium**
+- Regex ReDoS susceptibility → **High**
+
+### 1-5. Cryptography and sessions
+
+- Deprecated algorithms (MD5 / SHA1 for hashing, ECB mode) → **High**
+- Cryptographically secure RNG used for session tokens → **High**
+- HTTPS enforcement → **Medium**
 
 ---
 
-## 出力形式
+## Axis 2: Robustness review
+
+### 2-1. Panic / crash sources
+
+- Production `unwrap()` / `expect()` (Rust) → **Critical**
+- Unchecked array / Vec / Map indexing → **Critical**
+- Possible division by zero → **Critical**
+- `as` casts that overflow or truncate → **High**
+- Unhandled exceptions / errors (missing `catch`, downstream of `?`) → **High**
+- `todo!()` / `unimplemented!()` left in tree → **Critical**
+
+### 2-2. Input validation
+
+- External input (API request, file, env var) bounded by type and range → **High**
+- NaN / Infinity / empty string / null handled → **Medium**
+- String length / collection size limits → **Medium**
+- Deserialization rejects malformed data → **High**
+
+### 2-3. Data integrity
+
+- Cascade / transaction integrity on delete → **High**
+- Floating-point `==` comparison (use epsilon) → **Medium**
+- Concurrent-write protection (optimistic lock / isolation level) → **High**
+- Foreign key constraints set at the DB level → **Medium**
+
+### 2-4. Edge cases
+
+- Empty list / single-element handling → **Medium**
+- Boundary values (0, max, negatives, `i32::MAX`, `u64::MAX`) → **Medium**
+- Unicode / multibyte handling → **Low**
+
+### 2-5. Error propagation and recovery
+
+- Error type covers every case (no over-broad `_` catch-all) → **Medium**
+- External-API timeout configured → **High**
+- Backoff strategy on retry → **Medium**
+- DB-connection failure recovery → **High**
+
+### 2-6. Resource management
+
+- Memory usage on large data (avoid unnecessary `.collect()`) → **Medium**
+- Connection / file-handle lifecycle → **High**
+- Temporary-file cleanup → **Low**
+
+---
+
+## Project-specific checks
+
+Apply rules from CLAUDE.md `## Critical Constraints` and `## Project-Specific Checks` as additional findings.
+
+Examples:
+
+- Architecture rule (component X must not import Y) → grep for the import → **Critical**
+- Data-format ordering rule → check argument order at conversion boundaries → **High**
+- Framework convention (handler argument order, etc.) → **Medium**
+
+For each rule, emit a finding at the matching severity when violated.
+
+---
+
+## Output format
 
 ```
 ╔══════════════════════════════════════╗
-║  堅牢性レビュー結果                   ║
-║  対象: {target}                      ║
+║  Robustness review                   ║
+║  Target: <target>                    ║
 ╚══════════════════════════════════════╝
 
-■ サマリー
-  S-Critical: {n} 件
-  S-High:     {n} 件
-  S-Medium:   {n} 件
-  S-Low:      {n} 件
+■ Summary
+  Critical: <n>
+  High:     <n>
+  Medium:   <n>
+  Low:      <n>
 
-═══ Axis 1: セキュリティ ═══
+═══ Axis 1: Security ═══
 
-[SEC-1] S-Critical | インジェクション
-  ファイル: {file:line}
-  内容: {問題の説明}
-  攻撃例: {具体的な攻撃シナリオ}
-  修正案: {具体的な修正コード}
+[SEC-1] Critical | Injection
+  File: <file:line>
+  Issue: <description>
+  Attack: <attack scenario>
+  Fix: <concrete patch>
 
-═══ Axis 2: 堅牢性 ═══
+═══ Axis 2: Robustness ═══
 
-[ROB-1] S-Critical | パニック源
-  ファイル: {file:line}
-  内容: {問題の説明}
-  影響: {具体的な障害シナリオ}
-  修正案: {具体的な修正コード}
+[ROB-1] Critical | Panic source
+  File: <file:line>
+  Issue: <description>
+  Impact: <failure scenario>
+  Fix: <concrete patch>
 
-═══ プロジェクト固有制約 ═══
+═══ Project-specific constraints ═══
 
-[PRJ-1] S-High | {制約名}
-  ファイル: {file:line}
-  内容: {問題の説明}
-  制約: {CLAUDE.md の該当ルール}
-  修正案: {具体的な修正コード}
+[PRJ-1] High | <constraint name>
+  File: <file:line>
+  Issue: <description>
+  Rule: <CLAUDE.md reference>
+  Fix: <concrete patch>
 ```
 
-Finding が 0 件の場合は「全チェック項目クリーン」と報告する。
+When no findings exist, report "all checks clean".
 
 ---
 
-## パイプライン統合
+## Pipeline integration
 
-impl-orchestrator の Stage 4 から呼ばれる場合:
-- 対象ファイルはオーケストレーターから `{target_files}` として渡される
-- プロジェクト固有チェックは `{project_checks}` として渡される
-- 出力の Finding リストがそのまま Stage 5 の入力になる
+When called from `impl-orchestrator` Stage 4:
+- Target files arrive as `{target_files}` from the orchestrator
+- Project checks arrive as `{project_checks}`
+- The findings list feeds Stage 5 directly
 
-スタンドアロン実行時:
-- CLAUDE.md から自分で情報を取得
-- 出力後、`/robust-fix` での自動修正を推奨
+When run standalone:
+- Read CLAUDE.md context independently
+- After output, recommend `robust-fix` to apply the auto-fixable subset

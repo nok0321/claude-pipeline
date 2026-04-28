@@ -1,134 +1,132 @@
 ---
 name: escalation
-description: パイプライン全体で参照されるエスカレーション判断基準。Finding を Tier 1（必ずユーザー確認）/ Tier 2（自律対応＋事後報告）/ Tier 3（自律対応・報告不要）の3段階に分類する。USE WHEN 各スキル内の Finding 分類、CLAUDE.md の Escalation Overrides の検証、判断に迷った時の指針確認。SKIP 直接的な修正実行は別スキル（fix-with-verify, robust-fix, spec-fix）の領域。
+description: Use this skill whenever the user wants to classify a finding into one of the three escalation tiers — Tier 1 (must escalate to user), Tier 2 (auto-fix and report), Tier 3 (auto-fix silently) — to decide whether autonomous action is allowed. Trigger phrases include "should I escalate this", "is this Tier 1", "classify this finding", "do I need to ask the user about this", "auto-fix or escalate?", or any review-loop step deciding what to do with a Critical/High/Medium/Low item. Trigger even when the user does not say "escalation" — phrases like "should we just fix it?" or "does this need approval?" qualify. The skill defines the tier criteria, applies CLAUDE.md `## Escalation Overrides`, and outputs a recommended action.
 argument-hint: "[classify <finding-description>]"
 allowed-tools: Read, Grep, Glob
 ---
 
-# エスカレーションフレームワーク
+# Escalation framework
 
-パイプラインの全フェーズ（設計・実装・テスト・レビュー）で発見された問題（Finding）を分類し、対応方針を決定する。
+Classify findings discovered during design, implementation, testing, or review into three tiers and prescribe the response. Referenced from every layer of the pipeline.
 
-## 使い方
+## Usage
 
 ```
-/escalation classify <finding の説明>
+/escalation classify <finding description>
 ```
 
-指定された Finding を以下の3段階に分類し、分類理由と推奨アクションを出力する。
+Output: tier, matched criterion, recommended action.
 
 ---
 
-## 分類基準
+## Tier criteria
 
-### Tier 1: 必ずエスカレーション（自律判断禁止）
+### Tier 1: must escalate (no autonomous action)
 
-以下に該当する場合、**作業を停止してユーザーに確認**する。自律的に修正してはならない。
+When any of the following holds, **stop and confirm with the user**. Do not auto-fix.
 
-| 基準 | 理由 |
-|------|------|
-| 外部API / DBスキーマの選定・変更 | ドメイン知識とビジネス要件に依存 |
-| 認証・認可フローの設計判断 | セキュリティポリシーに直結 |
-| 公開インターフェースの破壊的変更 | 下流の利用者に影響 |
-| 設計書に記載のない新規要件の発見 | スコープ外の判断はユーザーが行う |
-| 同一問題の修正が3回連続失敗 | アプローチ自体の見直しが必要 |
-| 検証ゲートが最大リトライ後もパスしない | 根本原因がスキルの範囲外の可能性 |
-| ライセンス・法的制約に関わる変更 | 法務判断が必要 |
-| パフォーマンス特性を大きく変える設計変更 | ユーザーのトレードオフ判断が必要 |
+| Criterion | Why |
+|-----------|-----|
+| Selecting or changing an external API or DB schema | Domain knowledge and business requirements drive the choice |
+| Auth / authz flow design decisions | Direct security-policy impact |
+| Breaking changes to a public interface | Downstream consumers are affected |
+| New requirements not covered by the design docs | Out-of-scope decisions belong to the user |
+| Three consecutive failed attempts at the same fix | The approach itself needs review |
+| Verification gate still fails after max retries | Root cause is likely outside the skill's scope |
+| License or legal-constraint changes | Legal review is required |
+| Design changes that materially shift performance characteristics | Trade-off belongs to the user |
 
-### Tier 2: 自律対応 + 事後報告
+### Tier 2: auto-fix + post-report
 
-以下に該当する場合、**自律的に修正し、完了後にユーザーに報告**する。
+When any of the following holds, **fix autonomously and report after**.
 
-| 基準 | 例 |
-|------|-----|
-| S-Critical / S-High の定型修正パターン | `unwrap()` → `?` 変換、SQL injection → `.bind()` |
-| 設計書の軽微な矛盾修正 | 型名の揺れ、引数順の不一致、フィールド名の統一 |
-| テストで発見されたバグの修正 | テスト失敗の原因となるロジックバグ |
-| エッジケーステストの追加 | 境界値・空入力・NaN 等のテスト補強 |
-| Missing（仕様にあるが未実装）の実装 | spec-check で検出された未実装項目 |
-| Constraint 違反の修正 | アーキテクチャ制約違反、データ形式順序違反 等 |
+| Criterion | Example |
+|-----------|---------|
+| Critical / High items with a known fix pattern | `unwrap()` → `?`, SQL string interpolation → `.bind()` |
+| Minor design-doc inconsistency | Type-name drift, argument-order mismatch, field-name unification |
+| Test-discovered logic bug | Failing test indicates a real defect to fix |
+| Edge-case test additions | Boundary, empty input, NaN coverage |
+| Missing item flagged by `spec-check` | Specified in design but not implemented |
+| Constraint violations | Architecture-rule breach, data-format ordering, etc. |
 
-**報告フォーマット**:
+Report format:
+
 ```
-[自律対応] {分類} | {対象ファイル:行番号}
-  内容: {何を修正したか}
-  理由: {なぜ自律対応が妥当か}
-  検証: {修正後の検証結果（テスト通過等）}
+[auto-fix] <classification> | <file:line>
+  Change: <what was modified>
+  Reason: <why autonomous action is appropriate>
+  Verification: <gate result, e.g. tests pass>
 ```
 
-### Tier 3: 自律対応（報告不要）
+### Tier 3: auto-fix (no report needed)
 
-以下に該当する場合、**自律的に修正し、報告は不要**。
+When any of the following holds, **fix silently**.
 
-| 基準 |
-|------|
-| S-Medium / S-Low / Info レベルの修正 |
-| フォーマット修正、import 整理 |
-| ドキュメントコメントの追加・修正 |
-| 既存テストの軽微なリファクタリング（振る舞い変更なし） |
-| lint / clippy 警告の解消 |
+| Criterion |
+|-----------|
+| Medium / Low / Info-level items |
+| Formatting fixes, import organization |
+| Doc comments add / edit |
+| Minor refactor of existing tests with no behavior change |
+| Lint / clippy warning resolution |
 
 ---
 
-## 分類手順
+## Classification procedure
 
-1. Finding の内容を読み取る
-2. Tier 1 の基準に1つでも該当するか確認 → 該当すれば **Tier 1**
-3. Tier 3 の基準に該当するか確認 → 該当すれば **Tier 3**
-4. どちらでもなければ **Tier 2**
-5. 判断に迷う場合は **Tier 1**（安全側に倒す）
+1. Read the finding.
+2. Match against Tier 1 criteria. Any match → **Tier 1**.
+3. Match against Tier 3 criteria. Any match → **Tier 3**.
+4. Otherwise → **Tier 2**.
+5. When in doubt, default to **Tier 1** (fail safe).
 
 ---
 
-## プロジェクト固有オーバーライド
+## Project-specific overrides
 
-CLAUDE.md に `## Escalation Overrides` セクションがある場合、そのルールを優先適用する。
+When CLAUDE.md contains `## Escalation Overrides`, apply those rules first.
 
 ```markdown
 ## Escalation Overrides
-- promote: S-High の修正でも DB 関連は必ずエスカレーション
-- demote: ドキュメント修正は全て Tier 3（報告不要）
+- promote: any DB-related change must escalate, even at High
+- demote: documentation-only changes are always Tier 3
 ```
 
-### 適用順序
-1. CLAUDE.md の Escalation Overrides を読み取る
-2. Override に該当する Finding は Override のルールで分類
-3. Override に該当しない Finding は本フレームワークのデフォルト基準で分類
+Order: read overrides → apply matching ones → fall back to default criteria for the rest.
 
 ---
 
-## 出力形式
+## Output format
 
 ```
 ╔══════════════════════════════════════╗
-║  エスカレーション分類結果             ║
+║  Escalation classification           ║
 ╚══════════════════════════════════════╝
 
-Finding: {入力された Finding の要約}
+Finding: <input summary>
 
-分類: Tier {1|2|3} — {必ずエスカレーション|自律対応+事後報告|自律対応(報告不要)}
+Class: Tier <1|2|3> — <must escalate | auto-fix + report | auto-fix silent>
 
-該当基準: {マッチした基準}
+Matched criterion: <which rule fired>
 
-推奨アクション:
-  Tier 1 → ユーザーに以下を提示して判断を仰ぐ: {具体的な質問}
-  Tier 2 → 以下の修正を実行し事後報告: {修正内容}
-  Tier 3 → 以下の修正を実行: {修正内容}
+Action:
+  Tier 1 → ask user: <concrete question>
+  Tier 2 → apply fix and report: <what to change>
+  Tier 3 → apply fix: <what to change>
 
-Override 適用: {あり — ルール名 / なし}
+Override applied: <name | none>
 ```
 
 ---
 
-## エスカレーションキュー
+## Escalation queue
 
-パイプライン実行中、Tier 1 の Finding は `PIPELINE-STATE.md` のエスカレーションキューに蓄積される。
+During a pipeline run, Tier 1 findings accumulate in `PIPELINE-STATE.md` under the escalation queue.
 
-蓄積タイミング:
-- 各ステージ完了時に未解決の Tier 1 をキューに追加
-- フェーズ境界でキューの pending 項目をユーザーに一括提示
+- Push new items as each stage completes.
+- Present the pending queue to the user at phase boundaries (batched, not piecemeal).
 
-ユーザーの回答後:
-- 回答に基づき修正を実行 → キューの状態を `resolved` に更新
-- 「対応不要」の回答 → キューの状態を `dismissed` に更新
+After the user responds:
+
+- Apply the resulting fix and mark the queue item `resolved`.
+- If the user says "no action needed", mark the item `dismissed`.

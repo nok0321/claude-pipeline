@@ -1,90 +1,94 @@
 ---
 name: fix-with-verify
-description: バグ修正→コンパイル確認→回帰テスト→失敗時 revert の安全修正パイプライン。修正が新たなバグを生まないことを機械的に保証する。USE WHEN 単発バグ修正、影響範囲が見えにくい変更、リファクタの安全確認。SKIP 大規模機能追加は impl-orchestrator、セキュリティ Finding 一括修正は robust-fix、仕様整合性回復は spec-fix を使うこと。
+description: Use this skill whenever the user wants to apply a single bug fix or refactor with a built-in safety net — compile/type-check after each edit, run the existing test suite as a regression baseline, and automatically revert if the change breaks anything green. Trigger phrases include "fix this bug safely", "fix and verify", "make sure this doesn't break anything", "fix with regression check", "patch this without breaking other tests", or any single-issue fix where the user worries about ripple effects. Trigger even when the user does not say "fix-with-verify" — implicit phrases like "fix this but check it works", "small fix with safety", or "patch this and run the tests" qualify. For broad feature work, prefer `impl-orchestrator` instead.
 argument-hint: "[issue-description or file:line]"
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 ---
 
-# 修正 → 検証パイプライン
+# Fix → verify pipeline
 
-## Step 1: ベースライン記録
+Apply a localized fix, prove it does not introduce regressions, and revert automatically when verification fails.
 
-1. 修正対象ファイルの現在の状態を `git diff` で確認
-2. **既存テストを実行してベースライン記録**（言語を自動検出）:
+## Step 1: Record baseline
 
-| 言語 | コマンド |
-|------|---------|
+1. Inspect the current state with `git diff` to establish what is already pending.
+2. Run the existing test suite to record a baseline (auto-detect language):
+
+| Language | Command |
+|----------|---------|
 | Rust | `cargo test -p <crate> 2>&1 \| tail -20` |
-| Python | `pytest <テストファイル> 2>&1 \| tail -20` |
-| Go | `go test ./<パッケージ>/... 2>&1 \| tail -20` |
+| Python | `pytest <test file> 2>&1 \| tail -20` |
+| Go | `go test ./<package>/... 2>&1 \| tail -20` |
 | Node | `npm test 2>&1 \| tail -20` |
 
-3. 失敗テストがあれば、それが今回の修正対象か確認
+3. If tests already fail, confirm whether those failures are exactly the target of this fix.
 
-## Step 2: 影響範囲分析
+## Step 2: Impact analysis
 
-1. 修正対象の関数/型の呼び出し元を Grep で特定
-2. モジュール依存関係を確認（コアモジュール修正 → 依存モジュールにも影響）
-3. 公開 API のシグネチャ変更は影響範囲が広いため要注意
+1. Use Grep to find call sites of the function or type under repair.
+2. Inspect module dependencies — a change in a core module can ripple downstream.
+3. Treat changes to public-API signatures as broad-impact and plan accordingly.
 
-## Step 3: 修正実行
+## Step 3: Apply the fix
 
-1. **1ファイルずつ修正**（複数ファイル一括変更禁止）
-2. 各ファイル修正後にコンパイル/型チェック確認:
+1. Edit **one file at a time**. Bundling multi-file edits before verification defeats the safety net.
+2. After each edit, run a compile or type check:
 
-| 言語 | コマンド |
-|------|---------|
-| Rust | `cargo check -p <crate>` (コア修正時は `cargo check --workspace`) |
+| Language | Command |
+|----------|---------|
+| Rust | `cargo check -p <crate>` (use `cargo check --workspace` for core changes) |
 | Python | `ruff check <file>` / `mypy <file>` |
-| Go | `go build ./<パッケージ>/...` |
+| Go | `go build ./<package>/...` |
 | Node | `npx tsc --noEmit` |
 
-3. コンパイル/型エラーがあれば即座に修正
+3. Resolve any compile or type error before proceeding.
 
-## Step 4: セキュリティ・堅牢性チェック（修正内容に応じて）
+## Step 4: Targeted hardening (when applicable)
 
-以下のパターンが修正に含まれる場合、追加チェック:
+Apply the relevant pattern only when the fix touches one of these areas:
 
-### パニック/クラッシュ防止
-- `unwrap()` / `expect()` → `?` またはエラーハンドリングに置換
-- 配列インデックス → `.get()` + エラーハンドリング
-- 0除算 → 分母の事前チェック
+### Panic / crash sources
+- `unwrap()` / `expect()` → `?` or explicit error handling
+- Array index access → `.get()` with error handling
+- Division → guard against zero before the operation
 
-### インジェクション防止
-- SQL/NoSQL 文字列結合 → パラメータバインドに置換
+### Injection vectors
+- SQL / NoSQL string concatenation → parameter binding
 
-### 入力バリデーション
-- 外部入力の型・範囲チェック追加
-- NaN / Infinity / 空入力のハンドリング
+### Input validation
+- Type and range checks on external input
+- NaN / Infinity / empty-input handling
 
-## Step 5: リグレッション検証
+## Step 5: Regression verification
 
-1. Step 1 と同じテストスイートを実行
-2. コアモジュール修正時は依存モジュールも検証:
+1. Re-run the same test suite captured in Step 1.
+2. For core-module changes, also run downstream tests:
    - Rust: `cargo test --workspace`
    - Go: `go test ./...`
    - Node: `npm test`
-3. **新たに失敗したテストがあれば修正を revert**:
+3. **Revert immediately if any previously green test now fails:**
    ```bash
    git checkout HEAD -- <file>
    ```
-4. revert 後、より小さな単位で再修正を試みる
-5. 3回連続でリグレッションが起きたら代替案を3つ提案してユーザーに選択を求める
+   Why: a localized fix that breaks an unrelated test is more dangerous than the original bug.
+4. After a revert, attempt a smaller-scoped redo.
+5. Three consecutive regressions on the same fix → present three alternative approaches and ask the user to choose. Why: continued blind retries indicate the approach itself is wrong.
 
-## Step 6: エッジケーステスト追加
+## Step 6: Add edge-case tests
 
-修正に対応するテストが不足している場合、以下を追加:
-- 修正したバグの再現テスト（今後のリグレッション防止）
-- 境界値テスト（0, 空, 最大値, null/None/nil）
-- エラーケーステスト（不正入力、タイムアウト等）
+When the existing suite did not cover the original bug, add:
 
-テスト追加後に再度テスト実行で PASS を確認。
+- A reproducer test for the bug just fixed (locks in the fix against future regression).
+- Boundary-value tests (zero, empty, max, null/None/nil).
+- Error-case tests (invalid input, timeout, etc.).
 
-## Step 7: 完了確認
+Re-run tests after adding the new cases to confirm green.
 
-1. `git diff --stat` で変更概要確認
-2. lint グリーン確認（言語に応じたツール）
-3. 修正内容サマリーを表示:
-   - 何が壊れていたか
-   - どう直したか
-   - 追加したテスト
+## Step 7: Wrap up
+
+1. `git diff --stat` for a change summary.
+2. Confirm lint is clean.
+3. Print a fix summary:
+   - What was broken
+   - How it was fixed
+   - What tests were added

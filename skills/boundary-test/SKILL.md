@@ -1,243 +1,242 @@
 ---
 name: boundary-test
-description: コンポーネント間の境界契約（REST API↔Frontend、WASM↔TS、DB↔App、座標/単位/エンコーディング変換）を検出して境界テストを自動生成・実行する。USE WHEN 型不一致や変換ミスを機械的に検出したい、impl-orchestrator 完了後の最終ゲート、API/DB/WASM スキーマ変更後。SKIP 単一ファイル内のロジックバグ、UI 動作確認は対象外。
+description: Use this skill whenever the user wants to detect contracts at the boundaries between components — REST API ↔ frontend, WASM ↔ TypeScript, DB ↔ application, or unit / coordinate / encoding conversion functions — and auto-generate or run boundary contract tests for them. Surfaces type mismatches and conversion errors mechanically rather than relying on review judgment. Trigger phrases include "test the API/frontend contract", "WASM type-mismatch test", "round-trip test for the converter", "DB schema vs ORM mismatch", "boundary contract test", "test the conversion functions for round-trip", "post-impl-orchestrator final gate", or any conversion / contract test request after API / DB / WASM schema changes. Trigger even when the user does not say "boundary-test" — phrases like "make sure the JSON shape matches what the front end expects" qualify.
 argument-hint: "[detect | generate | run | all] [component-name]"
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 model: claude-opus-4-7
 ---
 
-# 境界契約テスト
+# Boundary contract test
 
-コンポーネント間の境界（API、WASM、DB、変換関数等）を自動検出し、契約テストを生成・実行する。
-レビューの「判断」に頼らず、型不一致・変換ミスを機械的に検出する。
-
----
-
-## コマンド
-
-```
-/boundary-test detect              # 境界を検出して一覧表示
-/boundary-test detect backend      # 指定コンポーネントの境界のみ
-/boundary-test generate            # 検出した境界のテストを生成
-/boundary-test generate backend    # 指定コンポーネントのテストのみ生成
-/boundary-test run                 # 既存の境界テストを実行
-/boundary-test all                 # detect → generate → run を一括実行
-```
+Detect contracts at component boundaries (API, WASM, DB, conversion functions) and auto-generate plus run contract tests. Catch type mismatches and conversion errors mechanically — independent of review judgment.
 
 ---
 
-## Step 1: 境界の検出（detect）
+## Commands
 
-### 1-1: プロジェクト情報の取得
+```
+/boundary-test detect              # Detect boundaries and list them
+/boundary-test detect backend      # Detect within one component only
+/boundary-test generate            # Generate tests for the detected boundaries
+/boundary-test generate backend    # Generate tests for one component
+/boundary-test run                 # Run the existing boundary tests
+/boundary-test all                 # detect → generate → run end-to-end
+```
 
-CLAUDE.md から取得（存在する場合）:
-- **`## Component Mapping`** — コンポーネントと実装ディレクトリの対応
-- **`## Critical Constraints`** — 変換ルール等の制約（座標系順序等）
-- **`## Boundary Definitions`** — プロジェクト固有の境界定義（存在する場合）
+---
 
-Component Mapping がない場合: プロジェクト構造から自動推定。
+## Step 1: Detect boundaries
 
-### 1-2: 境界タイプ別の検出
+### 1-1: Read project context
+
+From CLAUDE.md (when present):
+- `## Component Mapping` — components and implementation directories
+- `## Critical Constraints` — conversion rules (coordinate ordering, etc.)
+- `## Boundary Definitions` — project-specific boundary table
+
+When Component Mapping is missing, infer from the project layout.
+
+### 1-2: Per boundary type
 
 #### Type A: REST API ↔ Frontend
 
-**ソース側（API）検出:**
+**Provider side (API):**
 
-| 言語/FW | 検索パターン |
-|---------|-------------|
-| Rust (Axum) | `async fn` + ハンドラ型（`Json<T>`, `Path<T>`, `State<T>`）|
-| Rust (Actix) | `#[get]`, `#[post]` + ハンドラ関数 |
-| Node (Express) | `router.get`, `router.post` + レスポンス型 |
-| Python (FastAPI) | `@app.get`, `@app.post` + Pydantic モデル |
-| Java (Spring) | `@GetMapping`, `@PostMapping` + DTO クラス |
-| Go (gin/echo) | `r.GET`, `r.POST` + レスポンス構造体 |
+| Language / FW | Pattern |
+|---------------|---------|
+| Rust (Axum) | `async fn` + handler types (`Json<T>`, `Path<T>`, `State<T>`) |
+| Rust (Actix) | `#[get]`, `#[post]` + handler functions |
+| Node (Express) | `router.get`, `router.post` + response type |
+| Python (FastAPI) | `@app.get`, `@app.post` + Pydantic models |
+| Java (Spring) | `@GetMapping`, `@PostMapping` + DTO classes |
+| Go (gin / echo) | `r.GET`, `r.POST` + response struct |
 
-**消費側（Frontend）検出:**
+**Consumer side (frontend):**
 
-| パターン | 検索対象 |
+| Pattern | Targets |
 |---------|---------|
-| fetch / axios | `fetch("`, `axios.get(`, `axios.post(` + URL パターン |
-| 型定義 | レスポンスの interface / type 定義 |
-| API クライアント | 生成された client（openapi-generator 等） |
+| fetch / axios | `fetch("`, `axios.get(`, `axios.post(` + URL pattern |
+| Type definitions | response interface / type definitions |
+| API client | generated clients (e.g. openapi-generator) |
 
-**マッチング:** URL パス + HTTP メソッドで対応付け。
+**Match by:** URL path + HTTP method.
 
 #### Type B: WASM ↔ TypeScript
 
-**ソース側（WASM）検出:**
+**Provider side (WASM):**
 
-| 言語 | 検索パターン |
-|------|-------------|
+| Language | Pattern |
+|----------|---------|
 | Rust | `#[wasm_bindgen]` + `pub fn` / `pub struct` |
-| Go | `//export` ディレクティブ |
-| C/C++ | `EMSCRIPTEN_KEEPALIVE` |
+| Go | `//export` directive |
+| C / C++ | `EMSCRIPTEN_KEEPALIVE` |
 
-**消費側（TypeScript）検出:**
-- WASM import: `import { ... } from '*.wasm'` / `init()` パターン
-- 型定義: 対応する `.d.ts` ファイル
+**Consumer side (TypeScript):**
+- WASM import: `import { ... } from '*.wasm'` / `init()` pattern
+- Types: matching `.d.ts`
 
-**マッチング:** エクスポート名で対応付け。
+**Match by:** export name.
 
 #### Type C: DB ↔ Application
 
-**スキーマ側検出:**
+**Schema side:**
 
-| 方式 | 検索パターン |
-|------|-------------|
-| マイグレーション | `CREATE TABLE`, `ALTER TABLE` (SQL) |
-| ORM 定義 | `#[derive(Entity)]`, `@Entity`, `models.Model`, `Schema({` |
+| Method | Pattern |
+|--------|---------|
+| Migration | `CREATE TABLE`, `ALTER TABLE` (SQL) |
+| ORM definition | `#[derive(Entity)]`, `@Entity`, `models.Model`, `Schema({` |
 | SurrealQL | `DEFINE TABLE`, `DEFINE FIELD` |
 
-**アプリケーション側検出:**
-- モデル構造体 / Entity クラス
-- クエリ内のカラム参照
+**Application side:**
+- Model struct / entity class
+- Column references in queries
 
-**マッチング:** テーブル名 + カラム名で対応付け。
+**Match by:** table name + column name.
 
-#### Type D: 変換境界（座標系、単位、エンコーディング等）
+#### Type D: Conversion boundaries (coordinates, units, encoding, etc.)
 
-CLAUDE.md の `## Critical Constraints` から変換ルールを抽出。
+Pull conversion rules from CLAUDE.md `## Critical Constraints`.
 
-検出方法:
-1. 変換関数の Grep（`to_`, `from_`, `convert_`, `transform_`）
-2. 制約に記載された型ペア間の変換関数を特定
-3. ラウンドトリップ可能な変換ペアを識別
+Detection:
+1. Grep for conversion functions (`to_`, `from_`, `convert_`, `transform_`).
+2. Pinpoint conversion functions between the type pairs the constraint mentions.
+3. Identify round-trippable conversion pairs.
 
-例（データ形式変換）:
+Example (data-format conversion):
 ```
-制約: <FormatA>=[<field1>,<field2>], <FormatB>=[<field2>,<field1>]
-検出: to_<format_b>(), from_<format_b>()
-テスト: value → to_<format_b> → from_<format_b> → assert_eq(value)
+Constraint: <FormatA>=[<field1>,<field2>], <FormatB>=[<field2>,<field1>]
+Detected: to_<format_b>(), from_<format_b>()
+Test:    value → to_<format_b> → from_<format_b> → assert_eq(value)
 ```
 
-### 1-3: 検出結果の出力
+### 1-3: Detection report
 
 ```
 ╔══════════════════════════════════════╗
-║  境界検出結果                         ║
+║  Boundary detection                  ║
 ╚══════════════════════════════════════╝
 
-■ サマリー
-  Type A (REST API ↔ Frontend):  {n} 境界
-  Type B (WASM ↔ TypeScript):    {n} 境界
-  Type C (DB ↔ Application):     {n} 境界
-  Type D (変換境界):              {n} 境界
+■ Summary
+  Type A (REST API ↔ Frontend):  <n>
+  Type B (WASM ↔ TypeScript):    <n>
+  Type C (DB ↔ Application):     <n>
+  Type D (Conversion):           <n>
 
 ═══ Type A: REST API ↔ Frontend ═══
 
 [A-1] GET /<api_path>
   API: <path/to/handler>:<N> → Json<Vec<<Item>>>
   FE:  <path/to/client>:<N> → expects <Item>[]
-  状態: 型一致 ✓ / テストなし ✗
+  Status: types match ✓ / no test ✗
 
 [A-2] POST /<api_path>
   API: <path/to/handler>:<N> → Json<<CreateResponse>>
   FE:  <path/to/client>:<N> → expects { id: string }
-  状態: 型不一致 ✗ — レスポンス形状が異なる
+  Status: type mismatch ✗ — response shape diverges
 
-═══ Type D: 変換境界 ═══
+═══ Type D: Conversion ═══
 
-[D-1] <DataType> 形式変換
-  制約: <FormatA>=[<field1>,<field2>] ↔ <FormatB>=[<field2>,<field1>]
-  変換: <path/to/convert>:<N> — to_<format_b> / from_<format_b>
-  状態: テストなし ✗
+[D-1] <DataType> format conversion
+  Constraint: <FormatA>=[<field1>,<field2>] ↔ <FormatB>=[<field2>,<field1>]
+  Conversion: <path/to/convert>:<N> — to_<format_b> / from_<format_b>
+  Status: no test ✗
 ```
 
 ---
 
-## Step 2: テスト生成（generate）
+## Step 2: Generate tests
 
-### 2-1: 言語別テスト配置
+### 2-1: Per-language placement
 
-| 言語 | テストファイル | フレームワーク |
-|------|--------------|---------------|
-| Rust | `tests/boundary_*.rs` | `#[tokio::test]` + reqwest (API) / 直接呼び出し (変換) |
+| Language | Test file | Framework |
+|----------|-----------|-----------|
+| Rust | `tests/boundary_*.rs` | `#[tokio::test]` + reqwest (API) / direct call (conversion) |
 | TypeScript | `__tests__/boundary_*.test.ts` or `*.boundary.test.ts` | vitest / jest |
 | Python | `tests/test_boundary_*.py` | pytest |
 | Java | `src/test/**/Boundary*IT.java` | JUnit5 + TestContainers + MockMvc |
-| Go | `*_boundary_test.go` | testing パッケージ |
+| Go | `*_boundary_test.go` | `testing` package |
 
-CLAUDE.md に `## Test Conventions` がある場合はその配置規約に従う。
+When CLAUDE.md `## Test Conventions` exists, follow that placement instead.
 
-### 2-2: 境界タイプ別テスト生成
+### 2-2: Per-boundary test strategy
 
-#### Type A: REST API ↔ Frontend テスト
-
-```
-テスト戦略: レスポンスJSON構造の一致検証
-
-1. APIエンドポイントにリクエストを送信
-2. レスポンスのJSON構造（フィールド名・型）を検証
-3. Frontend側の型定義と照合
-
-検証項目:
-- レスポンスのフィールド名がFE型定義と一致
-- フィールドの型（string/number/boolean/array/object）が一致
-- 必須/オプショナルフィールドが一致
-- ネストしたオブジェクトの構造が一致
-- 配列要素の型が一致
-```
-
-#### Type B: WASM ↔ TypeScript テスト
+#### Type A: REST API ↔ Frontend
 
 ```
-テスト戦略: 型付き入出力の形状一致
+Strategy: validate response JSON shape
 
-1. WASM関数を直接呼び出し
-2. 入力型の変換が正しいか検証
-3. 出力型がTypeScript側の期待と一致するか検証
+1. Send a request to the API endpoint
+2. Verify the JSON shape (field names + types)
+3. Compare against the FE type definition
 
-検証項目:
-- 引数の型変換（JS → WASM）が正しい
-- 戻り値の型変換（WASM → JS）が正しい
-- エラーハンドリングが正しく伝播する
+Checks:
+- Response field names match FE definition
+- Field types (string / number / boolean / array / object) match
+- Required vs optional fields match
+- Nested object shapes match
+- Array element types match
 ```
 
-#### Type C: DB ↔ Application テスト
+#### Type B: WASM ↔ TypeScript
 
 ```
-テスト戦略: ラウンドトリップ（insert → select → assert）
+Strategy: typed input / output shape
 
-1. アプリケーションモデルからDBへ挿入
-2. DBから読み取り
-3. 元のモデルと一致するか検証
+1. Call the WASM function directly
+2. Verify input type conversion
+3. Verify output type matches the TS expectation
 
-検証項目:
-- 全フィールドが正しくマッピングされる
-- 型変換（DateTime, JSON, Enum等）が正しい
-- NULL/デフォルト値のハンドリング
-- 関連テーブルの整合性
+Checks:
+- JS → WASM argument conversion is correct
+- WASM → JS return-value conversion is correct
+- Errors propagate correctly
 ```
 
-#### Type D: 変換境界テスト
+#### Type C: DB ↔ Application
 
 ```
-テスト戦略: ラウンドトリップ（値 → 変換 → 逆変換 → 一致）
+Strategy: round-trip (insert → select → assert)
 
-1. テスト値を用意（通常値 + エッジケース）
-2. 正方向変換を実行
-3. 逆方向変換を実行
-4. 元の値と一致するか検証
+1. Insert a model from the application layer
+2. Read back from the DB
+3. Assert equality with the original model
 
-テスト値:
-- 通常値（代表的な値）
-- 境界値（0, 最大, 最小, 負数）
-- エッジケース（NaN, Infinity, 空, 極座標の特異点等）
-
-検証項目:
-- ラウンドトリップの一致（epsilon許容）
-- 中間値の範囲チェック（変換後の値が期待範囲内か）
+Checks:
+- Every field maps correctly
+- Type conversions (DateTime, JSON, Enum) are correct
+- NULL / default-value handling
+- Related-table integrity
 ```
 
-### 2-3: 既存テストとの重複チェック
+#### Type D: Conversion boundaries
 
-生成前に既存テストを Grep し、同等の検証が既に存在する場合はスキップ。
+```
+Strategy: round-trip (value → forward → reverse → equal)
+
+1. Prepare test values (typical + edge cases)
+2. Apply forward conversion
+3. Apply reverse conversion
+4. Assert equality with the original
+
+Test values:
+- Typical values
+- Boundary values (0, max, min, negative)
+- Edge cases (NaN, Infinity, empty, polar singularities)
+
+Checks:
+- Round-trip equality (epsilon tolerance allowed)
+- Intermediate range check (output within expected bounds)
+```
+
+### 2-3: Avoid duplicate tests
+
+Before generating, grep existing tests; skip when an equivalent check already exists.
 
 ---
 
-## Step 3: テスト実行（run）
+## Step 3: Run tests
 
-### 3-1: 境界テストの検出
+### 3-1: Discover boundary tests
 
 ```
 Glob: **/boundary_*.{rs,ts,test.ts,test.js,py,java,go}
@@ -246,92 +245,87 @@ Glob: **/Boundary*IT.java
 Glob: **/*_boundary_test.go
 ```
 
-### 3-2: 言語別実行
+### 3-2: Per-language run
 
-CLAUDE.md の `## Commands` を優先。なければ自動検出:
+CLAUDE.md `## Commands` takes priority; otherwise auto-detect:
 
-| 言語 | コマンド |
-|------|---------|
+| Language | Command |
+|----------|---------|
 | Rust | `cargo test --test 'boundary_*'` |
 | TypeScript | `npx vitest run --reporter verbose **/*.boundary.test.ts` or `npx jest --testPathPattern boundary` |
 | Python | `pytest tests/test_boundary_*.py -v` |
 | Java | `./gradlew test --tests '*BoundaryIT*'` |
 | Go | `go test -run Boundary ./...` |
 
-### 3-3: 結果の出力
+### 3-3: Output
 
 ```
 ╔══════════════════════════════════════╗
-║  境界テスト実行結果                   ║
+║  Boundary test results               ║
 ╚══════════════════════════════════════╝
 
-■ サマリー
-  実行: {n} テスト
-  成功: {n} ✓
-  失敗: {n} ✗
-  スキップ: {n} —
+■ Summary
+  Run:     <n>
+  Pass:    <n> ✓
+  Fail:    <n> ✗
+  Skipped: <n> —
 
-═══ 失敗テスト詳細 ═══
+═══ Failures ═══
 
 [FAIL] boundary_api::test_get_<resource>_response_shape
-  期待: { items: <Item>[] }（<path/to/client>:<N>）
-  実際: Vec<<Item>>（直接配列、ラップなし）
-  境界: [A-2] GET /<api_path>
-  修正案: APIレスポンスを { items: [...] } でラップ、またはFE側の型を配列に変更
+  Expected: { items: <Item>[] } (<path/to/client>:<N>)
+  Actual:   Vec<<Item>> (bare array, no wrap)
+  Boundary: [A-2] GET /<api_path>
+  Fix: wrap the API response as { items: [...] } or change the FE type to a bare array
 
 [FAIL] boundary_convert::test_<value>_roundtrip_<edge_case>
-  入力: <Value> { <field1>: NaN, <field2>: 0.0 }
-  期待: ラウンドトリップ一致 or エラー
-  実際: パニック at <path/to/convert>:<N>
-  境界: [D-1] <DataType> 形式変換
+  Input:    <Value> { <field1>: NaN, <field2>: 0.0 }
+  Expected: round-trip equality or explicit error
+  Actual:   panic at <path/to/convert>:<N>
+  Boundary: [D-1] <DataType> format conversion
 ```
 
 ---
 
-## パイプライン統合
+## Pipeline integration
 
-### impl-orchestrator Stage 3 との統合
+### impl-orchestrator Stage 3
 
-impl-orchestrator の Stage 3（検証ゲート）Step 3-4:
+When boundary tests already exist, they run as part of the regular test suite (Step 3-3 covers them).
 
-```
-境界テストファイルが存在する場合:
-  → 通常のテストスイート（Step 3-3）に含まれるため自動実行される
+When they don't exist:
+- `/boundary-test detect` is run to record the boundary list.
+- Generation happens as part of Stage 5 (treated as a finding).
 
-存在しない場合:
-  → /boundary-test detect を実行して境界一覧を記録
-  → テスト生成は Stage 5 の一部として実行（Finding扱い）
-```
+### Escalation
 
-### エスカレーション連携
-
-境界テストの失敗は以下のように分類:
-- **型不一致の検出** → Tier 2（自律修正 + 事後報告）: 型定義の修正
-- **設計上の不整合**（API契約の根本的な違い）→ Tier 1（エスカレーション）: どちらを正とするか判断が必要
-- **変換エラー** → Tier 2: 変換関数のバグ修正
+Boundary-test failures classify as:
+- Type mismatch → Tier 2 (auto-fix + post-report): patch the type definition.
+- Design-level disagreement (fundamental API contract drift) → Tier 1 (escalate): user must pick the canonical side.
+- Conversion bug → Tier 2: fix the conversion function.
 
 ---
 
-## プロジェクト固有の境界定義
+## Project-specific boundary definitions
 
-CLAUDE.md に `## Boundary Definitions` セクションを追加して、プロジェクト固有の境界を定義できる:
+CLAUDE.md may declare additional boundaries via `## Boundary Definitions`:
 
 ```markdown
 ## Boundary Definitions
-| 境界名 | ソース | 消費側 | 変換ルール |
-|--------|--------|--------|-----------|
-| <境界名A> | <component_a> [<field1>,<field2>] | <component_b> [<field2>,<field1>] | swap(0,1) |
-| <境界名B> | <component_a> [<field1>,<field2>] | <component_c> [<field1>,<field2>] | identity |
-| <境界名C> | <source> (<sourceFormat>) | <consumer> (<consumerFormat>) | <変換関数> |
+| Name | Source | Consumer | Conversion rule |
+|------|--------|----------|-----------------|
+| <name_a> | <component_a> [<field1>,<field2>] | <component_b> [<field2>,<field1>] | swap(0,1) |
+| <name_b> | <component_a> [<field1>,<field2>] | <component_c> [<field1>,<field2>] | identity |
+| <name_c> | <source> (<sourceFormat>) | <consumer> (<consumerFormat>) | <converter> |
 ```
 
-この定義がある場合、detect はこのテーブルを追加の検出ソースとして使用する。
+When the table exists, `detect` also uses it as a detection source.
 
 ---
 
-## 注意事項
+## Constraints
 
-- `generate` は既存の境界テストファイルを上書きしない（新規ファイルのみ作成）
-- 既存テストに追加する場合は、ファイル末尾にテストケースを追記
-- DB テスト（Type C）はテスト用DBが必要 — 環境がない場合はスキップして報告
-- WASM テスト（Type B）はビルド済み WASM が必要 — なければ先にビルドを試行
+- `generate` never overwrites an existing boundary test file (creates new files only). Why: existing tests may contain manual edge cases that should not be lost.
+- Adding cases to an existing test file is permitted via append.
+- DB tests (Type C) require a test database; skip and report when unavailable.
+- WASM tests (Type B) need a built WASM artifact; build before testing when missing.

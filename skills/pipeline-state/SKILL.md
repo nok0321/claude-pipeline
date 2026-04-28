@@ -1,138 +1,133 @@
 ---
 name: pipeline-state
-description: dev-pipeline のフェーズ間状態管理。PIPELINE-STATE.md の init/update/read/transition を提供する。USE WHEN dev-pipeline 各フェーズ境界での進捗記録、複数セッションに跨る構造化進捗管理、エスカレーションキューの操作。SKIP 単一セッションの作業引き継ぎは checkpoint、自由形式のメモは別途。
+description: Use this skill whenever the user wants to read, initialize, update, or transition phases in `PIPELINE-STATE.md` — the structured cross-session state file used by `dev-pipeline`. Trigger phrases include "init pipeline", "what phase are we in", "advance to implementation", "move pipeline to testing", "log this finding to the escalation queue", "update the impl status table", or any reference to PIPELINE-STATE.md by name. Trigger even when the user does not say "pipeline-state" — anything about phase transitions, escalation queue updates, or the structured table of components belongs here. Skip free-form session hand-off (use `checkpoint` for that).
 argument-hint: "[init <task-name>|update <section> <content>|read|transition <next-phase>]"
 allowed-tools: Read, Write, Bash, Glob
 ---
 
-# パイプライン状態管理
+# Pipeline state manager
 
-`PIPELINE-STATE.md` を通じてパイプラインのフェーズ間引き継ぎを管理する。
+Manage `PIPELINE-STATE.md` so phase transitions, escalation queues, and component status survive across sessions inside a single pipeline run.
 
 ---
 
-## コマンド
+## Commands
 
 ### /pipeline-state init \<task-name\>
 
-プロジェクトルートに `PIPELINE-STATE.md` を新規作成する。
+Create a new `PIPELINE-STATE.md` at the project root:
 
 ```markdown
-# Pipeline: {task-name}
+# Pipeline: <task-name>
 Phase: planning
-Updated: {ISO 8601}
+Updated: <ISO 8601>
 
-## 計画サマリー
-（未記入 — 計画フェーズで記入）
+## Plan summary
+(empty — fill in during planning)
 
-## 設計成果物
-（未記入 — 設計フェーズで記入）
+## Design artifacts
+(empty — fill in during design)
 
-## 実装ステータス
-| コンポーネント | 実装 | 検証ゲート | レビュー |
-|---------------|------|-----------|---------|
-（未記入 — 実装フェーズで記入）
+## Implementation status
+| Component | Impl | Verification gate | Review |
+|-----------|------|-------------------|--------|
+(empty — fill in during implementation)
 
-## エスカレーションキュー
-| # | フェーズ | 分類 | 内容 | 状態 |
-|---|---------|------|------|------|
-（なし）
+## Escalation queue
+| # | Phase | Class | Content | Status |
+|---|-------|-------|---------|--------|
+(none)
 
-## 次フェーズへの引き継ぎ
-（未記入）
+## Hand-off to next phase
+(empty)
 ```
 
-既に `PIPELINE-STATE.md` が存在する場合は上書きせず、ユーザーに確認する。
+If `PIPELINE-STATE.md` already exists, do not overwrite — confirm with the user first.
 
 ---
 
 ### /pipeline-state update \<section\> \<content\>
 
-指定セクションの内容を更新する。`Updated:` タイムスタンプも自動更新。
+Update the named section and refresh the `Updated:` timestamp.
 
-更新可能セクション:
-- `plan` — 計画サマリーを記入/更新
-- `design` — 設計成果物リストを追加/チェック更新
-- `impl` — 実装ステータステーブルの行を追加/更新
-- `escalation` — エスカレーションキューに項目を追加/状態更新
-- `handoff` — 次フェーズへの引き継ぎ内容を記入
+Updatable sections:
 
-#### 実装ステータスの更新例
+- `plan` — fill in or revise the plan summary
+- `design` — append or check off design artifacts
+- `impl` — add or update a row of the implementation status table
+- `escalation` — push an item onto the queue or update its status
+- `handoff` — write the hand-off note for the next phase
+
+Implementation row example:
+
 ```
 /pipeline-state update impl "<component> | done | build:pass type:pass test:pass | security:clean robustness:clean spec:clean"
 ```
 
-#### エスカレーション項目の追加例
+Escalation push example:
+
 ```
-/pipeline-state update escalation "add | design | must-escalate | <設計判断が必要な内容>"
+/pipeline-state update escalation "add | design | must-escalate | <design judgement needed>"
 ```
 
-#### エスカレーション項目の状態更新例
+Escalation resolve example:
+
 ```
-/pipeline-state update escalation "resolve #1 | ユーザー承認済み、<決定した方針>で進める"
+/pipeline-state update escalation "resolve #1 | user approved, proceed with <decision>"
 ```
 
 ---
 
 ### /pipeline-state read
 
-現在の `PIPELINE-STATE.md` の内容を読み取り、以下のサマリーを出力する:
+Read `PIPELINE-STATE.md` and print:
 
 ```
-Pipeline: {task-name}
-Phase: {current-phase}
-Updated: {timestamp}
+Pipeline: <task-name>
+Phase: <current-phase>
+Updated: <timestamp>
 
-設計成果物: {完了数}/{総数}
-実装状況: {完了コンポーネント数}/{総数}
-エスカレーション: {pending数} pending, {resolved数} resolved, {dismissed数} dismissed
+Design artifacts: <done>/<total>
+Implementation: <done components>/<total>
+Escalation: <pending> pending, <resolved> resolved, <dismissed> dismissed
 
-次フェーズ引き継ぎ:
-{引き継ぎ内容の要約}
+Next-phase hand-off:
+<short summary of the hand-off note>
 ```
 
-`PIPELINE-STATE.md` が存在しない場合は「パイプライン未初期化。`/pipeline-state init <task-name>` で開始してください」と報告。
+If the file does not exist, report "pipeline not initialized — run `/pipeline-state init <task-name>`".
 
 ---
 
 ### /pipeline-state transition \<next-phase\>
 
-フェーズを遷移する。以下を順次実行:
+Run this sequence:
 
-1. **現フェーズの完了チェック**
-   - pending のエスカレーション項目がある場合は警告（遷移は可能だが確認を促す）
-   - 実装ステータスに未完了コンポーネントがある場合は警告
+1. **Completion check.** Warn (do not block) on pending escalation items or unfinished components.
+2. **Update the Phase field.** Allowed forward transitions: `planning → design → implementation → testing → reporting`. Reject backward transitions to prevent silent regressions.
+3. **Auto-generate the hand-off note** — include this phase's artifacts, unresolved items, and warnings.
+4. **Run a checkpoint save** equivalent so `CHECKPOINT.md` mirrors the new phase.
+5. **Refresh the `Updated:` timestamp.**
 
-2. **Phase フィールドを更新**
-   - 有効な遷移: `planning` → `design` → `implementation` → `testing` → `reporting`
-   - 逆方向の遷移は禁止（警告を出して中止）
-
-3. **引き継ぎ内容の自動生成**
-   - 現フェーズの成果物・未解決項目・注意事項を「次フェーズへの引き継ぎ」に記入
-
-4. **チェックポイント連携**
-   - `/checkpoint save` と同等の CHECKPOINT.md 更新を実行
-   - コンテキスト使用量が大きい場合は `/compact` または `/clear` を推奨
-
-5. **Updated タイムスタンプを更新**
+If context usage is high after transition, recommend `/compact` or `/clear`.
 
 ---
 
-## checkpoint との関係
+## Relationship with checkpoint
 
 | | PIPELINE-STATE.md | CHECKPOINT.md |
 |---|---|---|
-| スコープ | パイプライン全体（複数セッション） | 単一セッション |
-| 内容 | フェーズ・成果物・エスカレーション | タスク進捗・git状態・申し送り |
-| 用途 | フェーズ間の構造化引き継ぎ | セッション間の汎用引き継ぎ |
-| 作成者 | pipeline-state スキル | checkpoint スキル |
+| Scope | Whole pipeline (multi-session) | Single session |
+| Content | Phase, artifacts, escalations | Task progress, git state, hand-off |
+| Use | Structured cross-phase hand-off | General session hand-off |
+| Owner | pipeline-state skill | checkpoint skill |
 
-両方を併用する。`transition` コマンドは CHECKPOINT.md も自動更新する。
+Both files coexist. `transition` updates both.
 
 ---
 
-## 注意事項
+## Constraints
 
-- `PIPELINE-STATE.md` はプロジェクトルートに1つだけ存在する（複数パイプラインの同時実行は非対応）
-- git でバージョン管理される（`.gitignore` に追加しない）
-- 手動編集も可能だが、構造（セクション名・テーブル形式）は維持すること
+- Exactly one `PIPELINE-STATE.md` lives at the project root. Concurrent pipelines are not supported.
+- The file is committed to git (do not add it to `.gitignore`).
+- Manual edits are fine, but preserve the section headings and table format.
