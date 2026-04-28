@@ -5,42 +5,42 @@
     {
       "query": "Auto-fix all S-Critical and S-High findings from the last robust-review run on src/auth/. Apply the standard patterns — unwrap removal, injection mitigation, unchecked index handling. Verify after each fix.",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 1.0,
+      "triggers": 3,
       "runs": 3,
-      "pass": false
-    },
-    {
-      "query": "Apply robust-fix on src/payment/ — focus on injection vectors (parameterize the SQL) and panic sources (replace unwrap with ? operator). Dry-run first, then real after I confirm.",
-      "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
-      "runs": 3,
-      "pass": false
+      "pass": true
     },
     {
       "query": "robust-review just dumped 14 findings, 5 are S-Critical (mostly unwrap and unchecked SQL params in src/payment/db.ts). Auto-apply the standard fixes.",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Apply robust-fix on src/payment/ — focus on injection vectors (parameterize the SQL) and panic sources (replace unwrap with ? operator). Dry-run first, then real after I confirm.",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
       "runs": 3,
       "pass": false
     },
     {
       "query": "fix the s-critical findings from last review pls. unwraps and sql injections, the usual stuff. verify with the test suite after each",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
       "runs": 3,
-      "pass": false
+      "pass": true
     },
     {
       "query": "Pre-release hotfix pass — robust-review surfaced 8 high-priority issues (4 S-Critical, 4 S-High), want them all auto-fixed with verification gates between each.",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 1.0,
+      "triggers": 3,
       "runs": 3,
-      "pass": false
+      "pass": true
     },
     {
       "query": "Run robust-fix --dry-run on the entire src/ tree to preview the patches for the last 12 robust-review findings before I commit to applying them.",
@@ -53,10 +53,10 @@
     {
       "query": "I have a list of 6 robust-review findings (3 S-Critical, 3 S-High) and need them resolved before the release tag. Auto-apply with build/test verification.",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 1.0,
+      "triggers": 3,
       "runs": 3,
-      "pass": false
+      "pass": true
     },
     {
       "query": "auto patch all the high severity stuff from robust-review on src/api/. dont break anything, run tests after each patch",
@@ -69,21 +69,21 @@
     {
       "query": "Run robust-fix on file src/handlers/order.ts — apply all the standard pattern fixes for the unwrap and unchecked-index findings from the last review.",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
       "runs": 3,
-      "pass": false
+      "pass": true
     },
     {
       "query": "Tier 2 batch processing — robust-review found 9 actionable findings, fix them autonomously with verification. No design judgment involved.",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
       "runs": 3,
       "pass": false
     },
     {
-      "query": "Run a deep security audit on src/auth/ — inject vectors, panic sources, race conditions. S-Critical/S-Low breakdown.",
+      "query": "Fix the bug in src/auth/login.ts:142 where null email crashes the OAuth flow. Single bug, with regression check after.",
       "should_trigger": false,
       "trigger_rate": 0.0,
       "triggers": 0,
@@ -91,7 +91,7 @@
       "pass": true
     },
     {
-      "query": "How do I prevent SQL injection in TypeScript with Prisma? Best practices?",
+      "query": "Run a deep security audit on src/auth/ — inject vectors, panic sources, race conditions. S-Critical/S-Low breakdown.",
       "should_trigger": false,
       "trigger_rate": 0.0,
       "triggers": 0,
@@ -107,7 +107,7 @@
       "pass": true
     },
     {
-      "query": "Fix the bug in src/auth/login.ts:142 where null email crashes the OAuth flow. Single bug, with regression check after.",
+      "query": "How do I prevent SQL injection in TypeScript with Prisma? Best practices?",
       "should_trigger": false,
       "trigger_rate": 0.0,
       "triggers": 0,
@@ -165,7 +165,7 @@
   ],
   "summary": {
     "total": 20,
-    "passed": 10,
-    "failed": 10
+    "passed": 16,
+    "failed": 4
   }
 }

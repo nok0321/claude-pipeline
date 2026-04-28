@@ -11,14 +11,6 @@
       "pass": false
     },
     {
-      "query": "Robust review on file src/handlers/checkout.ts. I want axis 1 (security) and axis 2 (robustness) findings — injection, unwrap, edge cases, concurrency.",
-      "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
-      "runs": 3,
-      "pass": false
-    },
-    {
       "query": "Pre-merge security audit on the new payment integration (src/payment/). Authorization, session handling, race conditions — go deep, this is going to prod tomorrow.",
       "should_trigger": true,
       "trigger_rate": 0.0,
@@ -27,15 +19,15 @@
       "pass": false
     },
     {
-      "query": "deep sec review on src/api/ before release pls. dont miss anything — were getting audited next week",
+      "query": "Robust review on file src/handlers/checkout.ts. I want axis 1 (security) and axis 2 (robustness) findings — injection, unwrap, edge cases, concurrency.",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
       "runs": 3,
       "pass": false
     },
     {
-      "query": "Run robust-review --all on the impl-orchestrator output for the inventory component. Stage 4 review — security/robustness/spec axes in parallel.",
+      "query": "deep sec review on src/api/ before release pls. dont miss anything — were getting audited next week",
       "should_trigger": true,
       "trigger_rate": 0.0,
       "triggers": 0,
@@ -51,10 +43,26 @@
       "pass": false
     },
     {
+      "query": "Run robust-review --all on the impl-orchestrator output for the inventory component. Stage 4 review — security/robustness/spec axes in parallel.",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
+      "runs": 3,
+      "pass": false
+    },
+    {
       "query": "Audit src/api/handlers/ for all the standard issues — SQL injection, command injection, XSS, panic sources, missing input validation, race conditions.",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "review src/auth deep, im paranoid about the new oauth flow and the new redirect logic in particular",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
       "runs": 3,
       "pass": false
     },
@@ -67,23 +75,15 @@
       "pass": false
     },
     {
-      "query": "review src/auth deep, im paranoid about the new oauth flow and the new redirect logic in particular",
-      "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
-      "runs": 3,
-      "pass": false
-    },
-    {
       "query": "Security/robustness deep dive on the new search query parser (src/search/parser.ts) before we ship it. Specifically injection via search terms.",
       "should_trigger": true,
-      "trigger_rate": 0.0,
-      "triggers": 0,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
       "runs": 3,
-      "pass": false
+      "pass": true
     },
     {
-      "query": "Help me write a regex for IPv6 addresses with abbreviated zero groups.",
+      "query": "Quick PR review on src/utils/format.ts — 5 min Critical/Warning/Info pass.",
       "should_trigger": false,
       "trigger_rate": 0.0,
       "triggers": 0,
@@ -107,7 +107,7 @@
       "pass": true
     },
     {
-      "query": "Quick PR review on src/utils/format.ts — 5 min Critical/Warning/Info pass.",
+      "query": "Help me write a regex for IPv6 addresses with abbreviated zero groups.",
       "should_trigger": false,
       "trigger_rate": 0.0,
       "triggers": 0,
@@ -123,7 +123,7 @@
       "pass": true
     },
     {
-      "query": "Light review on my last commit, just structure and naming. No deep audit needed.",
+      "query": "How do I store API keys securely in a Node.js app — env vars, secret manager, vault?",
       "should_trigger": false,
       "trigger_rate": 0.0,
       "triggers": 0,
@@ -131,7 +131,7 @@
       "pass": true
     },
     {
-      "query": "How do I store API keys securely in a Node.js app — env vars, secret manager, vault?",
+      "query": "Light review on my last commit, just structure and naming. No deep audit needed.",
       "should_trigger": false,
       "trigger_rate": 0.0,
       "triggers": 0,
@@ -165,7 +165,7 @@
   ],
   "summary": {
     "total": 20,
-    "passed": 10,
-    "failed": 10
+    "passed": 11,
+    "failed": 9
   }
 }

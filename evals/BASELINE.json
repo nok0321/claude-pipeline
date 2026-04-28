@@ -1,7 +1,7 @@
 {
   "phase": "baseline",
   "model": "claude-opus-4-7",
-  "timestamp": "2026-04-28T03:08:32.871290+00:00",
+  "timestamp": "2026-04-28T04:11:00.231471+00:00",
   "skills": {
     "boundary-test": {
       "trigger_rate_overall": 0.417,
@@ -171,101 +171,101 @@
       }
     },
     "robust-fix": {
-      "trigger_rate_overall": 0.0,
-      "should_trigger_rate": 0.0,
+      "trigger_rate_overall": 0.3,
+      "should_trigger_rate": 0.6,
       "should_not_trigger_rate": 1.0,
-      "passed": 10,
+      "passed": 16,
       "total": 20,
       "by_tag": {
-        "explicit": 0.0,
-        "implicit": 0.0,
-        "casual": 0.0,
-        "near-miss-robust-review": 0.0,
-        "generic": 0.0,
-        "near-miss-spec-fix": 0.0,
+        "explicit": 0.5,
+        "implicit": 0.833,
+        "casual": 0.333,
         "near-miss-fix-with-verify": 0.0,
+        "near-miss-robust-review": 0.0,
+        "near-miss-spec-fix": 0.0,
+        "generic": 0.0,
         "near-miss-impl-orchestrator": 0.0,
         "near-miss-code-review": 0.0
       }
     },
     "robust-review": {
-      "trigger_rate_overall": 0.0,
-      "should_trigger_rate": 0.0,
+      "trigger_rate_overall": 0.1,
+      "should_trigger_rate": 0.2,
       "should_not_trigger_rate": 1.0,
-      "passed": 10,
+      "passed": 11,
       "total": 20,
       "by_tag": {
-        "explicit": 0.0,
-        "implicit": 0.0,
-        "casual": 0.0,
-        "generic": 0.0,
+        "explicit": 0.167,
+        "implicit": 0.25,
+        "casual": 0.167,
+        "near-miss-code-review": 0.0,
         "near-miss-spec-check": 0.0,
         "near-miss-robust-fix": 0.0,
-        "near-miss-code-review": 0.0,
+        "generic": 0.0,
         "near-miss-fix-with-verify": 0.0,
         "near-miss-impl-orchestrator": 0.0
       }
     },
     "spec-audit": {
-      "trigger_rate_overall": 0.0,
-      "should_trigger_rate": 0.0,
+      "trigger_rate_overall": 0.45,
+      "should_trigger_rate": 0.9,
       "should_not_trigger_rate": 1.0,
-      "passed": 10,
+      "passed": 19,
       "total": 20,
       "by_tag": {
-        "implicit": 0.0,
-        "explicit": 0.0,
-        "casual": 0.0,
-        "near-miss-design-phase": 0.0,
-        "near-miss-spec-fix": 0.0,
+        "explicit": 1.0,
+        "implicit": 0.667,
+        "casual": 1.0,
         "near-miss-spec-check": 0.0,
+        "near-miss-spec-fix": 0.0,
+        "near-miss-design-phase": 0.0,
         "generic": 0.0,
         "near-miss-robust-review": 0.0
       }
     },
     "spec-check": {
-      "trigger_rate_overall": 0.0,
-      "should_trigger_rate": 0.0,
+      "trigger_rate_overall": 0.4,
+      "should_trigger_rate": 0.8,
       "should_not_trigger_rate": 1.0,
-      "passed": 10,
+      "passed": 18,
       "total": 20,
       "by_tag": {
-        "explicit": 0.0,
-        "casual": 0.0,
-        "implicit": 0.0,
+        "explicit": 0.75,
+        "implicit": 1.0,
+        "casual": 0.5,
         "near-miss-spec-audit": 0.0,
         "near-miss-spec-fix": 0.0,
         "generic": 0.0,
         "near-miss-design-phase": 0.0,
-        "near-miss-robust-review": 0.0,
         "near-miss-impl-orchestrator": 0.0,
+        "near-miss-robust-review": 0.0,
         "near-miss-code-review": 0.0
       }
     },
     "spec-fix": {
-      "trigger_rate_overall": 0.0,
-      "should_trigger_rate": 0.0,
+      "trigger_rate_overall": 0.233,
+      "should_trigger_rate": 0.467,
       "should_not_trigger_rate": 1.0,
-      "passed": 10,
+      "passed": 14,
       "total": 20,
       "by_tag": {
-        "implicit": 0.0,
-        "explicit": 0.0,
-        "casual": 0.0,
+        "explicit": 0.5,
+        "implicit": 0.333,
+        "casual": 0.667,
+        "near-miss-impl-orchestrator": 0.0,
         "near-miss-spec-check": 0.0,
         "generic": 0.0,
-        "near-miss-impl-orchestrator": 0.0,
         "near-miss-design-phase": 0.0,
-        "near-miss-spec-audit": 0.0,
         "near-miss-fix-with-verify": 0.0,
+        "near-miss-spec-audit": 0.0,
         "near-miss-robust-fix": 0.0
       }
     }
   },
   "summary": {
     "total_skills": 15,
-    "avg_trigger_rate": 0.194,
-    "avg_pass_rate": 0.697,
-    "skills_above_pass_threshold_0.7": 8
+    "avg_trigger_rate": 0.293,
+    "avg_pass_rate": 0.79,
+    "skills_above_pass_threshold_0.7": 12
   }
 }

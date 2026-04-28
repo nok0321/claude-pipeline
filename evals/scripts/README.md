@@ -1,20 +1,23 @@
 # evals/scripts/
 
-Wrapper scripts that drive the skill-creator eval framework against the 15
-custom skills in this repository.
+Self-contained eval framework for measuring trigger rates of the 15 custom
+skills in this repository. No dependency on the upstream skill-creator
+framework — see [Design rationale](#design-rationale) below for why.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `run_baseline.sh` | Iterates 15 skills × 20 (or 10) queries × 3 runs through `run_eval.py`, saves per-skill JSON to `evals/results/<phase>/` |
+| `run_eval_compat.py` | Per-skill trigger eval. Spawns `claude -p` subprocesses, parses streaming JSON for `Skill` tool_use events, writes per-query results in the same schema as skill-creator's `run_eval.py` |
+| `run_baseline.sh` | Iterates 15 skills × 20 (or 10) queries × N runs through `run_eval_compat.py`, saves per-skill JSON to `evals/results/<phase>/` |
 | `aggregate.py` | Reads per-skill JSONs and produces a single summary (`BASELINE.json`, `PHASE1.json`, `POST.json`) with metrics broken down by tag |
 
 ## Prerequisites
 
 1. `claude` CLI on `PATH`
 2. `python` 3.10+
-3. skill-creator framework at `~/.claude/plugins/marketplaces/claude-plugins-official/plugins/skill-creator/skills/skill-creator/` (override with `SKILL_CREATOR_DIR=` env var)
+
+That's it — `run_eval_compat.py` is fully self-contained.
 
 ## Quick start (Phase 0 baseline)
 
@@ -38,12 +41,23 @@ bash evals/scripts/run_baseline.sh evals/results/post
 python evals/scripts/aggregate.py evals/results/post --phase post > evals/POST.json
 ```
 
+> **Important:** Do not edit any `skills/*/SKILL.md` while a baseline run
+> is in flight. `run_eval_compat.py` evaluates the **real, installed
+> skill** (see Design rationale §2) so concurrent edits contaminate the
+> measurement.
+
 ## Subset runs
 
-Run a specific subset of skills (useful when iterating on description changes):
+Run a specific subset of skills (useful when iterating on description
+changes, or when re-measuring after a rate-limited run):
 
 ```bash
 ONLY_SKILLS="spec-audit code-review" bash evals/scripts/run_baseline.sh
+
+# Re-measure with reduced parallelism to avoid rate limits
+ONLY_SKILLS="robust-fix robust-review spec-audit spec-check spec-fix" \
+  WORKERS=3 \
+  bash evals/scripts/run_baseline.sh evals/results/baseline-resub
 ```
 
 Other env overrides:
@@ -51,14 +65,15 @@ Other env overrides:
 | Var | Default | Purpose |
 |-----|---------|---------|
 | `MODEL` | `claude-opus-4-7` | Model for `claude -p` subprocess |
-| `WORKERS` | `10` | Parallel workers per skill (within `run_eval.py`) |
+| `WORKERS` | `10` | Parallel workers per skill (within `run_eval_compat.py`). Drop to `3` if you hit rate limits |
 | `TIMEOUT` | `30` | Per-query timeout (seconds) |
 | `RUNS` | `3` | Runs per query for variance smoothing |
 
 ## Cost / time estimate
 
 - 15 skills × ~17 queries (avg of 20+10) × 3 runs ≈ **765 `claude -p` invocations**
-- With `WORKERS=10`, expect 30〜60 minutes wall clock
+- With `WORKERS=10`, expect 30–60 minutes wall clock
+- With `WORKERS=3`, expect ~2× longer but no rate-limit hits
 - Cost: depends on prompt-cache hit rate; first run is most expensive
 
 ## Output schema (BASELINE.json)
@@ -94,9 +109,58 @@ Other env overrides:
 }
 ```
 
+## Design rationale
+
+`run_eval_compat.py` is a port of skill-creator's `scripts/run_eval.py`,
+diverging in three ways. Both divergences came from real failures during
+Phase 0:
+
+### 1. Threading-based stdout reader (Windows compatibility)
+
+The upstream `run_eval.py` reads from the `claude -p` subprocess pipe with
+`select.select()`. On Windows this raises `WinError 10038` because the
+Win32 `select` API only accepts socket handles, not file handles. We
+replace it with a reader thread that feeds a `queue.Queue`, which works
+identically on Windows / Linux / macOS.
+
+### 2. No "probe skill" injection
+
+The upstream `run_eval.py` creates a unique probe skill at
+`.claude/skills/<unique-id>/SKILL.md` so each eval has its own isolated
+description and trigger event. In practice **claude-opus-4-7 (claude-code
+2.1.119) flags uniquely-named skills as prompt-injection bait and refuses
+to invoke them**, falling back to whichever real skill matches the query.
+The eval becomes meaningless — the probe is never selected.
+
+`run_eval_compat.py` instead evaluates the **real, installed skill**
+directly by detecting whether `claude -p` emits a `tool_use` event with
+`name="Skill"` and `input.skill` matching the target skill name.
+
+Trade-off: we cannot evaluate hypothetical description rewrites without
+temporarily editing the real `SKILL.md`. The Phase 1 → Phase 5 workflow
+is therefore: edit `SKILL.md` → run baseline → analyze → iterate.
+
+### 3. Output JSON schema preserved
+
+The result JSON shape (`skill_name`, `description`, `results[]`,
+`summary{}`) matches `run_eval.py` exactly so `aggregate.py` consumes
+results uniformly regardless of which runner produced them.
+
 ## Troubleshooting
 
-- **"`run_eval.py` not found"**: Set `SKILL_CREATOR_DIR=...` to point at the directory containing `scripts/run_eval.py`. The default path assumes the official `claude-plugins-official` marketplace is installed
-- **All evals timing out**: Increase `TIMEOUT=60` (some skills may be slower to surface as a `Skill` tool call). Check the per-skill `*.stderr.log` files
-- **Some skills fail with import errors**: Confirm `PYTHONPATH` is being set correctly. The wrapper sets `PYTHONPATH=$SKILL_CREATOR_DIR` and uses `python -m scripts.run_eval` to allow the `from scripts.utils import parse_skill_md` import inside `run_eval.py` to resolve
-- **Trigger rate suspiciously high for `should_not_trigger`**: This indicates the description is over-pushy and the skill triggers on near-miss queries. Note the tag in `by_tag` — Phase 1 description rewrites should reduce it
+- **`run_eval_compat.py` not found**: Ensure you are running from the repo
+  root and that `evals/scripts/run_eval_compat.py` is committed.
+- **All evals timing out**: Increase `TIMEOUT=60` (some skills may be
+  slower to surface as a `Skill` tool_use). Check the per-skill
+  `*.stderr.log` files in the results directory.
+- **Some skills show `trigger_rate_overall: 0.0` across the board**:
+  Likely a rate limit. Re-run that subset with `WORKERS=3`. The `claude
+  -p` subprocesses degrade silently to "no response" when rate-limited,
+  which `run_eval_compat.py` correctly records as no `Skill` invocation.
+- **Trigger rate suspiciously high for `should_not_trigger`**: The
+  description is over-pushy and the skill triggers on near-miss queries.
+  Note the tag in `by_tag` — Phase 1 description rewrites should reduce
+  it.
+- **Permission prompt appears mid-run**: `run_eval_compat.py` uses
+  `claude -p --permission-mode bypassPermissions` to suppress prompts.
+  If you see one, your CLI version may differ — check `claude --help`.
