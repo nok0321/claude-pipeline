@@ -8,12 +8,16 @@ model: claude-opus-4-7
 
 # Implementation orchestrator
 
-Drive the spec-to-shipped loop:
+Drive the spec-to-shipped loop in 4 stages (Phase 2 P4 simplification — was 6 stages):
 
 ```
-Stage 1: Setup → Stage 2: Implementation (sonnet) → Stage 3: Verification gate
-  → Stage 4: Parallel review (opus ×3) → Stage 5: Resolve findings → Stage 6: Done check
+Stage 1: Setup
+  → Stage 2: Implement & Verify (sonnet + gate)
+  → Stage 3: Review & Remediate (opus ×3 + safe-fix)
+  → Stage 4: Iterate or Finalize
 ```
+
+The 4-stage shape merges the previous Stage 2+3 (implementation and the verification gate now run as a single pair with in-stage fix attempts) and Stage 4+5 (parallel review feeds directly into safe-fix dispatch and the escalation queue without an intermediate hand-off).
 
 ---
 
@@ -26,7 +30,7 @@ design_files:     []     # corresponding DESIGN/*.md
 impl_files:       []     # implementation files
 gate_results:     {}     # verification gate output
 findings:         []     # accumulated review findings
-escalation_queue: []     # Tier 1 items
+escalation_queue: []     # Tier 1 items (mirror to PIPELINE-STATE.md, see ARCHITECTURE.md §B)
 ```
 
 ---
@@ -37,17 +41,13 @@ escalation_queue: []     # Tier 1 items
 
 From CLAUDE.md:
 
-1. **Component Mapping** — components ↔ specs ↔ implementation directories
-   ```
-   ## Component Mapping
-   | Component | Spec | Implementation directory |
-   ```
+1. **Component Mapping** — components ↔ specs ↔ implementation directories.
    Missing this section: **escalate** ("Component Mapping not defined in CLAUDE.md — please define"). Why: the orchestrator has no canonical place to write the implementation otherwise.
 
-2. **Commands** — build / test / lint commands
+2. **Commands** — build / test / lint commands.
 3. **Critical Constraints** — data-format ordering, architecture rules, etc.
-4. **Project-Specific Checks** — extra checks
-5. **Escalation Overrides** — only when present
+4. **Project-Specific Checks** — extra checks.
+5. **Escalation Overrides** — only when present (applied per ARCHITECTURE.md §A).
 
 ### 1-2: Read the specs
 
@@ -55,10 +55,11 @@ Load every `DESIGN/*.md` corresponding to the target component.
 
 - Argument `all` → process every component in the mapping in dependency order.
 - No explicit ordering → infer from each spec's dependency section.
+- DESIGN/*.md absent → fall back to `design-phase` via Agent delegation (entry-point fallback per ARCHITECTURE.md §3.3).
 
 ### 1-3: Check PIPELINE-STATE.md
 
-When present, read prior context (plan summary, escalation queue).
+When present, read prior context (plan summary, escalation queue) per ARCHITECTURE.md §B.
 When absent, run in standalone mode.
 
 ### 1-4: Build the implementation plan
@@ -67,11 +68,11 @@ Enumerate implementation units (file granularity) from the specs and order them 
 
 ---
 
-## Stage 2: Implementation (sonnet sub-agent)
-
-Delegate code generation to a sonnet sub-agent. Why sonnet: implementation is high-volume, judgment is captured downstream by opus reviewers and the verification gate.
+## Stage 2: Implement & Verify (sonnet sub-agent + mechanical gate)
 
 ### 2-1: Spawn the implementer
+
+Delegate code generation to a sonnet sub-agent. Why sonnet: implementation is high-volume; judgment is captured downstream by opus reviewers and the verification gate.
 
 ```
 Agent(
@@ -103,64 +104,41 @@ Agent(
 
 Pull the file list from the agent's report into `impl_files`.
 
----
+### 2-3: Verification gate
 
-## Stage 3: Verification gate
+Mechanical, no judgment required. **All gates must pass.** Use CLAUDE.md `## Commands` first; otherwise fall back by marker file:
 
-Mechanical, no judgment required. **All gates must pass.**
+| Gate | Marker | Fallback command |
+|------|--------|------------------|
+| Build | Cargo.toml | `cargo check --workspace` |
+|       | package.json | `npm run build` or `npx tsc --noEmit` |
+|       | build.gradle / pom.xml | `./gradlew compileJava` or `mvn compile` |
+|       | go.mod | `go build ./...` |
+| Type / lint | Cargo.toml | `cargo clippy --workspace -- -D warnings` |
+|             | tsconfig.json + svelte | `npx svelte-check` |
+|             | tsconfig.json | `npx tsc --noEmit` |
+|             | pyproject.toml / ruff.toml | `ruff check .` |
+|             | go.mod | `go vet ./...` |
+| Test | Cargo.toml | `cargo test --workspace` |
+|      | package.json | `npm test` |
+|      | build.gradle | `./gradlew test` |
+|      | go.mod | `go test ./...` |
+| Boundary | `**/boundary_*.{rs,ts,test.ts,java}` glob match | covered by the regular test suite |
 
-### 3-1: Build
-
-Use CLAUDE.md Commands first. Otherwise, fall back by marker file:
-
-| Marker | Command |
-|--------|---------|
-| Cargo.toml | `cargo check --workspace` |
-| package.json | `npm run build` or `npx tsc --noEmit` |
-| build.gradle / pom.xml | `./gradlew compileJava` or `mvn compile` |
-| go.mod | `go build ./...` |
-
-### 3-2: Type check / lint
-
-| Marker | Command |
-|--------|---------|
-| Cargo.toml | `cargo clippy --workspace -- -D warnings` |
-| tsconfig.json + svelte | `npx svelte-check` |
-| tsconfig.json | `npx tsc --noEmit` |
-| pyproject.toml / ruff.toml | `ruff check .` |
-| go.mod | `go vet ./...` |
-
-### 3-3: Test suite
-
-| Marker | Command |
-|--------|---------|
-| Cargo.toml | `cargo test --workspace` |
-| package.json | `npm test` |
-| build.gradle | `./gradlew test` |
-| go.mod | `go test ./...` |
-
-### 3-4: Boundary contract tests (optional)
-
-```
-Glob: **/boundary_*.{rs,ts,test.ts,java}
-```
-
-If found, they are part of the regular test suite and covered by 3-3.
-
-### 3-5: Gate failure handling
+### 2-4: Gate failure handling
 
 1. Parse the error and identify the cause.
-2. Try up to three autonomous fixes:
+2. Try up to **three autonomous fixes**:
    - Compile error → fix per the message.
    - Test failure → reconcile expected vs implemented behavior.
    - Lint warning → patch per the warning.
-3. Three failures → **escalate**:
+3. Three failures → **escalate** as Tier 1 (per ARCHITECTURE.md §A):
    ```
    Tier 1: verification gate fails after max retries
    Issue: <gate name> still failing after three fix attempts. Error: <summary>
    ```
 
-### 3-6: Record results
+### 2-5: Record results
 
 ```
 gate_results: {
@@ -173,11 +151,11 @@ gate_results: {
 
 ---
 
-## Stage 4: Parallel review (opus sub-agents ×3)
+## Stage 3: Review & Remediate (opus reviewers ×3 + safe-fix)
 
-After every gate passes, spawn three opus reviewers **simultaneously in a single message**. Why parallel: the review axes are independent, and parallelism keeps wall time manageable.
+After every gate passes, spawn three opus reviewers **simultaneously in a single message**, then dispatch findings to safe-fix and the escalation queue.
 
-### 4-1: Prepare review prompts
+### 3-1: Prepare review prompts
 
 Read `REVIEW-AGENTS.md` and expand placeholders:
 
@@ -188,107 +166,70 @@ Read `REVIEW-AGENTS.md` and expand placeholders:
 | `{project_checks}` | Critical Constraints + Project-Specific Checks |
 | `{component_mapping}` | CLAUDE.md Component Mapping |
 
-### 4-2: Spawn
+### 3-2: Spawn the three reviewers
 
-**Send all three Agent calls in one message.**
+**Send all three Agent calls in one message.** Why parallel: the review axes are independent, and parallelism keeps wall time manageable.
 
 ```
-Agent(
-  description: "Security review: <component>",
-  model: "opus",
-  prompt: "<expanded REVIEW-AGENTS.md Agent 1 template>"
-)
-
-Agent(
-  description: "Robustness review: <component>",
-  model: "opus",
-  prompt: "<expanded REVIEW-AGENTS.md Agent 2 template>"
-)
-
-Agent(
-  description: "Spec compliance review: <component>",
-  model: "opus",
-  prompt: "<expanded REVIEW-AGENTS.md Agent 3 template>"
-)
+Agent(description: "Security review: <component>",   model: "opus", prompt: "<robust-review template, security axis>")
+Agent(description: "Robustness review: <component>", model: "opus", prompt: "<robust-review template, robustness axis>")
+Agent(description: "Spec compliance: <component>",   model: "opus", prompt: "<spec-audit --mode=conformance>")
 ```
 
-### 4-3: Fallback on agent failure
+### 3-3: Fallback on agent failure
 
-- Timeout (>5 min) → skip that axis and record:
-  ```
-  { agent: "security", status: "timeout", note: "post-report: security review timed out" }
-  ```
+- Timeout (>5 min) → skip that axis and record `{ agent: "<axis>", status: "timeout" }`.
 - Error exit → same with status `error`.
 - Continue with the remaining axes.
 
-### 4-4: Merge findings
+### 3-4: Merge findings
 
 Pull findings from all three outputs into `findings`. Deduplicate by file + line, keeping the higher severity.
 
----
+### 3-5: Dispatch via safe-fix and escalation
 
-## Stage 5: Resolve findings
+Classify each finding via the framework in ARCHITECTURE.md §A. Apply CLAUDE.md `## Escalation Overrides` first.
 
-### 5-1: Escalation classification
+| Tier | Action |
+|------|--------|
+| **Tier 1** (must escalate) | Push to `escalation_queue`, mirror to `PIPELINE-STATE.md` (§B). **Do not block.** Continue handling other findings; report at end. |
+| **Tier 2** (auto-fix + post-report) | Hand off to `safe-fix` via Agent (`--mode=robust` for SEC-*/ROB-*, `--mode=conformance` for SPEC-*/AUDIT-*). safe-fix re-runs the Stage 2 verification gate after each patch and reverts on failure. Log the auto-fix entry for the post-report. |
+| **Tier 3** (auto-fix silent) | Same as Tier 2 but no log entry. |
 
-Classify each finding via the `escalation` framework. Apply CLAUDE.md `## Escalation Overrides` first.
-
-### 5-2: Tier 1 (must escalate)
-
-- Push to `escalation_queue`.
-- Mirror onto `PIPELINE-STATE.md`'s queue if it exists.
-- **Do not block.** Continue handling other findings and report at the end.
-
-### 5-3: Tier 2 (auto-fix + post-report)
-
-1. Apply the fix.
-2. Re-run **Stage 3 verification gate** end-to-end (must pass again).
-3. Log for the post-report:
-   ```
-   [auto-fix] SEC-1 | Critical | <handler>:<line>
-     Change: format!() → .bind() (SQL injection mitigation)
-     Verification: <test command> → pass
-   ```
-
-### 5-4: Tier 3 (auto-fix silent)
-
-1. Apply the fix.
-2. Verify the gate still passes.
-
-### 5-5: Design-change loop
+### 3-6: Design-change loop
 
 When a review surfaces "spec is missing requirements" or "fundamental design issue":
 
 1. **First time**: update `DESIGN/*.md` and return to Stage 2 to re-implement.
-2. **Second time and beyond**: escalate. Why the cap: an unbounded design-change loop indicates the original requirement was wrong, which is a Tier 1 issue.
+2. **Second time and beyond**: escalate as Tier 1. Why the cap: an unbounded design-change loop indicates the original requirement was wrong, which is a Tier 1 issue per ARCHITECTURE.md §A.
 
 ---
 
-## Stage 6: Done check
+## Stage 4: Iterate or Finalize
 
-### 6-1: State
+### 4-1: State
 
 ```
 open_findings = findings.filter(status == "open")
 tier1_pending = escalation_queue.filter(status == "pending")
 ```
 
-### 6-2: Decision
+### 4-2: Decision
 
 | Condition | Action |
 |-----------|--------|
 | `open_findings == 0` | **Done** — emit the report |
-| `open_findings > 0` ∧ `iteration < 3` | `iteration += 1` → Stage 4 |
+| `open_findings > 0` ∧ `iteration < 3` | `iteration += 1` → return to Stage 3 |
 | `iteration == 3` | **Stop** — report remaining findings |
 
-### 6-3: PIPELINE-STATE.md update
+### 4-3: PIPELINE-STATE.md update
 
-When present, update the implementation table:
+When present, update the implementation table per ARCHITECTURE.md §B:
 ```
 | <component> | done | build:<result> type:<result> test:<result> | security:<result> robustness:<result> spec:<result> |
 ```
 
-### 6-4: Context management
+### 4-4: Context management
 
 Per component, when running `all`:
 - Estimate context size before moving to the next component.
@@ -317,7 +258,7 @@ Per component, when running `all`:
   Spec:        Missing: <n> / Diverged: <n> / Extra: <n> / Constraint: <n>
 
 ■ Resolution
-  Auto-fixed:  <n> (Tier 2 + Tier 3)
+  Auto-fixed:  <n> (Tier 2 + Tier 3 via safe-fix)
   Escalated:   <n> (Tier 1, see below)
 
 ═══ Auto-fix log (Tier 2: post-report) ═══
@@ -350,7 +291,9 @@ Per component, when running `all`:
 ## Constraints
 
 - Component Mapping missing → escalate at Stage 1 and stop. Why: hard-coding paths inside the skill defeats the dynamic-config principle in ARCHITECTURE.md §6.
+- DESIGN/*.md missing → fall back to `design-phase` via Agent (impl-orchestrator is the entry point per ARCHITECTURE.md §3.3).
 - Build / test commands must come from CLAUDE.md `## Commands` first (auto-detect is fallback only).
 - Reviewers run on opus (judgment quality), implementers on sonnet (cost efficiency).
-- Design-change reverse flow caps at one iteration. Why: see Stage 5-5.
+- Design-change reverse flow caps at one iteration per Stage 3-6.
+- Tier classification uses ARCHITECTURE.md §A; remediation uses safe-fix (Mode A or B).
 - For `all`, recommend a checkpoint between components when context is bloated.
