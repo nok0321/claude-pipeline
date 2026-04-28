@@ -1,0 +1,91 @@
+{
+  "skill_name": "escalation",
+  "description": "パイプライン全体で参照されるエスカレーション判断基準。Finding を Tier 1（必ずユーザー確認）/ Tier 2（自律対応＋事後報告）/ Tier 3（自律対応・報告不要）の3段階に分類する。USE WHEN 各スキル内の Finding 分類、CLAUDE.md の Escalation Overrides の検証、判断に迷った時の指針確認。SKIP 直接的な修正実行は別スキル（fix-with-verify, robust-fix, spec-fix）の領域。",
+  "results": [
+    {
+      "query": "robust-review found a S-Critical finding about session token storage. The fix involves changing the data model — should this be Tier 1 (user confirmation) or Tier 2 (autonomous fix + report)? Apply the escalation framework.",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "I have 12 findings from spec-check and don't know which to surface to the user vs auto-fix. Help me classify them per the Tier 1/2/3 criteria — some are Constraint violations, some are Diverged.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Classify this finding using the Tier framework: 'Implementation in src/payment/refund.ts uses a new field `partial_refund_amount` not present in DESIGN/03_payment.md.' Tier 1, 2, or 3?",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "verification gate failed twice in a row on the auth component, is this tier 1 escalation territory or do i retry one more time?",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Looking at the Escalation Overrides section in CLAUDE.md — want to verify that promoting 'unwrap in production code' to Tier 1 actually overrides the default Tier 2 from the framework.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Fix the failing test in tests/auth.test.ts and verify regression tests still pass.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Auto-fix all S-Critical findings from the last robust-review run on src/auth/.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "What does Tier 1 support mean in AWS pricing for enterprise customers?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "How do escalation policies work in PagerDuty for on-call rotations?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Apply spec-fix to the 8 Diverged findings between DESIGN/02_payment.md and src/payment/.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "passed": 6,
+    "failed": 4
+  }
+}

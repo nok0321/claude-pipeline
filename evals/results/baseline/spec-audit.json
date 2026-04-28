@@ -1,0 +1,171 @@
+{
+  "skill_name": "spec-audit",
+  "description": "DESIGN/*.md 仕様書間の矛盾（型名揺れ、フィールド不一致、API契約不一致、依存循環、DBスキーマ不整合、用語不統一、定数不整合）を検出する。USE WHEN 設計書を追加/更新した後の自己検証、design-phase からの自動呼び出し、PR で DESIGN/*.md 変更がある時の事前チェック。SKIP 仕様↔実装の差分検出は spec-check、自動修正は spec-fix を使うこと。",
+  "results": [
+    {
+      "query": "We have 8 markdown files under DESIGN/ and I keep finding little inconsistencies between them when I read implementation. Can you do a sweep across the design docs and surface anything that looks off?",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "I've updated 3 of our component design docs (DESIGN/02_user.md, DESIGN/04_order.md, DESIGN/06_inventory.md) to add the new pagination spec. Before I open the PR, can you make sure none of the API contracts have drifted across docs?",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Just added DESIGN/03_payment.md and DESIGN/04_refund.md. Could you check if the field names align with the existing 5 design docs? I'm worried about TransactionId vs transaction_id inconsistency.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "yo can u sanity check the design docs in DESIGN/ for me, especially the type names. been refactoring all afternoon and im seeing UserId vs user_id all over the place",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "I want to verify type names are consistent between DESIGN/01_user.md and DESIGN/02_order.md. Things like UserId vs user_id will bite us in the implementation phase later.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Run a cross-document audit on our spec markdowns under DESIGN/ — I want to catch type name variations, field mismatches, and any circular dependencies before the freeze tomorrow morning.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Editing the auth component spec right now, but I'm worried about constant drift across components. CONST_TIMEOUT might have different values between DESIGN/auth.md and the other yaml configs we have under DESIGN/configs/.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Audit the 6 design docs we just generated from design-phase as a batch. I want type, API contract, and DB schema inconsistencies surfaced before review.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "We have a constant CONNECT_TIMEOUT_MS defined in DESIGN/01_gateway.md and DESIGN/05_worker.md but I'm seeing different values (3000 vs 5000). Can you sweep all design docs for this kind of constant mismatch?",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "wanna do a one-shot check on the spec markdowns in DESIGN/, anything misaligned in field names? been touching all of them last week and lost track",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Generate a brand new design document for the payment retry workflow, we don't have one yet — start from plans/PAYMENT-RETRY.md.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "I have a list of 12 spec mismatches from the last spec-check run, can you fix the implementation to match the design?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Compare my implementation in src/auth/ against DESIGN/01_auth.md and tell me if anything is missing or diverged from the spec.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Audit the security logs from last month for unauthorized access attempts to /admin endpoints. The logs are in /var/log/access.log",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Rename the variable getUserData to fetchUser across the codebase, including all .ts and .tsx files.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Verify whether the src/order/ implementation matches DESIGN/03_order.md — list out Missing items and Diverged fields between the spec and the actual code.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Deep security review on the auth code under src/auth/ — focus on injection vectors and authorization logic, give me S-Critical and S-High findings.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "I want to implement an audit log feature and need a spec for the log format. How should I structure it for ELK ingestion?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Update the dependencies in package.json to their latest versions — npm outdated shows several upgradable packages including react and zod.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Write DESIGN/04_payment.md from scratch for the new payment component, ignore the existing docs for now.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 20,
+    "passed": 10,
+    "failed": 10
+  }
+}

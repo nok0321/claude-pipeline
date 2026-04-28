@@ -1,0 +1,13 @@
+Evaluating skill='pipeline-state' against 10 queries...
+  description (first 100 chars): dev-pipeline のフェーズ間状態管理。PIPELINE-STATE.md の init/update/read/transition を提供する。USE WHEN dev-pipeline ...
+Results: 7/10 passed
+  [FAIL] rate=0/3 expected=True: Read the current pipeline state — I want to know which phase we're in,
+  [PASS] rate=3/3 expected=True: Initialize PIPELINE-STATE.md for the new task 'auth-rewrite'. Componen
+  [FAIL] rate=0/3 expected=True: Update PIPELINE-STATE.md — we just finished Phase 1 (design) and are t
+  [FAIL] rate=0/3 expected=True: transition pipeline to phase 3 (test phase), update the state file wit
+  [PASS] rate=3/3 expected=True: I need to record that the auth component implementation is done but sp
+  [PASS] rate=0/3 expected=False: Save a checkpoint before I /clear — long task, want to resume tomorrow
+  [PASS] rate=0/3 expected=False: Restore the last checkpoint and tell me where we left off. CHECKPOINT.
+  [PASS] rate=0/3 expected=False: What's the typical phase structure of a software development pipeline 
+  [PASS] rate=0/3 expected=False: How do I set up a Jenkins pipeline for a Node.js project with parallel
+  [PASS] rate=0/3 expected=False: Run the full dev-pipeline on the new chat feature from plans/CHAT.md.

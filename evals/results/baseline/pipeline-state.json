@@ -1,0 +1,91 @@
+{
+  "skill_name": "pipeline-state",
+  "description": "dev-pipeline のフェーズ間状態管理。PIPELINE-STATE.md の init/update/read/transition を提供する。USE WHEN dev-pipeline 各フェーズ境界での進捗記録、複数セッションに跨る構造化進捗管理、エスカレーションキューの操作。SKIP 単一セッションの作業引き継ぎは checkpoint、自由形式のメモは別途。",
+  "results": [
+    {
+      "query": "Read the current pipeline state — I want to know which phase we're in, what's pending, and which components have escalations queued. PIPELINE-STATE.md is in the project root.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Initialize PIPELINE-STATE.md for the new task 'auth-rewrite'. Components are: oauth, session-mgmt, mfa. Phase 0 starts now and we're using the standard 5-phase template.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Update PIPELINE-STATE.md — we just finished Phase 1 (design) and are transitioning to Phase 2 (impl). Mark the design components as complete and add the new impl checkboxes.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "transition pipeline to phase 3 (test phase), update the state file with the new component checklist",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "I need to record that the auth component implementation is done but spec-check flagged 3 Constraint violations. Update PIPELINE-STATE.md and add the violations to the escalation queue.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Save a checkpoint before I /clear — long task, want to resume tomorrow with full context.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Restore the last checkpoint and tell me where we left off. CHECKPOINT.md should be in the project root.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "What's the typical phase structure of a software development pipeline at companies like Spotify or Netflix?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "How do I set up a Jenkins pipeline for a Node.js project with parallel test stages?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Run the full dev-pipeline on the new chat feature from plans/CHAT.md.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 10,
+    "passed": 7,
+    "failed": 3
+  }
+}
