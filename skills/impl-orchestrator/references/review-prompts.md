@@ -82,6 +82,8 @@ Emit each finding as:
   Issue: {description}
   Attack: {attack scenario, Critical/High only}
   Fix: {concrete patch}
+
+After the human-readable list, emit a single fenced code block tagged `json` containing the same findings as an array conforming to skills/safe-fix/references/finding.schema.json. Use finding_id prefix SEC-, populate `attack` for Critical/High, and use `description` for the issue text and `fix_hint` for the patch suggestion.
 ```
 
 ---
@@ -138,6 +140,8 @@ Emit each finding as:
   Issue: {description}
   Impact: {failure scenario}
   Fix: {concrete patch}
+
+After the human-readable list, emit a single fenced code block tagged `json` containing the same findings as an array conforming to skills/safe-fix/references/finding.schema.json. Use finding_id prefix ROB-, populate `impact` for Critical/High, and use `description` for the issue text and `fix_hint` for the patch suggestion.
 ```
 
 ---
@@ -188,6 +192,8 @@ Emit each finding as:
   Spec: {spec_file:line} — {spec definition}
   Code: {impl_file:line} — {actual state}
   Recommendation: {update spec / patch implementation / append to spec}
+
+After the human-readable list, emit a single fenced code block tagged `json` containing the same findings as an array conforming to skills/safe-fix/references/finding.schema.json. Use finding_id prefix SPEC-, populate `spec_ref` from the Spec line, set `severity` per the diff class (Missing/Diverged: High; Extra: Medium; Constraint: per CLAUDE.md), and put the recommendation in `fix_hint`.
 ```
 
 ---

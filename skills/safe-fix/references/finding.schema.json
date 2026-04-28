@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://claude-pipeline.local/skills/safe-fix/finding.schema.json",
-  "title": "safe-fix Finding",
-  "description": "Informal contract for findings consumed by safe-fix from spec-audit (--mode=conformance), robust-review, and code-review. Phase 3 / Sub-J version. The contract is hardened to a formal schema in Phase 4 of REDESIGN-PLAN.md.",
+  "title": "Finding (claude-pipeline shared contract)",
+  "description": "Canonical contract for findings consumed by safe-fix from spec-audit (--mode=conformance), robust-review, and code-review. Phase 4 formalization (REDESIGN-PLAN.md §3.4 Sub-P): every upstream reviewer emits a JSON Findings block conforming to this schema; safe-fix validates input against this schema before processing. The pattern in `category` is intentionally open (free-form string) so security and robustness reviewers can use natural-language category labels; conformance reviewers must use the four enum values listed in the examples.",
   "type": "object",
   "required": ["finding_id", "severity", "category", "file", "description"],
   "additionalProperties": false,

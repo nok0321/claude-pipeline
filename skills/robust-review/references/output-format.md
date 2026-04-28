@@ -51,3 +51,14 @@ When no findings exist, report "all checks clean".
 - `Impact:` is required for Critical and High robustness findings.
 - `Fix:` is always required and must be concrete enough that
   `safe-fix --mode=robust` can act on it without further interpretation.
+
+### Schema-compliant JSON emission
+
+After the human-readable report, emit a single fenced code block tagged
+`json` containing every finding as an array conforming to
+[../../safe-fix/references/finding.schema.json](../../safe-fix/references/finding.schema.json).
+Security findings use `finding_id` prefix `SEC-` and populate `attack`
+(Critical / High only). Robustness findings use prefix `ROB-` and
+populate `impact` (Critical / High only). Project-specific findings
+emitted with prefix `SEC-` or `ROB-` per their nearest axis. This block
+is the input contract for `safe-fix --mode=robust`.

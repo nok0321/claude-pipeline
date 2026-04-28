@@ -40,13 +40,13 @@ Per-mode procedure lives in `references/mode-<mode>.md`.
 
 ## Finding input contract
 
-Findings flow in as JSON with the fields below (Phase 3 informal version
-in [references/finding.schema.json](references/finding.schema.json); a
-formal schema lands in Phase 4):
+Findings flow in as a JSON array conforming to
+[references/finding.schema.json](references/finding.schema.json) (the
+canonical Phase 4 contract). Each entry has the fields below:
 
 ```json
 {
-  "finding_id": "SPEC-1 | AUDIT-3 | SEC-1 | ROB-3",
+  "finding_id": "SPEC-1 | AUDIT-3 | SEC-1 | ROB-3 | CR-1",
   "severity": "Critical | High | Medium | Low",
   "category": "Missing | Diverged | Extra | Constraint | SQL injection | unwrap | ...",
   "file": "path:line",
@@ -55,6 +55,23 @@ formal schema lands in Phase 4):
   "fix_hint": "..."
 }
 ```
+
+### Validation step (run before any edits)
+
+1. Locate the JSON Findings block in the upstream output (a single fenced
+   code block tagged `json` after the human-readable report).
+2. Parse it; reject input that is not a JSON array of objects.
+3. For each entry, verify against
+   [references/finding.schema.json](references/finding.schema.json):
+   - `finding_id`, `severity`, `category`, `file`, `description` are
+     required; reject the whole batch if any entry omits them.
+   - `severity` must be one of `Critical | High | Medium | Low`.
+   - `finding_id` must match `^(SPEC|AUDIT|SEC|ROB|CR)-[0-9]+$`.
+   - `file` must match `^[^:]+:[0-9]+$`.
+   - `spec_ref` must match `^.+\.md:[0-9]+$` when present.
+4. On schema mismatch, emit a Tier 1 escalation describing which entries
+   failed and which fields were invalid. Do not silently filter — the
+   upstream reviewer is broken or the JSON block was hand-edited.
 
 ---
 
