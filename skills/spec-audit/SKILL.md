@@ -180,6 +180,13 @@ Cross-mode finding tag = `AUDIT-<n>`. Conformance-mode tag = `SPEC-<n>`. When `b
 
 When everything matches: report "specs are mutually consistent and aligned with the implementation".
 
+### Schema-compliant JSON emission
+
+After the human-readable report, emit a single fenced code block tagged
+`json` containing every finding as an array conforming to
+[skills/safe-fix/references/finding.schema.json](../safe-fix/references/finding.schema.json).
+Conformance findings use `finding_id` prefix `SPEC-`, cross-spec findings use `AUDIT-`. Both modes must populate `spec_ref`. This block is the input contract for `safe-fix --mode=conformance`.
+
 ---
 
 ## Pipeline integration

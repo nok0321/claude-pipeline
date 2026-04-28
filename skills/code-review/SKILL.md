@@ -129,3 +129,13 @@ Fix: ...
 ### Test additions recommended
 - <missing test case description with code sample>
 ```
+
+### Schema-compliant JSON emission
+
+After the human-readable report, emit a single fenced code block tagged
+`json` containing every finding as an array conforming to
+[../safe-fix/references/finding.schema.json](../safe-fix/references/finding.schema.json).
+Use `finding_id` prefix `CR-`. Set `category` to the matching review
+axis (`injection`, `secret`, `panic source`, `input validation`, etc.).
+Critical / High items must include `fix_hint` so `safe-fix` can act on
+them directly.
