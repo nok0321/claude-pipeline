@@ -1,204 +1,149 @@
-# Redesign Checkpoint: Phase 1 検証完了 → 共食い仮説検証＋Phase 2 着手判断
+# Redesign Checkpoint: Phase 2 完了 → Phase 3 着手
 
 Updated: 2026-04-29
 
 ## 現在地
 
-- ブランチ: `redesign/heavy` (main は触らない、Phase 6完了時に1回マージ)
+- ブランチ: `redesign/heavy` (main は触らない、Phase 6 完了時に 1 回マージ)
 - 計画書: [REDESIGN-PLAN.md](REDESIGN-PLAN.md)
-- 完了 commit:
+- 完了 commits (新しい順):
+  - `81de55e` Phase 2 Step 6: add docs/MIGRATION.md
+  - `d224ac3` Phase 2 Step 5: simplify impl-orchestrator 6→4 stages
+  - `312347c` Phase 2 Step 4: demote pipeline-state/escalation to ARCHITECTURE.md §A/§B
+  - `f8ae499` Phase 2 Step 3: add safe-fix skill (3 modes)
+  - `fa2c275` Phase 2 Step 2: integrate spec-check into spec-audit (Mode A + B)
+  - `3bace02` Phase 2 Step 1: drop 6 obsolete skills
+  - `8629c9e` Phase 2 Step 0: phase 1 verification + sub-f isolation test
+  - `c0192cc` checkpoint: phase 1 done
+  - `6fbdff7` Phase 1: 英語化 + pushy descriptions
+  - `80d9f60` Phase 0 fix: 5 skill 再測定
+  - `3f9fbeb` checkpoint: phase 0 done
+  - `2054bb7` Phase 0 baseline
+  - `db36059` Phase 0 scaffolding
   - `4991cdf` 計画書追加
-  - `db36059` Phase 0 scaffolding (250 queries + scripts + PLAN.md skill count fix)
-  - `2054bb7` Phase 0 baseline 測定結果 (15 skills, run_eval_compat.py)
-  - `3f9fbeb` checkpoint: phase 0 done, phase 1 handoff doc
-  - `80d9f60` Phase 0 fix: 5 skill 再測定 + scripts/README.md 全面書き換え
-  - `6fbdff7` Phase 1: 15 skill 英語化 + pushy description + severity 統一
-- 未 commit (作業ディレクトリのみ):
-  - `evals/PHASE1.json` Phase 1 集計結果
-  - `evals/PHASE1-DIFF.md` BASELINE vs PHASE1 markdown diff
-  - `evals/results/phase1/` per-skill 結果 + stderr.log (15 ファイル）
-  - `evals/scripts/compare.py` 比較スクリプト（新規追加, smoke-test 済）
-  - `plans/REDESIGN-CHECKPOINT.md` 本ファイル
 
-## Phase 1 eval 結果 (2026-04-28 19:41–21:08, 5044s, WORKERS=3)
+---
 
-`evals/PHASE1.json` / `evals/PHASE1-DIFF.md` 参照。
+## Phase 1 振り返り (2026-04-28)
 
-```
-avg_trigger_rate: 0.293 → 0.238 (-0.055)
-avg_pass_rate:    0.790 → 0.737 (-0.053)
-skills_above_0.7:    12 →     9 (-3)
-should_not_trigger_rate: 全15 skill とも 1.000 維持（near-miss 誤発火なし）
-```
+- `avg_trigger` 0.293 → 0.238 (形式上は悪化)
+- 5 skill が完全ゼロ化: spec-audit, spec-check, spec-fix, robust-fix, robust-review
+- 9 skill は description rewrite で改善 (escalation +0.233 が最大)
+- `should_not_trigger_rate` 全 15 skill とも 1.000 維持
 
-### 改善 9 skill (1 ファイルずつの description rewrite が機能)
+## Sub-F 検証結果 (2026-04-29)
 
-| skill | trigger Δ | pass Δ |
-|---|---:|---:|
-| escalation | +0.233 | +0.300 |
-| checkpoint | +0.134 | +0.150 |
-| impl-orchestrator | +0.133 | +0.200 |
-| code-review | +0.100 | +0.100 |
-| dev-pipeline | +0.100 | +0.050 |
-| boundary-test | +0.083 | +0.050 |
-| design-phase | +0.066 | +0.050 |
-| fix-with-verify | +0.066 | 0 |
-| pipeline-state | +0.033 | 0 |
+spec-check と spec-fix を `.quarantine/` に退避 → spec-audit 単独 eval:
 
-### 完全ゼロ化 5 skill (artifact の可能性大)
-
-| skill | base trigger | phase1 trigger | should_trigger_rate |
-|---|---:|---:|---:|
-| spec-audit | 0.450 | **0.000** | 0.000 |
-| spec-check | 0.400 | **0.000** | 0.000 |
-| spec-fix | 0.233 | **0.000** | 0.000 |
-| robust-fix | 0.300 | **0.000** | 0.000 |
-| robust-review | 0.100 | **0.000** | 0.000 |
-
-これら 5 件は **3 runs × 全クエリで一切発火していない**。stderr.log でも全件 `rate=0/3`。
-
-### 部分悪化 1 skill
-
-- `quick-test` 0.400 → 0.100 (-0.300, pass 18/20→12/20)
-
-## 共食い仮説（最有力原因）
-
-`evals/scripts/run_eval_compat.py` のトリガー判定:
-```python
-if isinstance(skill_arg, str) and skill_arg.lower() == target_lower:
-    triggered = True
-```
-**指定 skill 名と完全一致したときだけ triggered=True**。model が sibling skill (例: `spec-audit` を期待した query で `spec-check` を選ぶ) を選んでも `triggered=False` で記録される。
-
-Phase 1 rewrite で 15 skill の description を **同一テンプレ "Use this skill whenever the user wants to..."** に揃えた結果、近接プレフィックスの skill 間で文体が同質化し、disambiguation 不能になった疑い:
-
-- `spec-audit` / `spec-check` / `spec-fix` (spec-* trio): query は同じ DESIGN/ ドメインを言及するため、3つのうち 1 つが選ばれて他 2 つは見かけ上ゼロ
-- `robust-fix` / `robust-review` (robust-* duo): 同様
-- `fix-with-verify` は trigger=0.383 と健在 (sibling 共食いの "勝者" 側になっている可能性)
-
-description 長 (740–1014 chars) は broken/working 両群で重なるため、**長さは原因ではない**。
-
-## Sub-F 実行結果 (2026-04-29)
-
-選択肢 A を採用、`skills/spec-check/` と `skills/spec-fix/` を `.quarantine/` に `git mv` で退避して spec-audit 単独 eval を実行 (`evals/results/phase1-isolation/`)。
-
-| 指標 | BASELINE | Phase 1 | Sub-F (phase1-iso) |
+| 指標 | BASELINE | Phase 1 | Sub-F |
 |---|---:|---:|---:|
 | trigger_rate | 0.450 | 0.000 | **0.467** |
 | should_trigger_rate | 0.900 | 0.000 | 0.933 |
 | should_not_trigger_rate | 1.000 | 1.000 | 1.000 |
 
-by_tag (Sub-F): explicit=1.0, implicit=0.889, casual=0.833 / near-miss-spec-check=0.0, near-miss-spec-fix=0.0, near-miss-design-phase=0.0, near-miss-robust-review=0.0, generic=0.0
+by_tag (Sub-F): explicit=1.0 / implicit=0.889 / casual=0.833 / 全 near-miss=0.0
 
-**判定**: trigger_rate 0.467 ≥ 0.30 → sibling 共食い仮説**確定**。Phase 1 の description rewrite 自体は機能していて、悪化は spec-* trio と robust-* duo の sibling 共食い artifact が原因。退避状態のまま Sub-G (Phase 2 構造再編) に進行する判断 (G1 採択)。
+**結論**: sibling 共食い仮説**確定**。Phase 1 description rewrite 自体は機能、悪化は spec-* trio と robust-* duo の sibling 共食い artifact のみが原因。Phase 2 構造再編 (G1) で根絶する設計通りに進めた。
 
-## 判定結果と推奨方針
+---
 
-判定基準（CHECKPOINT 旧版）:
-- avg_trigger ≥ 0.40 → Phase 2
-- 0.30–0.40 → 個別 description 調整 → Phase 2
-- 改善なし or 悪化 → ユーザーに Phase 1 設計に戻る判断を仰ぐ ← **形式上ここに該当 (0.238)**
+## Phase 2 実行結果 (2026-04-29, redesign/heavy: 8 commits)
 
-ただし **悪化の主因は sibling 共食い artifact** であり、Phase 2 構造再編 (`spec-check` → `spec-audit` 統合 / `spec-fix` + `robust-fix` + `fix-with-verify` → `safe-fix` 統合) はまさにこの共食いを根絶する設計になっている。
+| Step | 内容 | commit | 主要成果物 |
+|------|------|--------|----------|
+| 0 | Phase 1 検証 + Sub-F artifacts | `8629c9e` | evals/PHASE1*, results/phase1*, scripts/compare.py |
+| 1 | Drop 6 skills | `3bace02` | dev-pipeline / quick-test / spec-check / spec-fix / robust-fix / fix-with-verify を削除 |
+| 2 | spec-audit に conformance 統合 | `fa2c275` | spec-audit/SKILL.md (Mode A + B、`--mode=cross\|conformance\|both`) |
+| 3 | safe-fix 新設 | `f8ae499` | safe-fix/SKILL.md (3 mode、共通 gate + revert) |
+| 4 | Demote 補章吸収 | `312347c` | ARCHITECTURE.md §A (Escalation framework) + §B (Pipeline state file) |
+| 5 | impl-orchestrator 6→4 ステージ | `d224ac3` | Setup / Implement & Verify / Review & Remediate / Iterate or Finalize |
+| 6 | MIGRATION.md | `81de55e` | docs/MIGRATION.md (15 → 8 mapping + use-case 移行ガイド) |
+| 7 | CHECKPOINT 更新 | (本 commit) | Phase 3 ハンドオフ |
 
-**よって以下の 3 択をユーザーに提示する**:
+**skill 数: 15 → 8** (PLAN §2 ターゲット達成)
 
-| 選択肢 | 内容 | 工数 |
-|--------|------|------|
-| **A 推奨** | 仮説検証 1 件（spec-check と spec-fix を skills/ から一時退避→ spec-audit を単独 eval）→ trigger 復活確認 → Phase 2 着手 | +1 セッション |
-| B | Phase 2 を即着手 (sibling 共食い解消が目的そのもの, eval は Phase 5 で再測定) | 0 |
-| C | Phase 1 description 設計に戻す (artifact を真の悪化と解釈する場合) | 巻き戻し |
+### Phase 2 後の skill 行数 (Phase 3 分割対象判定)
 
-**A を推奨**: 共食い仮説が誤りなら Phase 2 やっても改善しないリスクがあるため、1 件で実証する価値が高い。検証コストは低い (1 skill × 17 queries × 3 runs ÷ 3 workers = 約 9 分 + 退避/復元手順)。
+| skill | 行数 | P5 (≤200) | Phase 3 分割対象 |
+|-------|---:|:---:|:---:|
+| `checkpoint` | 68 | ✓ | — |
+| `code-review` | 131 | ✓ | — |
+| `spec-audit` | 190 | ✓ | — |
+| `robust-review` | 209 | × | △ (微調整) |
+| `safe-fix` | 236 | × | **要分割** |
+| `impl-orchestrator` | 299 | × | **要分割** |
+| `boundary-test` | 331 | × | **要分割** |
+| `design-phase` | 346 | × | **要分割** |
 
-## 次セッションのサブタスク（並列実行禁止、1 つずつ確認）
+合計 1810 行。Phase 3 完了時の目標: 全て ≤200 行。
 
-> **メモ**: 並列で複数 Bash/Agent を走らせるとメッセージ上限に達したため、次セッションでは個別実行する。Monitor は 60 分上限のため、長時間 eval は再武装が必要。
+---
 
-### Sub-F: sibling 共食い仮説の単一 skill 検証
+## Phase 3 サブタスク
 
-1. `git status` で作業ディレクトリ確認
-2. `skills/spec-check/` と `skills/spec-fix/` を一時退避（git で管理されているため revert 可能）:
-   ```bash
-   mkdir -p .quarantine
-   git mv skills/spec-check .quarantine/
-   git mv skills/spec-fix .quarantine/
-   ```
-3. spec-audit を単独 eval:
-   ```bash
-   ONLY_SKILLS=spec-audit WORKERS=3 bash evals/scripts/run_baseline.sh evals/results/phase1-isolation
-   ```
-4. 結果確認:
-   ```bash
-   python evals/scripts/aggregate.py evals/results/phase1-isolation --phase phase1-iso > /tmp/iso.json
-   python -c "import json; d=json.load(open('/tmp/iso.json')); print(d['skills']['spec-audit'])"
-   ```
-5. **判定**:
-   - trigger_rate ≥ 0.30 → 共食い仮説確定 → Sub-G へ
-   - trigger_rate < 0.10 → 仮説否定 → Sub-H (description 個別調整) へ
+PLAN §3.3 通り、Progressive Disclosure を適用して全 SKILL.md を 200 行以下にする。
 
-### Sub-G (Sub-F が仮説確定したとき): Phase 2 着手
+### Sub-I: 行数超過 4 skill の references/ 分割
 
-`REDESIGN-PLAN.md §3.2` どおりに進める。並列禁止のため 1 操作ずつ commit:
+優先度順 (行数の多い順):
+1. **design-phase** (346 行) — 設計書生成のテンプレートを `references/templates.md` に分離、validation 詳細を `references/spec-audit-handoff.md` に
+2. **boundary-test** (331 行) — 言語別の境界検出ルール (API / WASM / DB / 単位変換 / 座標系) を `references/<topic>.md` に分離
+3. **impl-orchestrator** (299 行) — Stage 2 verification gate のコマンド表 + Stage 3 review prompt template を `references/gate-commands.md` と `references/review-prompts.md` に分離
+4. **safe-fix** (236 行) — Mode 別 procedure を `references/<mode>.md` に分離 (`mode-conformance.md` / `mode-robust.md` / `mode-adhoc.md`)
 
-1. 退避 skill の正式削除コミット (spec-check, spec-fix を含む):
-   - **Drop**: `dev-pipeline`, `quick-test` (機能重複)
-   - **Drop**: `spec-check` (spec-audit に機能統合)
-   - **Drop & Merge**: `spec-fix`, `robust-fix`, `fix-with-verify` → 新 `safe-fix` skill
-2. `spec-audit` SKILL.md に spec-check 機能 (impl 突合) を追記
-3. `safe-fix` skill を新設（JSON Finding 入力契約、refs `references/finding.schema.json` 予定）
-4. **Demote**: `pipeline-state`, `escalation` を `ARCHITECTURE.md` 補章へ吸収
-5. `boundary-test`: Phase 1 で +0.083 改善・SNT=1.0 維持 → **独立維持** が妥当
-6. `impl-orchestrator` の 6 ステージ → 4 ステージに簡素化 (P4)
-7. `docs/MIGRATION.md` 新設
+各 skill で:
+1. SKILL.md を熟読し「呼び出し時に常に必要な核」と「詳細リファレンス」を切り分け
+2. 詳細を `skills/<name>/references/<topic>.md` に分離
+3. SKILL.md 本文に `For X, see references/x.md` を明示 (P3)
+4. SKILL.md 行数が ≤200 に収まることを確認
 
-**ターゲット skill 数: 7** (spec-audit, impl-orchestrator, checkpoint, robust-review, code-review, design-phase, boundary-test) **+ safe-fix = 8**。
+### Sub-J: safe-fix の Finding 入力契約定義
 
-### Sub-H (Sub-F が仮説否定したとき): description 個別調整
+PLAN §3.4 (Phase 4) で正式定義予定だが、Phase 3 のうちに informal な JSON Schema を `skills/safe-fix/references/finding.schema.json` に置く価値あり。SKILL.md からは "For the formal contract, see references/finding.schema.json" で参照。
 
-1. `evals/results/phase1/spec-audit.stderr.log` の FAIL 行を読み、どんなクエリで発火しないか確認
-2. spec-audit description を pushy 度を一段下げて個別 rewrite (例: テンプレ冒頭を変える)
-3. 単独 eval で再測定
-4. 改善するまで反復（最大 3 回）
+### Sub-K (オプション): robust-review 微調整
+
+209 行 = P5 をわずか超過。短い節を削除するか小分割。優先度低 — Sub-I 完了後の余力で実施可。
+
+### Sub-L: Phase 4 着手判断
+
+Phase 3 完了時に Phase 4 (公式新機能取り込み: `context: fork` / `agent: parallel` / `skills:` プリロード) に進むか判断。互換性に問題があれば旧方式維持 (R2)。
+
+---
 
 ## 維持事項
 
-- ARCHITECTURE.md / README.md / plans/* / evals/ は日本語維持
+- ARCHITECTURE.md / README.md / plans/* / docs/MIGRATION.md / evals/ は日本語維持
 - ユーザー出力は日本語可
-- skills/ 編集中は eval 実行禁止（測定汚染防止）
-- main にはマージしない（Phase 6 完了まで `redesign/heavy` 1 本）
-- **新規**: 並列 Bash/Agent 実行を避ける（メッセージ上限対策）
-- **新規**: 長時間 eval (>60min) は Monitor を 60 分ごとに再武装
+- skills/ 編集中は eval 実行禁止 (測定汚染防止)
+- main にはマージしない (Phase 6 完了まで `redesign/heavy` 1 本)
+- 並列 Bash/Agent 実行を避ける (前セッションでメッセージ上限到達)
+- 長時間 eval (>60min) は Monitor を 60 分ごとに再武装
 
 ## 引き継ぎメモ
 
-- True baseline = 0.293 (`evals/BASELINE.json`)
-- Phase 1 trigger = 0.238 だが artifact 込み (sibling 共食い)
-- 9/15 skill は description rewrite 自体は機能 (escalation +0.233 が最大改善)
-- should_not_trigger_rate は全 skill 1.000 維持（誤発火リスクなし）
-- 完全ゼロ 5 skill のうち spec-* trio と robust-* duo は Phase 2 統合対象 → Phase 2 完了時点で構造的に解消する見込み
-- `quick-test` 単独悪化 (-0.300) は Phase 2 で Drop 対象 → 個別調整しない
-- `evals/scripts/compare.py` 新規 (smoke-test 済, BASELINE↔自己比較で全 Δ=0 確認)
+- True baseline = 0.293 (`evals/BASELINE.json`)、Phase 1 trigger = 0.238 (artifact 込み)
+- **Phase 2 完了時点では eval 未実施** — PLAN §3.5 (Phase 5) でまとめて再測定
+- ARCHITECTURE.md `§A 補章 (Escalation framework)` と `§B 補章 (Pipeline state file)` は impl-orchestrator が常時参照する核ドキュメント。Phase 3 で skill 分割する際にも本文中の参照リンクは維持すること
+- safe-fix の Mode 自動判別は SKILL.md description だけで決まる (Markdown 指示書、内部実装なし)。混乱が出たら description で disambiguation 強化
+- impl-orchestrator Stage 3-2 の Agent 委譲先は `robust-review` と `spec-audit --mode=conformance`。`REVIEW-AGENTS.md` (Phase 1 時点の内容) は Phase 3 で更新を要するかもしれない — 現状は本文 placeholders で `<robust-review template, security axis>` 等と参照
+- skill ディレクトリは `skills/{boundary-test,checkpoint,code-review,design-phase,impl-orchestrator,robust-review,safe-fix,spec-audit}/` の 8 個
 
-## メッセージ上限対策（次セッション運用ルール）
+## メッセージ上限対策
 
-- Sub-F の eval (~9 分, spec-audit 単体) は短いので block 通しで実行可
-- 長時間タスクは `run_in_background` + Monitor 1 本のみ。並列の Monitor/Agent は走らせない
-- 各 skill 完了通知は短い ack（または無視）でよい
+- Phase 3 は skill 編集中心で eval は走らないため、Bash/Agent の並列実行リスクは低い
+- TodoWrite 推奨 (4-5 skill を順次分割するため進捗可視化が役立つ)
+- 1 skill 分割ごとに 1 commit を切る (Phase 2 と同様)
 
 ---
 
 ## 新規セッション開始プロンプト
 
 ```
-claude-pipeline 重量整理 Phase 1 検証完了、共食い仮説検証 → Phase 2 着手判断をお願いします。
+claude-pipeline 重量整理 Phase 2 完了、Phase 3 (Progressive Disclosure) 着手をお願いします。
 - 作業ブランチ: redesign/heavy
-- 状況: plans/REDESIGN-CHECKPOINT.md と evals/PHASE1-DIFF.md を最初に読んでください
-- Phase 1 結果: avg_trigger 0.293→0.238 で形式上は「悪化」だが、5/15 skill が完全ゼロ化（spec-audit/spec-check/spec-fix/robust-fix/robust-review）= sibling 共食い artifact 仮説あり
-- 最初の作業: Sub-F (共食い仮説の単一 skill 検証, 約 15 分) — spec-check/spec-fix を一時退避して spec-audit 単独 eval。CHECKPOINT に手順記載
-- Sub-F 結果で:
-  - trigger ≥ 0.30 → 共食い確定 → Sub-G (Phase 2 着手) を進めてよい
-  - trigger < 0.10 → 仮説否定 → Sub-H (description 個別調整) に進む前にユーザー判断を仰ぐ
-- 並列実行禁止 (前セッションで上限到達)。Bash/Agent は 1 つずつ完了を確認してから次へ
-- skills/ 編集中は eval 実行禁止
+- 状況: plans/REDESIGN-CHECKPOINT.md と docs/MIGRATION.md を最初に読んでください
+- Phase 2 結果: skill 数 15 → 8 (impl-orchestrator, spec-audit, safe-fix, robust-review, code-review, design-phase, boundary-test, checkpoint)。pipeline-state/escalation は ARCHITECTURE.md §A/§B 補章へ吸収。
+- Phase 3 のスコープ: PLAN §3.3。200 行超の 4 skill (design-phase 346, boundary-test 331, impl-orchestrator 299, safe-fix 236) を references/ に分割。robust-review 209 は微調整。
+- 注意: skills/ 編集中は eval 禁止、main にはマージしない、Bash/Agent 並列禁止
 ```
