@@ -1,0 +1,171 @@
+{
+  "skill_name": "dev-pipeline",
+  "description": "Use this skill whenever the user explicitly wants the full plan → design → implementation → test → report pipeline driven end-to-end as one autonomous run, with the only required user touchpoints being plan approval and escalation answers. Each phase is delegated via the Agent tool to its dedicated sub-skill (design-phase, impl-orchestrator, boundary-test, spec-fix, robust-review). Trigger phrases include \"run the full pipeline\", \"kick off dev-pipeline\", \"do the whole flow plan to ship\", \"autonomous build of <feature>\", \"resume the pipeline\", or any explicit ask for cross-phase orchestration. Trigger even when the user does not say \"dev-pipeline\" — phrases like \"take this requirement all the way to implementation\" qualify only when the user clearly wants every phase rolled up. For implementation alone (specs already exist) prefer `impl-orchestrator`.",
+  "results": [
+    {
+      "query": "Run dev-pipeline on the new chat feature. plans/CHAT.md has the requirements — go through design, impl, test, report autonomously. Only escalate design judgment calls.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Start the full pipeline (Phase 0-4) for the inventory rewrite. plans/INVENTORY-REWRITE.md is the plan. Self-drive the whole thing, ping me only on Tier 1 escalations.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "I want a new component (notification system) built end-to-end from requirements to merged PR. Plan is in plans/NOTIFICATION.md. Autopilot the whole pipeline.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "full auto on the search rewrite. plans/SEARCH.md has reqs. only ping me for design calls and major architectural choices",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Take this requirements doc and run the entire dev pipeline — design, impl, parallel reviews, tests, the whole thing. plans/PAYMENT-V2.md is ready.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Execute /dev-pipeline on the auth refactor. plans/AUTH-REWRITE.md is detailed. Phases 1-4 autonomous, only Phase 0 (planning) is approved already.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "kick off the pipeline for the export feature, plans/EXPORT.md has everything. wake me when its done or if you need a design call",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "End-to-end autonomous build for the new admin dashboard from plans/ADMIN.md. I want design, impl, review, test, and a final report — escalation-driven only.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Run dev-pipeline on the discount system. Plan is in plans/DISCOUNT.md, escalate only for design judgment calls and verification gate failures.",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Build the entire shipping calculator feature autonomously — requirements in plans/SHIPPING.md, expect ~3 components (rate-calc, address-validate, label-print).",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "I have DESIGN/05_inventory.md ready. Implement the component end-to-end with the 6-stage process — no design phase needed, skip straight to impl.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Just need design docs from plans/CHAT.md, not the full implementation. Skip impl and test phases.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Quick review pass on my last 3 commits before I open the PR — Critical/Warning/Info breakdown.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Fix the bug in handlers/order.ts that's failing tests. Verify regression after the fix.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "What's the difference between an orchestrator and a coordinator pattern in distributed systems?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Deep security audit on the auth code in src/auth/ before release — S-Critical/S-High findings.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Help me draft a project plan for migrating from Vue 2 to Vue 3 with Composition API.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Implement the auth component from DESIGN/01_auth.md, the design is finalized. 6-stage impl process.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Set up a CI/CD pipeline for this Node.js project using GitHub Actions — build, test, deploy stages.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Explain the difference between continuous integration and continuous deployment with examples.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 20,
+    "passed": 15,
+    "failed": 5
+  }
+}

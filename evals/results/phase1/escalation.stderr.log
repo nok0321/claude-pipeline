@@ -1,0 +1,13 @@
+Evaluating skill='escalation' against 10 queries...
+  description (first 100 chars): Use this skill whenever the user wants to classify a finding into one of the three escalation tiers ...
+Results: 9/10 passed
+  [PASS] rate=3/3 expected=True: robust-review found a S-Critical finding about session token storage. 
+  [PASS] rate=3/3 expected=True: I have 12 findings from spec-check and don't know which to surface to 
+  [PASS] rate=3/3 expected=True: Classify this finding using the Tier framework: 'Implementation in src
+  [PASS] rate=3/3 expected=True: verification gate failed twice in a row on the auth component, is this
+  [FAIL] rate=0/3 expected=True: Looking at the Escalation Overrides section in CLAUDE.md — want to ver
+  [PASS] rate=0/3 expected=False: Fix the failing test in tests/auth.test.ts and verify regression tests
+  [PASS] rate=0/3 expected=False: Auto-fix all S-Critical findings from the last robust-review run on sr
+  [PASS] rate=0/3 expected=False: What does Tier 1 support mean in AWS pricing for enterprise customers?
+  [PASS] rate=0/3 expected=False: Apply spec-fix to the 8 Diverged findings between DESIGN/02_payment.md
+  [PASS] rate=0/3 expected=False: How do escalation policies work in PagerDuty for on-call rotations?

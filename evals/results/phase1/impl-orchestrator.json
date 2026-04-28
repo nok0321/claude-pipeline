@@ -1,0 +1,171 @@
+{
+  "skill_name": "impl-orchestrator",
+  "description": "Use this skill whenever the user wants to autonomously implement one or more components from their `DESIGN/*.md` specs — running the full loop of code generation (sonnet) → verification gate (build / type / test) → parallel review (security / robustness / spec compliance, opus ×3) → finding remediation, repeated up to three iterations. Trigger phrases include \"implement the auth component from the spec\", \"build out DESIGN/03_payment.md\", \"autonomously implement the backend\", \"drive the implementation phase\", \"Phase 2 of the pipeline\", \"implement based on the design docs\", or any spec-driven implementation request. Trigger even when the user does not say \"impl-orchestrator\" — phrases like \"build this from the design doc\", \"make the code match DESIGN/\", or \"ship the component end to end\" qualify when DESIGN/*.md exists.",
+  "results": [
+    {
+      "query": "DESIGN/05_inventory.md is finalized. Please implement the inventory tracking component end-to-end with the 6-stage process — implementation, build/type/test verification, parallel review, escalation handling.",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "I have the design docs ready for the notification module under DESIGN/. Can you build it autonomously? I want type checks, tests, and the security/robustness review all run before I see it.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Take DESIGN/02_search.md and just... implement the whole thing. Don't ping me for every step, only escalate if something needs me to make a design call.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Run the impl orchestrator on the auth component — DESIGN/01_auth.md is done, I want sonnet for the impl agents and opus for the parallel reviews.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "ok the design is locked for the export feature (DESIGN/07_export.md). autopilot the implementation pls, ill check the PR when its done",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Run autonomous 6-stage implementation on DESIGN/04_payment.md — implementation through verification gate, parallel review, and finding resolution all in one pass.",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "The notification module design is finalized in DESIGN/notification/. Implement the whole thing autonomously — run tests and reviews too, only escalate when design judgment is needed.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "search feature design is locked in (DESIGN/02_search.md). spin up the impl loop and let it self-drive, only escalate the actual design calls",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "DESIGN/06_inventory.md is ready and CLAUDE.md Component Mapping is aligned for the inventory component. Run Phase 2 autonomous implementation on it.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Auth component, run impl-orchestrator with the 6-stage loop. Sonnet for impl agents, opus parallel for the security/robustness/spec reviewers.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "We don't have a design doc for the chat feature yet. Can you generate the design first based on the user stories in plans/CHAT.md?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "There's a bug in the login flow — when 2FA fails, the session token isn't cleared. Fix it and verify the regression tests still pass.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "I just want a security review of the existing payment code in src/payment/. Don't implement anything new — just S-Critical/S-High findings.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Quick PR review on the changes in src/utils/ — Critical/Warning/Info levels. Should take 5 min max.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "What's the difference between sonnet and opus models for code generation tasks? Trying to decide for a new project.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Help me write a regex that matches IPv6 addresses including the abbreviated zero-group form (::1, fe80::, etc).",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Chat feature has no design doc yet. Generate one from plans/CHAT.md and the customer stories in plans/customer-stories/chat.md before any implementation.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Small bug in the login redirect — after SSO callback the user lands on /home instead of the original deep link. Fix it and run regression tests to verify.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Audit the design docs under DESIGN/ and tell me about any contradictions you find between them — type names, API contracts, anything that drifted.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "I want to enable strict mode in tsconfig.json and need to understand the impact across our codebase before flipping the switch.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 20,
+    "passed": 20,
+    "failed": 0
+  }
+}
