@@ -1,125 +1,131 @@
 ---
 name: code-review
-description: 軽量な統合コードレビュー（Critical/Warning/Info の3段階）。静的解析+セキュリティ+堅牢性+構造+テスト影響を一通り走らせる。USE WHEN PR 作成前、小〜中規模の変更レビュー、コード変更直後の品質確認。SKIP マージ前の深層セキュリティ監査が必要なら robust-review、仕様↔実装の整合性チェックなら spec-check、単発バグ修正の安全確認なら fix-with-verify を使うこと。
+description: Use this skill whenever the user wants a lightweight integrated code review for a small-to-medium change — typically right after editing code, before opening a PR, or as a sanity pass before commit. Covers static analysis, security spot-check, robustness spot-check, structure smells, and test-coverage gaps in one report ranked Critical / High / Medium / Low. Trigger phrases include "review my changes", "look over this PR", "give me a code review", "check this diff", "spot-check this commit", or any pre-PR / pre-commit review request. Trigger even when the user does not say "code-review" — implicit phrases like "anything wrong with this?", "anything to fix here?", or "ready to ship?" qualify when the context is a code diff. For deeper pre-merge security audits use `robust-review` instead.
 argument-hint: "[file-path or git-range]"
 allowed-tools: Read, Grep, Glob, Bash
 model: claude-opus-4-7
 context: fork
 ---
 
-# 統合コードレビュー
+# Integrated lightweight code review
 
-## 深刻度定義
+## Severity scale
 
-| レベル | 基準 | 対応 |
-|--------|------|------|
-| **Critical** | データ損失・パニック/クラッシュ・セキュリティ侵害を引き起こしうる欠陥 | マージ前に必ず修正 |
-| **Warning** | 品質・保守性・パフォーマンス上の問題 | 修正を推奨 |
-| **Info** | スタイル・軽微な改善提案 | 任意対応 |
+| Level | Definition | Action |
+|-------|-----------|--------|
+| **Critical** | Defects that can cause data loss, panic / crash, or a security breach | Must fix before merge |
+| **High** | Quality, maintainability, or performance issues that affect correctness or operability | Strongly recommended |
+| **Medium** | Edge cases or moderate refactor opportunities | Fix when reasonable |
+| **Low** | Style and minor improvements | Optional |
 
 ---
 
-## Phase 1: 静的解析（自動）
+## Phase 1: Static analysis (automated)
 
-対象ファイルの言語を判定し、適切なツールを実行:
+Identify the language of the target files and run the appropriate tool:
 
-| 言語 | コマンド |
-|------|---------|
+| Language | Command |
+|----------|---------|
 | Rust | `cargo clippy --workspace -- -D warnings` |
 | TypeScript | `npx tsc --noEmit` / `npx svelte-check` / `npx vue-tsc --noEmit` |
 | Python | `ruff check` / `mypy` / `pyright` |
 | Go | `go vet ./...` / `staticcheck ./...` |
 
-コンパイルエラー・型エラーは **Critical** 扱い。
+Compile errors and type errors are **Critical**.
 
 ---
 
-## Phase 2: セキュリティレビュー
+## Phase 2: Security review
 
-### インジェクション
-- [ ] SQL/NoSQL クエリにユーザー入力を文字列結合していないか → **Critical**
-  - NG: `format!("SELECT ... WHERE name = '{}'", name)` / `` `SELECT ... WHERE name = '${name}'` ``
-  - OK: パラメータバインド / プリペアドステートメント
-- [ ] XSS: 未サニタイズ入力の HTML レンダリング (`innerHTML`, `{@html}`, `v-html` 等)
-- [ ] コマンドインジェクション: ユーザー入力を shell コマンドに渡していないか
+### Injection
+- [ ] User input concatenated into a SQL / NoSQL query → **Critical**
+  - Bad: `format!("SELECT ... WHERE name = '{}'", name)` / `` `SELECT ... WHERE name = '${name}'` ``
+  - Good: parameter binding / prepared statements
+- [ ] XSS: rendering unsanitized input as HTML (`innerHTML`, `{@html}`, `v-html`, etc.)
+- [ ] Command injection: user input passed into shell commands
 
-### 機密情報
-- [ ] パスワード・APIキー・接続文字列のハードコード → **Critical**
-- [ ] エラーレスポンスに内部情報（スタックトレース、クエリ等）が露出していないか
-- [ ] `.env` が `.gitignore` に含まれているか
+### Secrets
+- [ ] Hard-coded passwords, API keys, connection strings → **Critical**
+- [ ] Internal information (stack traces, raw queries) leaked into error responses
+- [ ] `.env` listed in `.gitignore`
 
-### アクセス制御
-- [ ] CORS 設定が本番で過度に緩くないか（`Access-Control-Allow-Origin: *`）
-- [ ] 認証が必要なエンドポイントに認証チェックがあるか
+### Access control
+- [ ] CORS not overly permissive in production (`Access-Control-Allow-Origin: *`)
+- [ ] Auth-required endpoints actually checked for authentication
 
-### リソース枯渇
-- [ ] アップロードのサイズ制限
-- [ ] リクエストボディの制限
-- [ ] 大量データ処理時のメモリ制御（ストリーミング / ページネーション）
-
----
-
-## Phase 3: 堅牢性レビュー
-
-### パニック / クラッシュ源
-- [ ] 本番コードの `unwrap()` / `expect()` (Rust) → **Critical**
-- [ ] 未チェックの配列インデックスアクセス → **Critical**
-- [ ] 0除算の可能性
-- [ ] 未処理の例外 / エラー（`catch` なし、`?` 伝播先のハンドリング確認）
-
-### 入力バリデーション
-- [ ] 外部入力（API リクエスト、ファイル、環境変数）の型・範囲チェック
-- [ ] NaN / Infinity / 空文字列 / null のハンドリング
-- [ ] 文字列長・コレクションサイズの上限
-
-### エッジケース
-- [ ] 空リスト / 単一要素の処理
-- [ ] 境界値（0, 最大値, 負数）の処理
-- [ ] 浮動小数点の比較に `==` を使っていないか（epsilon 比較推奨）
-
-### 同時実行
-- [ ] 共有状態の排他制御（Mutex / ロック）
-- [ ] デッドロック可能性
-- [ ] DB の同時書き込み対策
+### Resource exhaustion
+- [ ] Upload size limits
+- [ ] Request body size limits
+- [ ] Memory control for large data (streaming / pagination)
 
 ---
 
-## Phase 4: 構造レビュー（Warning/Info 中心）
+## Phase 3: Robustness review
 
-- [ ] 単一責任原則の遵守
-- [ ] 不要なクローン / コピー / アロケーション
-- [ ] 関数の純粋性（副作用の局所化）
-- [ ] API レスポンス型と内部データ構造の一貫性
-- [ ] エラー型の統一性（散在する文字列エラーなど）
+### Panic / crash sources
+- [ ] Production `unwrap()` / `expect()` (Rust) → **Critical**
+- [ ] Unchecked array indexing → **Critical**
+- [ ] Possible division by zero
+- [ ] Unhandled exceptions / errors (missing `catch`, propagation downstream of `?`)
+
+### Input validation
+- [ ] External input (API request, file, env var) bounded by type and range
+- [ ] NaN / Infinity / empty string / null handled
+- [ ] String length / collection size limits
+
+### Edge cases
+- [ ] Empty list / single-element handling
+- [ ] Boundary values (0, max, negative)
+- [ ] Floating-point comparison uses epsilon, not `==`
+
+### Concurrency
+- [ ] Shared state guarded (Mutex / lock)
+- [ ] Deadlock possibility
+- [ ] Concurrent DB writes
 
 ---
 
-## Phase 5: テスト影響分析
+## Phase 4: Structural review (mostly High / Medium / Low)
 
-1. 変更ファイルに対応するテストを特定
-2. Critical 観点のテストケースが存在するか確認
-3. 不足テストケースを具体的に提案（コード例つき）
+- [ ] Single-responsibility adherence
+- [ ] Unnecessary clone / copy / allocation
+- [ ] Function purity (side effects localized)
+- [ ] Consistency between API response types and internal data shapes
+- [ ] Unified error type (avoid scattered string errors)
 
 ---
 
-## 出力形式
+## Phase 5: Test impact
+
+1. Identify tests corresponding to changed files.
+2. Verify Critical-axis test cases exist.
+3. Recommend missing test cases concretely (with code samples).
+
+---
+
+## Output format
+
 ```
-### レビュー結果サマリー
-- Critical: [件数] - マージ前に必ず修正
-- Warning:  [件数] - 修正を推奨
-- Info:     [件数] - 任意対応
+### Review summary
+- Critical: <n> — must fix before merge
+- High:     <n> — strongly recommended
+- Medium:   <n> — fix when reasonable
+- Low:      <n> — optional
 
-### Critical 詳細
-[ファイル:行番号] [カテゴリ] 説明
-修正案: ...
+### Critical
+<file:line> [<category>] <description>
+Fix: ...
 
-### Warning 詳細
-[ファイル:行番号] [カテゴリ] 説明
-修正案: ...
+### High
+<file:line> [<category>] <description>
+Fix: ...
 
-### Info
-[ファイル:行番号] 説明
+### Medium
+<file:line> [<category>] <description>
 
-### テスト追加推奨
-- [不足テストケースの説明とコード例]
+### Low
+<file:line> <description>
+
+### Test additions recommended
+- <missing test case description with code sample>
 ```

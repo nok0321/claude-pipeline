@@ -1,167 +1,163 @@
 ---
 name: spec-fix
-description: spec-check の Finding を元に仕様書または実装を双方向に自動修正する。修正方向は Finding 種別とヒューリスティクス（堅牢性、テスト存在、git blame 等）で判定。`--loop` で差分0まで反復可能（旧 spec-cycle 後継）。USE WHEN spec-check 直後の整合性回復、設計変更後の同期取り、Constraint 違反の一括修正。SKIP Missing が大規模機能なら impl-orchestrator で実装、設計判断を伴う Diverged は Tier 1 エスカレーション。
+description: Use this skill whenever the user wants to repair findings from `spec-check` — patching either the implementation or the design doc bidirectionally — based on heuristics (robustness wins, tests-validate-impl, recent-edit signal, git blame). Supports a `--loop` mode that iterates spec-check → spec-fix until the diff hits zero or a retry cap (succeeds the retired `spec-cycle`). Trigger phrases include "fix the spec mismatches", "reconcile spec and implementation", "apply the spec-check findings", "update the design doc to match the code", "make implementation match the spec", "fix the constraint violations", or any conformance-repair request after spec-check. Trigger even when the user does not say "spec-fix" — phrases like "close the gap between design and code" or "make spec and impl agree" qualify.
 argument-hint: "[component-name or 'all'] [--spec-wins | --impl-wins | --dry-run | --loop [N]]"
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 model: claude-opus-4-7
 ---
 
-# 仕様 ↔ 実装 双方向自動修正
+# Spec ↔ implementation bidirectional auto-fix
 
-`/spec-check` で検出された差分（Missing / Diverged / Extra / Constraint）を修正する。
-仕様書と実装のどちらを修正するかは、Finding の種別とヒューリスティクスで判定する。
+Repair the diffs (Missing / Diverged / Extra / Constraint) found by `/spec-check`. The fix direction (touch the spec vs touch the code) is decided by finding class plus heuristics.
 
 ---
 
-## 使い方
+## Usage
 
 ```
-/spec-fix                # 直前の spec-check Finding を修正
-/spec-fix all            # spec-check all を実行してから修正
-/spec-fix backend        # 指定コンポーネントの spec-check → 修正
-/spec-fix --spec-wins    # 常に実装側を修正（仕様が正）
-/spec-fix --impl-wins    # 常に仕様側を修正（実装が正）
-/spec-fix --dry-run      # 修正計画のみ出力
-/spec-fix --loop         # 差分が0になるか上限到達まで spec-check → spec-fix を反復（デフォルト3回）
-/spec-fix --loop 5       # 反復上限を指定
+/spec-fix                # Fix findings from the most recent spec-check output
+/spec-fix all            # Run spec-check all first, then fix
+/spec-fix backend        # Run spec-check on the component, then fix
+/spec-fix --spec-wins    # Always patch the implementation (spec is canonical)
+/spec-fix --impl-wins    # Always patch the spec (code is canonical)
+/spec-fix --dry-run      # Print the fix plan only
+/spec-fix --loop         # Iterate spec-check → spec-fix until diff = 0 or cap (default 3)
+/spec-fix --loop 5       # Iterate up to 5 times
 ```
 
 ---
 
-## 修正方向の判定
+## Direction selection
 
-### デフォルト（フラグなし）: ヒューリスティクス判定
+### Default (no flag): heuristic
 
-| Finding 種別 | デフォルト修正方向 | 理由 |
-|-------------|-------------------|------|
-| **Missing** | 実装を追加 | 仕様にあるべきものが未実装 |
-| **Diverged** | ケース判定（下記） | どちらが正しいか文脈による |
-| **Extra** | 仕様に追記 | 実装が先行した有用な追加の可能性 |
-| **Constraint** | 実装を修正 | 制約は仕様側の絶対ルール |
+| Class | Default direction | Why |
+|-------|-------------------|-----|
+| **Missing** | Add to implementation | The spec mandates it |
+| **Diverged** | Per-case decision (below) | Both sides may be right depending on context |
+| **Extra** | Add to spec | Implementation may have made a useful additive choice |
+| **Constraint** | Patch implementation | Constraints are absolute and live on the spec side |
 
-#### Diverged の修正方向ヒューリスティクス
+#### Diverged direction heuristic
 
-| 条件 | 方向 | 理由 |
-|------|------|------|
-| 実装が仕様より堅牢（Result ラップ、Option 化等） | 仕様を更新 | 実装側の改善を採用 |
-| テストが実装側の振る舞いを検証済み | 仕様を更新 | テストが通っている実装を尊重 |
-| 仕様の方が詳細で具体的 | 実装を修正 | 設計意図を尊重 |
-| git blame で実装が最近変更された | 実装を修正 | 意図しない変更の可能性 |
-| 判断不能 | **エスカレーション** | ユーザーに方向を確認 |
+| Condition | Direction | Why |
+|-----------|-----------|-----|
+| Implementation is strictly more robust (Result wrap, Option, etc.) | Update spec | Adopt the better contract |
+| Tests already validate the implementation behavior | Update spec | Don't break a green test for spec hygiene |
+| Spec is more detailed and concrete | Patch implementation | Honor design intent |
+| `git blame` shows the implementation was recently changed | Patch implementation | Recent change may be unintentional |
+| Cannot decide | **Escalate** | User confirms direction |
 
-### --spec-wins: 仕様優先モード
+### --spec-wins
 
-全ての Finding で実装側を修正。仕様書は変更しない。
+Patch the implementation for every finding. Spec is never modified.
 
-### --impl-wins: 実装優先モード
+### --impl-wins
 
-全ての Finding で仕様書側を修正。実装は変更しない。
-
----
-
-## 実行フロー
-
-### Step 1: Finding の取得
-
-1. 会話中に直前の `/spec-check` 出力がある → そこから Finding を抽出
-2. 引数指定あり → `/spec-check` 相当のチェックを先に実行
-3. どちらもない → `git diff --name-only HEAD` に関連するコンポーネントをチェック
-
-### Step 2: 修正計画の作成
-
-各 Finding について:
-1. 修正方向を判定（上記ヒューリスティクス or フラグ）
-2. 修正内容を決定
-3. 修正の難易度を判定:
-   - **自動修正可能**: シグネチャ変更、フィールド追加、型名変更等
-   - **半自動**: スケルトン生成 + TODO コメント（Missing の大きな機能）
-   - **手動必要**: 設計判断を伴う変更 → エスカレーション
-
-`--dry-run` 指定時はここで停止し、修正計画を出力する。
-
-### Step 3: 修正の実行
-
-#### 実装側の修正（spec-wins / Missing / Constraint）
-
-| Finding | 修正内容 |
-|---------|---------|
-| Missing (関数) | 仕様書のシグネチャでスケルトン生成 + `todo!()` or 仕様のコードスニペットで実装 |
-| Missing (型) | 仕様書の定義をコードに変換 |
-| Missing (エンドポイント) | ルーティング + ハンドラスケルトン生成 |
-| Diverged (シグネチャ) | 仕様に合わせてシグネチャ変更 + 呼び出し元も修正 |
-| Diverged (フィールド) | フィールド名・型を仕様に合わせて変更 |
-| Constraint | 違反箇所を制約に準拠する形に修正 |
-
-#### 仕様側の修正（impl-wins / Extra / Diverged の一部）
-
-| Finding | 修正内容 |
-|---------|---------|
-| Extra | DESIGN/*.md の該当セクションに実装の定義を追記 |
-| Diverged (実装が堅牢) | 仕様のシグネチャ・型定義を実装に合わせて更新 |
-
-### Step 4: 検証
-
-修正後に以下を実行:
-
-1. **実装を修正した場合**: ビルド → 型チェック → テスト（検証ゲート）
-2. **仕様を修正した場合**: `/spec-check` を再実行して差分が解消されたことを確認
-3. **両方修正した場合**: 両方のチェックを実行
-
-検証失敗時:
-- 実装修正の失敗 → 修正をリバート → スキップとして報告
-- 仕様修正の失敗 → 新たな矛盾が生じていないか確認
-
-### Step 5: エスカレーション判定
-
-以下の場合はエスカレーション候補として報告（自律修正しない）:
-- Diverged で修正方向が判断不能
-- Missing で機能が大きく、スケルトン生成では不十分
-- 修正が他コンポーネントの仕様にも影響する
+Patch the spec for every finding. Implementation is never modified.
 
 ---
 
-## 出力形式
+## Execution flow
+
+### Step 1: Acquire findings
+
+1. Findings from a recent `/spec-check` output present in the conversation.
+2. If an argument is provided, run `/spec-check` against it first.
+3. Otherwise, run `/spec-check` against components touched by `git diff --name-only HEAD`.
+
+### Step 2: Plan the fix
+
+For each finding:
+1. Decide direction (heuristic or flag).
+2. Decide content.
+3. Decide difficulty:
+   - **Auto** — signature change, field add, type rename, etc.
+   - **Semi-auto** — generate a skeleton with TODO (large Missing functions)
+   - **Manual** — design decision required → escalate
+
+`--dry-run` stops here and prints the plan.
+
+### Step 3: Apply
+
+#### Implementation-side patch (Missing / Constraint / spec-wins)
+
+| Finding | Change |
+|---------|--------|
+| Missing (function) | Generate a skeleton with the spec signature + `todo!()`, or transcribe the spec's code snippet |
+| Missing (type) | Translate the spec definition into code |
+| Missing (endpoint) | Generate a router entry + handler skeleton |
+| Diverged (signature) | Update the signature to match spec, plus call sites |
+| Diverged (field) | Rename / retype the field to match spec |
+| Constraint | Rewrite the violating site to comply |
+
+#### Spec-side patch (Extra / some Diverged / impl-wins)
+
+| Finding | Change |
+|---------|--------|
+| Extra | Append the implementation surface to the spec |
+| Diverged (impl is more robust) | Update the spec signature / type to match the implementation |
+
+### Step 4: Verify
+
+- **Implementation patched** → run build / type / test (full verification gate).
+- **Spec patched** → re-run `/spec-check` to confirm the diff resolved.
+- **Both patched** → run both checks.
+
+On verification failure:
+- Implementation patch failed → revert the patch and skip with a report entry.
+- Spec patch failed (introduced new contradiction) → re-run `spec-audit` to surface the new issue.
+
+### Step 5: Escalation rules
+
+Surface as escalation candidates (do not auto-fix):
+- Diverged with no decisive heuristic.
+- Missing where the function is large and a skeleton is insufficient.
+- A fix that ripples into another component's spec.
+
+---
+
+## Output format
 
 ```
 ╔══════════════════════════════════════╗
-║  仕様整合性修正レポート               ║
-║  対象: {component}                   ║
-║  モード: {default|spec-wins|impl-wins}║
+║  Spec fix report                     ║
+║  Target: <component>                 ║
+║  Mode: <default|spec-wins|impl-wins> ║
 ╚══════════════════════════════════════╝
 
-■ サマリー
-  実装修正:    {n} 件
-  仕様更新:    {n} 件
-  スキップ:    {n} 件（エスカレーション候補）
-  検証: build:{result} type:{result} test:{result}
+■ Summary
+  Implementation patched: <n>
+  Spec updated:           <n>
+  Skipped:                <n> (escalation candidates)
+  Verification: build:<result> type:<result> test:<result>
 
-═══ 実装を修正 ═══
+═══ Implementation patched ═══
 
-[1] SPEC-1 | Missing → 実装追加
-  仕様: DESIGN/<component>.md:<N>
-  追加: <path/to/new_file> — pub fn <function_name>()
-  検証: build:pass type:pass test:pass
+[1] SPEC-1 | Missing → impl added
+  Spec: DESIGN/<component>.md:<N>
+  Added: <path/to/new_file> — pub fn <function_name>()
+  Verification: build:pass type:pass test:pass
 
-═══ 仕様を更新 ═══
+═══ Spec updated ═══
 
-[2] SPEC-2 | Diverged → 仕様更新（実装が堅牢）
-  実装: <path/to/file>:<N> — fn <function_name>() -> Result<<ReturnType>, Error>
-  更新: DESIGN/<component>.md:<N> — 戻り値を Result 型に変更
+[2] SPEC-2 | Diverged → spec updated (impl is more robust)
+  Code: <path/to/file>:<N> — fn <function_name>() -> Result<<ReturnType>, Error>
+  Updated: DESIGN/<component>.md:<N> — return type changed to Result
 
-═══ スキップ（要ユーザー判断） ═══
+═══ Skipped (user decision needed) ═══
 
-[S-1] SPEC-5 | Diverged | 修正方向不明
-  仕様: DESIGN/<component>.md:<N> — POST /<api_path>
-  実装: <path/to/handler>:<N> — PUT /<api_path>
-  質問: HTTPメソッドはPOSTとPUTのどちらが正しいですか？
+[S-1] SPEC-5 | Diverged | direction unclear
+  Spec: DESIGN/<component>.md:<N> — POST /<api_path>
+  Code: <path/to/handler>:<N> — PUT /<api_path>
+  Question: which HTTP method is canonical, POST or PUT?
 ```
 
 ---
 
-## ループモード（--loop）
+## Loop mode (--loop)
 
-差分が解消されるか上限到達まで `spec-check` → `spec-fix` を反復実行する。
-旧 `spec-cycle` スキルの後継（廃止済み）。
+Iterate spec-check → spec-fix until the diff is empty or the cap is hit.
 
 ```
 iteration = 1
@@ -170,7 +166,7 @@ while iteration <= max:
     if len(findings) == 0:
         return "converged"
     fix_results = spec-fix(findings)
-    if all(skipped):
+    if all skipped:
         return "stuck — escalate remaining"
     if findings count not decreasing:
         return "no progress — escalate"
@@ -178,19 +174,19 @@ while iteration <= max:
 return "max iterations reached"
 ```
 
-収束保証:
-- max 上限（デフォルト3、`--loop N` で変更可）
-- 進捗チェック: Finding 数が減少しない場合は打ち切り
-- 全スキップ検出: 修正可能な Finding がない場合は即打ち切り
-- 同一 Finding 再出現: スキップに昇格
+Termination guarantees:
+- Hard cap (default 3, configurable via `--loop N`) prevents infinite loops.
+- Progress check: bail when the finding count fails to decrease, since continuing would only churn.
+- All-skipped detection: bail immediately when no finding is auto-fixable.
+- Same-finding regression: promote to Skipped on second appearance.
 
-impl-orchestrator から呼ばれる場合は Stage 6 のループが同等の役割を果たすため、`--loop` は不要。
+When called from `impl-orchestrator`, Stage 6's loop already plays this role — `--loop` is unnecessary.
 
 ---
 
-## パイプライン統合
+## Pipeline integration
 
-impl-orchestrator の Stage 5 から呼ばれる場合:
-- Spec Finding はオーケストレーターのエスカレーション分類を経由
-- Constraint 違反は自律修正（Tier 2）
-- Missing / Diverged でスコープ外の判断が必要なものは Tier 1 エスカレーション
+Inside `impl-orchestrator` Stage 5:
+- Spec findings flow through the orchestrator's escalation classifier.
+- Constraint violations are auto-fixed (Tier 2).
+- Missing or Diverged items that need scope decisions are Tier 1 escalation.

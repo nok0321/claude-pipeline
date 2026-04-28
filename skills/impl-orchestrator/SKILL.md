@@ -1,173 +1,167 @@
 ---
 name: impl-orchestrator
-description: DESIGN/*.md から自律的に「実装(sonnet) → 検証ゲート(build/type/test) → 並列レビュー(security/robustness/spec の opus 3並列) → 指摘解決」を6ステージでループ実行するオーケストレーター。USE WHEN 仕様書がある状態でコンポーネントを丸ごと実装、dev-pipeline Phase 2、新機能の自律開発。SKIP 設計書がない状態は先に design-phase、単発バグ修正は fix-with-verify、純粋なレビューだけなら robust-review を使うこと。
+description: Use this skill whenever the user wants to autonomously implement one or more components from their `DESIGN/*.md` specs — running the full loop of code generation (sonnet) → verification gate (build / type / test) → parallel review (security / robustness / spec compliance, opus ×3) → finding remediation, repeated up to three iterations. Trigger phrases include "implement the auth component from the spec", "build out DESIGN/03_payment.md", "autonomously implement the backend", "drive the implementation phase", "Phase 2 of the pipeline", "implement based on the design docs", or any spec-driven implementation request. Trigger even when the user does not say "impl-orchestrator" — phrases like "build this from the design doc", "make the code match DESIGN/", or "ship the component end to end" qualify when DESIGN/*.md exists.
 argument-hint: "[component-name or 'all']"
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, Agent
 model: claude-opus-4-7
 ---
 
-# 実装オーケストレーター
+# Implementation orchestrator
 
-DESIGN/*.md の仕様書を元に、以下の6ステージを自律的にループ実行する:
-
-```
-Stage 1: 準備 → Stage 2: 実装(sonnet) → Stage 3: 検証ゲート
-  → Stage 4: 並列レビュー(opus×3) → Stage 5: 指摘解決 → Stage 6: 完了判定
-```
-
----
-
-## 内部状態（維持する）
+Drive the spec-to-shipped loop:
 
 ```
-component: <対象コンポーネント名>
-iteration: 1 / 3
-design_files: []     # 対応する DESIGN/*.md
-impl_files: []       # 実装対象ファイル
-gate_results: {}     # 検証ゲート結果
-findings: []         # レビュー Finding の累積
-escalation_queue: [] # Tier 1 エスカレーション項目
+Stage 1: Setup → Stage 2: Implementation (sonnet) → Stage 3: Verification gate
+  → Stage 4: Parallel review (opus ×3) → Stage 5: Resolve findings → Stage 6: Done check
 ```
 
 ---
 
-## Stage 1: 準備
+## Internal state
 
-### 1-1: プロジェクト情報の取得
+```
+component:        <target component name>
+iteration:        1 / 3
+design_files:     []     # corresponding DESIGN/*.md
+impl_files:       []     # implementation files
+gate_results:     {}     # verification gate output
+findings:         []     # accumulated review findings
+escalation_queue: []     # Tier 1 items
+```
 
-CLAUDE.md から以下を読み取る:
+---
 
-1. **Component Mapping** — コンポーネントと仕様書・実装ディレクトリの対応
+## Stage 1: Setup
+
+### 1-1: Read project context
+
+From CLAUDE.md:
+
+1. **Component Mapping** — components ↔ specs ↔ implementation directories
    ```
    ## Component Mapping
-   | コンポーネント | 仕様書 | 実装ディレクトリ |
+   | Component | Spec | Implementation directory |
    ```
-   - このセクションが存在しない場合: **エスカレーション**（「Component Mapping が CLAUDE.md に未定義です。定義してください」）
+   Missing this section: **escalate** ("Component Mapping not defined in CLAUDE.md — please define"). Why: the orchestrator has no canonical place to write the implementation otherwise.
 
-2. **Commands** — ビルド/テスト/lint コマンド
+2. **Commands** — build / test / lint commands
+3. **Critical Constraints** — data-format ordering, architecture rules, etc.
+4. **Project-Specific Checks** — extra checks
+5. **Escalation Overrides** — only when present
 
-3. **Critical Constraints** — 制約事項（データ形式順序、アーキテクチャ制約 等）
+### 1-2: Read the specs
 
-4. **Project-Specific Checks** — プロジェクト固有のチェック項目
+Load every `DESIGN/*.md` corresponding to the target component.
 
-5. **Escalation Overrides** — エスカレーション基準のオーバーライド（存在する場合のみ）
+- Argument `all` → process every component in the mapping in dependency order.
+- No explicit ordering → infer from each spec's dependency section.
 
-### 1-2: 仕様書の読み込み
+### 1-3: Check PIPELINE-STATE.md
 
-引数のコンポーネントに対応する DESIGN/*.md を全て読み取る。
+When present, read prior context (plan summary, escalation queue).
+When absent, run in standalone mode.
 
-- 引数が `all` の場合: Component Mapping に列挙された全コンポーネントを依存順に処理
-- 依存順序: CLAUDE.md に記載がなければ、仕様書の依存関係セクションから推定
+### 1-4: Build the implementation plan
 
-### 1-3: PIPELINE-STATE.md の確認
-
-存在する場合: 前フェーズの文脈（計画サマリー、エスカレーションキュー）を読み取る。
-存在しない場合: 初期化なしで続行（スタンドアロン実行モード）。
-
-### 1-4: 実装計画の作成
-
-仕様書から実装単位（ファイル単位）を列挙し、依存順に並べる。
-TaskCreate で進捗を管理する。
+Enumerate implementation units (file granularity) from the specs and order them by dependency. Track progress with TodoWrite.
 
 ---
 
-## Stage 2: 実装（sonnet サブエージェント）
+## Stage 2: Implementation (sonnet sub-agent)
 
-コンポーネントの実装を **sonnet モデルのサブエージェント** に委任する。
+Delegate code generation to a sonnet sub-agent. Why sonnet: implementation is high-volume, judgment is captured downstream by opus reviewers and the verification gate.
 
-### 2-1: 実装エージェントの生成
+### 2-1: Spawn the implementer
 
 ```
 Agent(
-  description: "{component} の実装",
+  description: "<component> implementation",
   model: "sonnet",
   prompt: "
-    あなたは実装担当です。以下の仕様書に従ってコードを実装してください。
+    You are the implementer. Build the code that satisfies the spec below.
 
-    ## 仕様書
-    {DESIGN/*.md の内容}
+    ## Spec
+    <DESIGN/*.md content>
 
-    ## プロジェクト制約
-    {CLAUDE.md の Critical Constraints}
+    ## Project constraints
+    <CLAUDE.md Critical Constraints>
 
-    ## 実装ディレクトリ
-    {Component Mapping から特定したパス}
+    ## Implementation directory
+    <Component Mapping path>
 
-    ## ルール
-    - 仕様書のコードスニペットをベースに実装
-    - CLAUDE.md の NEVER ルールを厳守
-    - 既存コードのパターンに合わせる
-    - テストも仕様書のテスト要件に従って追加
-    - 完了したら実装したファイル一覧を報告
+    ## Rules
+    - Anchor implementation on the spec's code snippets
+    - Honor every NEVER rule from CLAUDE.md
+    - Match existing-code patterns
+    - Add tests per the spec's test requirements
+    - Report back the list of files implemented
   "
 )
 ```
 
-### 2-2: 実装結果の確認
+### 2-2: Record output
 
-エージェントの報告から実装ファイル一覧を `impl_files` に記録。
+Pull the file list from the agent's report into `impl_files`.
 
 ---
 
-## Stage 3: 検証ゲート
+## Stage 3: Verification gate
 
-全て機械的なチェック。エスカレーション判断に依存しない。**全パスが必須。**
+Mechanical, no judgment required. **All gates must pass.**
 
-### 3-1: ビルド/コンパイル
+### 3-1: Build
 
-CLAUDE.md の Commands セクションから適切なコマンドを選択して実行。
+Use CLAUDE.md Commands first. Otherwise, fall back by marker file:
 
-コマンドが不明な場合の自動検出:
-| マーカーファイル | コマンド |
-|----------------|---------|
+| Marker | Command |
+|--------|---------|
 | Cargo.toml | `cargo check --workspace` |
 | package.json | `npm run build` or `npx tsc --noEmit` |
 | build.gradle / pom.xml | `./gradlew compileJava` or `mvn compile` |
 | go.mod | `go build ./...` |
 
-### 3-2: 型チェック / Lint
+### 3-2: Type check / lint
 
-| マーカー | コマンド |
-|---------|---------|
+| Marker | Command |
+|--------|---------|
 | Cargo.toml | `cargo clippy --workspace -- -D warnings` |
 | tsconfig.json + svelte | `npx svelte-check` |
 | tsconfig.json | `npx tsc --noEmit` |
 | pyproject.toml / ruff.toml | `ruff check .` |
 | go.mod | `go vet ./...` |
 
-### 3-3: テストスイート
+### 3-3: Test suite
 
-| マーカー | コマンド |
-|---------|---------|
+| Marker | Command |
+|--------|---------|
 | Cargo.toml | `cargo test --workspace` |
 | package.json | `npm test` |
 | build.gradle | `./gradlew test` |
 | go.mod | `go test ./...` |
 
-### 3-4: 境界契約テスト（オプション）
+### 3-4: Boundary contract tests (optional)
 
-境界テストファイルが存在する場合のみ実行（Sprint 2 で追加予定）:
 ```
 Glob: **/boundary_*.{rs,ts,test.ts,java}
 ```
-存在すれば通常のテストスイートに含まれるため、3-3 でカバーされる。
 
-### 3-5: ゲート失敗時の処理
+If found, they are part of the regular test suite and covered by 3-3.
 
-1. エラー出力を解析し、失敗原因を特定
-2. 自律修正を試行（最大3回）:
-   - コンパイルエラー → エラーメッセージに基づき修正
-   - テスト失敗 → 失敗テストの期待値と実装を照合して修正
-   - lint 警告 → 警告に基づき修正
-3. 3回失敗 → **エスカレーション**:
+### 3-5: Gate failure handling
+
+1. Parse the error and identify the cause.
+2. Try up to three autonomous fixes:
+   - Compile error → fix per the message.
+   - Test failure → reconcile expected vs implemented behavior.
+   - Lint warning → patch per the warning.
+3. Three failures → **escalate**:
    ```
-   Tier 1: 検証ゲートが最大リトライ後もパスしない
-   内容: {ゲート名} が3回修正後も失敗。エラー: {エラー概要}
+   Tier 1: verification gate fails after max retries
+   Issue: <gate name> still failing after three fix attempts. Error: <summary>
    ```
 
-### 3-6: ゲート結果の記録
+### 3-6: Record results
 
-`gate_results` に各ゲートの結果を記録:
 ```
 gate_results: {
   build: "pass",
@@ -179,187 +173,184 @@ gate_results: {
 
 ---
 
-## Stage 4: 並列レビュー（opus サブエージェント ×3）
+## Stage 4: Parallel review (opus sub-agents ×3)
 
-検証ゲートを全パスした後、3つの **opus モデル** レビューエージェントを **同時に** 生成する。
+After every gate passes, spawn three opus reviewers **simultaneously in a single message**. Why parallel: the review axes are independent, and parallelism keeps wall time manageable.
 
-### 4-1: レビューエージェントの準備
+### 4-1: Prepare review prompts
 
-REVIEW-AGENTS.md を読み取り、プレースホルダーを展開:
+Read `REVIEW-AGENTS.md` and expand placeholders:
 
-| プレースホルダー | 値 |
-|-----------------|-----|
-| `{target_files}` | Stage 2 で実装/変更されたファイル一覧 |
-| `{design_docs}` | Stage 1 で読み取った DESIGN/*.md 一覧 |
-| `{project_checks}` | CLAUDE.md の Critical Constraints + Project-Specific Checks |
-| `{component_mapping}` | CLAUDE.md の Component Mapping |
+| Placeholder | Value |
+|-------------|-------|
+| `{target_files}` | Files implemented or modified in Stage 2 |
+| `{design_docs}` | DESIGN/*.md from Stage 1 |
+| `{project_checks}` | Critical Constraints + Project-Specific Checks |
+| `{component_mapping}` | CLAUDE.md Component Mapping |
 
-### 4-2: 3エージェントの同時生成
+### 4-2: Spawn
 
-**重要: 3つのAgent呼び出しを単一メッセージ内で並列実行する。**
+**Send all three Agent calls in one message.**
 
 ```
 Agent(
-  description: "Security Review: {component}",
+  description: "Security review: <component>",
   model: "opus",
-  prompt: "{REVIEW-AGENTS.md の Agent 1 テンプレートをプレースホルダー展開した内容}"
+  prompt: "<expanded REVIEW-AGENTS.md Agent 1 template>"
 )
 
 Agent(
-  description: "Robustness Review: {component}",
+  description: "Robustness review: <component>",
   model: "opus",
-  prompt: "{REVIEW-AGENTS.md の Agent 2 テンプレートをプレースホルダー展開した内容}"
+  prompt: "<expanded REVIEW-AGENTS.md Agent 2 template>"
 )
 
 Agent(
-  description: "Spec Compliance Review: {component}",
+  description: "Spec compliance review: <component>",
   model: "opus",
-  prompt: "{REVIEW-AGENTS.md の Agent 3 テンプレートをプレースホルダー展開した内容}"
+  prompt: "<expanded REVIEW-AGENTS.md Agent 3 template>"
 )
 ```
 
-### 4-3: エージェント失敗時のフォールバック
+### 4-3: Fallback on agent failure
 
-- タイムアウト（5分超）→ 該当軸をスキップし `findings` に記録:
+- Timeout (>5 min) → skip that axis and record:
   ```
-  { agent: "security", status: "timeout", note: "事後報告: セキュリティレビューがタイムアウト" }
+  { agent: "security", status: "timeout", note: "post-report: security review timed out" }
   ```
-- エラー終了 → 同上（status: "error"）
-- 残り2軸の結果で続行
+- Error exit → same with status `error`.
+- Continue with the remaining axes.
 
-### 4-4: Finding の統合
+### 4-4: Merge findings
 
-3エージェントの出力から Finding を抽出し、`findings` に追加。
-同一ファイル・同一行の重複 Finding は統合（より高い深刻度を採用）。
+Pull findings from all three outputs into `findings`. Deduplicate by file + line, keeping the higher severity.
 
 ---
 
-## Stage 5: 指摘解決
+## Stage 5: Resolve findings
 
-### 5-1: エスカレーション分類
+### 5-1: Escalation classification
 
-各 Finding をエスカレーションフレームワーク（`/escalation` スキル）の基準で分類。
+Classify each finding via the `escalation` framework. Apply CLAUDE.md `## Escalation Overrides` first.
 
-CLAUDE.md に `## Escalation Overrides` がある場合はオーバーライドを優先適用。
+### 5-2: Tier 1 (must escalate)
 
-### 5-2: Tier 1（必ずエスカレーション）
+- Push to `escalation_queue`.
+- Mirror onto `PIPELINE-STATE.md`'s queue if it exists.
+- **Do not block.** Continue handling other findings and report at the end.
 
-- `escalation_queue` に追加
-- PIPELINE-STATE.md のエスカレーションキューにも追加（存在する場合）
-- **作業は停止しない** — 他の Finding の処理を続行し、最後にまとめて報告
+### 5-3: Tier 2 (auto-fix + post-report)
 
-### 5-3: Tier 2（自律対応 + 事後報告）
-
-1. Finding の修正を実行
-2. 修正後に **Stage 3 の検証ゲートを再実行**（全パス確認）
-3. 事後報告用の修正ログを記録:
+1. Apply the fix.
+2. Re-run **Stage 3 verification gate** end-to-end (must pass again).
+3. Log for the post-report:
    ```
-   [自律対応] SEC-1 | S-Critical | <path/to/handler>:<N>
-     修正: format!() → .bind() に変更（SQLインジェクション対策）
-     検証: <プロジェクトのテストコマンド> → PASS
+   [auto-fix] SEC-1 | Critical | <handler>:<line>
+     Change: format!() → .bind() (SQL injection mitigation)
+     Verification: <test command> → pass
    ```
 
-### 5-4: Tier 3（自律対応、報告不要）
+### 5-4: Tier 3 (auto-fix silent)
 
-1. Finding の修正を実行
-2. 修正後に検証ゲート通過を確認
+1. Apply the fix.
+2. Verify the gate still passes.
 
-### 5-5: 設計変更が必要な場合
+### 5-5: Design-change loop
 
-レビューで「仕様書に記載のない新規要件」や「設計の根本的な問題」が見つかった場合:
+When a review surfaces "spec is missing requirements" or "fundamental design issue":
 
-1. **1回目**: DESIGN/*.md を更新 → Stage 2 に戻って再実装
-2. **2回目以降**: **エスカレーション**（設計変更ループの上限）
+1. **First time**: update `DESIGN/*.md` and return to Stage 2 to re-implement.
+2. **Second time and beyond**: escalate. Why the cap: an unbounded design-change loop indicates the original requirement was wrong, which is a Tier 1 issue.
 
 ---
 
-## Stage 6: 完了判定
+## Stage 6: Done check
 
-### 6-1: 状態確認
+### 6-1: State
 
 ```
 open_findings = findings.filter(status == "open")
 tier1_pending = escalation_queue.filter(status == "pending")
 ```
 
-### 6-2: 判定ロジック
+### 6-2: Decision
 
-| 条件 | 行動 |
-|------|------|
-| `open_findings == 0` | **完了** → 報告出力 |
-| `open_findings > 0` ∧ `iteration < 3` | `iteration += 1` → Stage 4 へ |
-| `iteration == 3` | **停止** → 残存 Finding を報告 |
+| Condition | Action |
+|-----------|--------|
+| `open_findings == 0` | **Done** — emit the report |
+| `open_findings > 0` ∧ `iteration < 3` | `iteration += 1` → Stage 4 |
+| `iteration == 3` | **Stop** — report remaining findings |
 
-### 6-3: PIPELINE-STATE.md の更新
+### 6-3: PIPELINE-STATE.md update
 
-存在する場合、実装ステータステーブルを更新:
+When present, update the implementation table:
 ```
-| {component} | done | build:{result} type:{result} test:{result} | security:{result} robustness:{result} spec:{result} |
+| <component> | done | build:<result> type:<result> test:<result> | security:<result> robustness:<result> spec:<result> |
 ```
 
-### 6-4: コンテキスト管理
+### 6-4: Context management
 
-コンポーネント処理完了ごとに:
-- 引数が `all` で複数コンポーネントを処理中 → 次のコンポーネントに進む前にコンテキスト量を自己評価
-- 肥大化している場合 → checkpoint save を実行し、`/compact` を推奨
+Per component, when running `all`:
+- Estimate context size before moving to the next component.
+- If high, run a checkpoint save and recommend `/compact`. Why: context bloat across components silently degrades subsequent stages.
 
 ---
 
-## 最終報告
+## Final report
 
 ```
 ╔══════════════════════════════════════════════════╗
-║  実装オーケストレーター 完了レポート               ║
-║  対象: {component}                               ║
-║  イテレーション: {iteration} / 3                  ║
+║  Implementation orchestrator report               ║
+║  Target: <component>                              ║
+║  Iteration: <iteration> / 3                       ║
 ╚══════════════════════════════════════════════════╝
 
-■ 検証ゲート結果
-  ビルド:       {pass/fail}
-  型チェック:    {pass/fail}
-  テスト:       {pass/fail} ({passed} passed, {failed} failed)
-  境界テスト:    {pass/fail/skipped}
+■ Verification gate
+  Build:    <pass/fail>
+  Type:     <pass/fail>
+  Test:     <pass/fail> (<passed> passed, <failed> failed)
+  Boundary: <pass/fail/skipped>
 
-■ レビュー結果サマリー
-  Security:    S-Critical: {n} / S-High: {n} / S-Medium: {n} / S-Low: {n}
-  Robustness:  S-Critical: {n} / S-High: {n} / S-Medium: {n} / S-Low: {n}
-  Spec:        Missing: {n} / Diverged: {n} / Extra: {n} / Constraint: {n}
+■ Review summary
+  Security:    Critical: <n> / High: <n> / Medium: <n> / Low: <n>
+  Robustness:  Critical: <n> / High: <n> / Medium: <n> / Low: <n>
+  Spec:        Missing: <n> / Diverged: <n> / Extra: <n> / Constraint: <n>
 
-■ 対応結果
-  自律修正済み:   {n} 件（Tier 2 + Tier 3）
-  エスカレーション: {n} 件（Tier 1 — 以下に詳細）
+■ Resolution
+  Auto-fixed:  <n> (Tier 2 + Tier 3)
+  Escalated:   <n> (Tier 1, see below)
 
-═══ 自律修正ログ（Tier 2: 事後報告） ═══
+═══ Auto-fix log (Tier 2: post-report) ═══
 
-[1] SEC-1 | S-Critical | <path/to/handler>:<N>
-  修正: format!() → .bind()（SQLインジェクション対策）
-  検証: test suite PASS
+[1] SEC-1 | Critical | <handler>:<line>
+  Change: format!() → .bind() (SQL injection)
+  Verification: test suite pass
 
-[2] ROB-3 | S-High | <path/to/file>:<N>
-  修正: unwrap() → ? 変換
-  検証: test suite PASS
+[2] ROB-3 | High | <file>:<line>
+  Change: unwrap() → ?
+  Verification: test suite pass
 
-═══ エスカレーション（Tier 1: ユーザー確認必要） ═══
+═══ Escalation (Tier 1: user decision needed) ═══
 
-[E-1] SPEC-2 | Missing | 仕様書に未定義のAPIが必要
-  内容: {詳細}
-  質問: {ユーザーへの具体的な質問}
+[E-1] SPEC-2 | Missing | undocumented API needed
+  Issue: <details>
+  Question: <concrete question>
 
-═══ 残存 Finding（未解決） ═══
+═══ Open findings (unresolved) ═══
 
-（iteration 上限到達時のみ）
+(only when iteration cap was hit)
 
-═══ 次のアクション ═══
-  - エスカレーション項目への回答
-  - 手動確認: {ブラウザでの動作確認等}
+═══ Next actions ═══
+  - Answer escalation items
+  - Manual confirmation: <browser test, etc.>
 ```
 
 ---
 
-## 注意事項
+## Constraints
 
-- Component Mapping が CLAUDE.md にない場合は Stage 1 でエスカレーションし停止
-- 検証ゲートの build/test コマンドは CLAUDE.md の Commands を最優先で使用
-- レビューエージェントは opus モデル（判断力重視）、実装エージェントは sonnet モデル（コスト効率重視）
-- 設計変更の逆流は最大1回（2回目はエスカレーション）
-- `all` 指定時はコンポーネント間で context が肥大化するため、適宜 checkpoint を推奨
+- Component Mapping missing → escalate at Stage 1 and stop. Why: hard-coding paths inside the skill defeats the dynamic-config principle in ARCHITECTURE.md §6.
+- Build / test commands must come from CLAUDE.md `## Commands` first (auto-detect is fallback only).
+- Reviewers run on opus (judgment quality), implementers on sonnet (cost efficiency).
+- Design-change reverse flow caps at one iteration. Why: see Stage 5-5.
+- For `all`, recommend a checkpoint between components when context is bloated.

@@ -1,58 +1,71 @@
 ---
 name: quick-test
-description: git diff の変更ファイルから関連テストのみ自動選択して高速実行する（フルテスト実行より大幅短縮）。USE WHEN 修正直後の素早い動作確認、impl-orchestrator や code-review 起動前の事前チェック、コミット前の軽量検証。SKIP リリース前のフルテストスイート、未コミット変更がない場合（git diff で対象が拾えない）。
+description: Use this skill whenever the user wants to run only the tests relevant to their pending git diff rather than the full test suite — for instance "just run the tests for what I changed", "quick smoke test before commit", "fast test pass on this fix", or any pre-commit / pre-PR sanity check after editing code. The skill detects changed files via `git diff --name-only HEAD`, maps them to the corresponding tests for the project's language (Rust / TypeScript / Python / Go / Node), and runs the narrowest scope that still covers the change. Trigger even if the user does not say "quick test" — phrases like "did I break anything?", "rerun the tests on this file", or "run the relevant tests" all qualify. Skip if there are no uncommitted changes (nothing for `git diff` to pick up).
 allowed-tools: Bash, Grep, Glob
 ---
 
-# 変更関連テスト高速実行
+# Diff-scoped fast test runner
 
-## Step 1: 変更ファイルを検出
+Run only the tests related to the pending change set. Drastically faster than the full suite, suited for the inner edit loop and pre-commit gate.
+
+## Step 1: Detect changed files
+
 ```bash
 git diff --name-only HEAD
 ```
 
-## Step 2: プロジェクト種別と対応テストを特定
+If the result is empty, report "no uncommitted changes — nothing to scope" and stop.
+
+## Step 2: Identify project layout and pick a runner
 
 ### Rust (Cargo.toml)
-変更ファイルのパスからクレート名を自動検出:
+
+Resolve the crate name from the changed path:
+
 ```bash
-# crates/<name>/... → cargo test -p <name>
-# src/... → cargo test (ルートクレート)
+# crates/<name>/...   -> cargo test -p <name>
+# src/...             -> cargo test (root crate)
 ```
 
-クレート依存も考慮: コアクレートの変更時は依存クレートのテストも実行。
+When a core crate changes, also run downstream crates that depend on it.
 
 ### Node.js / TypeScript (package.json)
+
+Auto-detect the runner from project config:
+
 ```bash
-# テストランナーを自動検出
-npm test              # package.json の test スクリプト
+npm test              # package.json test script
 npx vitest run        # Vitest
 npx jest              # Jest
-npx svelte-check      # Svelte 型チェック
-npx vue-tsc --noEmit  # Vue 型チェック
-npx tsc --noEmit      # TypeScript 型チェック
+npx svelte-check      # Svelte type check
+npx vue-tsc --noEmit  # Vue type check
+npx tsc --noEmit      # TypeScript type check
 ```
 
 ### Python (pyproject.toml / setup.py)
+
 ```bash
-pytest <変更ファイルに対応するテストファイル>
+pytest <test file matching the changed module>
 # tests/test_<module>.py or <module>/tests/test_*.py
 ```
 
 ### Go (go.mod)
+
 ```bash
-go test ./<変更パッケージ>/...
+go test ./<changed package>/...
 ```
 
-## Step 3: 特定されたテストのみ実行
+## Step 3: Narrow further when possible
 
-**最速オプション（特定テスト関数のみ）:**
+Prefer a single test function when the change is localized:
+
 - Rust: `cargo test -p <crate> <test_name>`
 - Python: `pytest tests/test_module.py::test_function`
 - Go: `go test -run TestName ./pkg/...`
 - Node: `npx vitest run src/module.test.ts`
 
-## Step 4: 結果サマリー表示
-- 全テスト通過: 完了報告
-- 失敗テストあり: テスト名・失敗理由・修正提案を表示
-- コアモジュール修正時は依存モジュールのテストも確認を推奨
+## Step 4: Report
+
+- All green: report success.
+- Failures: print the test name, failure reason, and a minimal repair suggestion.
+- When a core module was changed, recommend a follow-up run on dependent modules to confirm no upstream regression.

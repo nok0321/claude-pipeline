@@ -1,57 +1,68 @@
 ---
 name: checkpoint
-description: 長期タスクのセッション継続用チェックポイント（CHECKPOINT.md）を作成・復元する。USE WHEN /clear や /compact の直前、長時間セッションの区切り、明日続きをやる時。SKIP 数分で終わるタスク、構造化されたパイプライン状態は pipeline-state を使うこと。
+description: Use this skill whenever the user is about to break a long-running task across sessions — before `/clear` or `/compact`, at the end of a working day, when picking up unfinished work the next morning, or any time the user mentions saving or restoring state with phrases like "save my place", "where was I", "pick up tomorrow", "checkpoint this". The skill writes or reads `CHECKPOINT.md` at the project root, capturing task progress, git state, decisions, and a hand-off note for the next session. Trigger even if the user does not say the word "checkpoint" — phrases like "let me come back to this later" or "I want to step away" are sufficient.
 argument-hint: "[save|restore|status]"
 allowed-tools: Read, Write, Bash, Glob
 ---
 
-# セッション継続管理
+# Session continuation manager
+
+Maintain `CHECKPOINT.md` at the project root so a long task survives across `/clear`, `/compact`, or a fresh session the next day. Free-form, single-task scope. For structured pipeline state across multiple components, defer to `pipeline-state`.
+
+---
 
 ## /checkpoint save
-1. プロジェクトルートに `CHECKPOINT.md` を作成/更新:
+
+1. Write or update `CHECKPOINT.md` at the project root with the following structure:
 
 ```markdown
-# Checkpoint: [タスク名]
-Updated: [ISO 8601 タイムスタンプ]
+# Checkpoint: <task name>
+Updated: <ISO 8601 timestamp>
 Session: ${CLAUDE_SESSION_ID}
 
-## 目標
-[タスクの最終ゴール]
+## Goal
+<final goal of the task>
 
-## 完了済み
-- [x] [完了タスク1]（コミット: abc1234）
+## Done
+- [x] <completed item> (commit: abc1234)
 
-## 進行中
-- [ ] [現在のタスク]
-  - 現状: [具体的な進捗]
-  - ブロッカー: [あれば記載]
+## In progress
+- [ ] <current item>
+  - Status: <concrete progress>
+  - Blocker: <if any>
 
-## 未着手
-- [ ] [残タスク]
+## Not started
+- [ ] <remaining item>
 
-## 重要な決定事項
-- [決定]: [理由]
+## Key decisions
+- <decision>: <reason>
 
-## 環境状態
-- ブランチ: [現在のブランチ名]
-- 未コミット変更: [あり/なし]
-- ビルド状態: [成功 / エラーあり — 内容を記載]
+## Environment
+- Branch: <current branch>
+- Uncommitted changes: <yes / no>
+- Build status: <pass / failing — describe>
 
-## 次のセッションへの申し送り
-[次にやるべきことの具体的な指示]
+## Hand-off to next session
+<concrete next instructions>
 ```
 
-2. 未コミット変更がある場合は WIP コミット作成を提案
-3. `git log --oneline -5` の出力を含める
+2. If there are uncommitted changes, propose a WIP commit so the checkpoint matches a recoverable git state.
+3. Append the output of `git log --oneline -5` so the next session can locate the working point in history.
+
+---
 
 ## /checkpoint restore
-1. `CHECKPOINT.md` の存在確認（なければ「前回チェックポイントなし」と報告）
-2. 内容を読み込みコンテキストに注入
-3. git ログとの整合性確認
-4. プロジェクトのビルドツールでコンパイル/型チェック状態を確認
-5. 「次のセッションへの申し送り」に従って作業を再開
+
+1. Verify `CHECKPOINT.md` exists. If not, report "no prior checkpoint found" and stop.
+2. Read its contents and inject them into context.
+3. Cross-check against `git log` — flag any drift (e.g., the commit referenced under "Done" no longer exists on this branch).
+4. Run the project's compile / type-check command to confirm the build still matches what the checkpoint claims.
+5. Resume from the "Hand-off to next session" instructions.
+
+---
 
 ## /checkpoint status
-1. `CHECKPOINT.md` の最終更新日時を表示
-2. 現在の git 状態との差分を報告
-3. 「完了済み」「進行中」「未着手」の件数をサマリー表示
+
+1. Print the `Updated:` timestamp of `CHECKPOINT.md`.
+2. Diff the recorded git state against the current `git status` and report drift.
+3. Summarize counts of items under "Done", "In progress", and "Not started".

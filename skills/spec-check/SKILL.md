@@ -1,185 +1,198 @@
 ---
 name: spec-check
-description: DESIGN/*.md と実装コードの整合性チェック。差分を Missing（仕様にあるが未実装）/ Diverged（不一致）/ Extra（仕様外実装）/ Constraint（設計制約違反）の4分類で報告する。USE WHEN 実装完了後の整合性確認、impl-orchestrator Stage 4 の Spec Reviewer、PR 前の最終確認。SKIP 仕様書同士の矛盾検出は spec-audit、自動修正したい時は spec-fix を直接使うこと。
+description: Use this skill whenever the user wants to compare design documents under `DESIGN/` against the actual implementation and report the diff in four buckets — Missing (specified but unimplemented), Diverged (mismatch between spec and code), Extra (implementation has things the spec does not), and Constraint (architecture or design-rule violation). Trigger phrases include "check spec vs implementation", "does the code match DESIGN/01_auth.md?", "verify implementation matches the spec", "list missing items from the design doc", "find diverged signatures between spec and code", or any spec-to-impl conformance check. Trigger even when the user does not say "spec-check" — phrases like "is the implementation behind the spec?", "is anything missing from the design doc?", or "compare what we built against what we designed" qualify.
 argument-hint: "[component-name or 'all']"
 allowed-tools: Read, Grep, Glob, Bash
 model: claude-opus-4-7
 context: fork
 ---
 
-# 設計仕様 ↔ 実装 整合性チェック
+# Spec ↔ implementation conformance check
 
-DESIGN/*.md の仕様書と実装コードを照合し、差分を報告する。
+Compare DESIGN/*.md against the implementation and surface the diff.
 
 ---
 
-## 準備
+## Setup
 
-### コンポーネントマッピングの取得
+### Resolve component mapping
 
-CLAUDE.md の `## Component Mapping` を読み取る:
+Read CLAUDE.md `## Component Mapping`:
 
 ```markdown
 ## Component Mapping
-| コンポーネント | 仕様書 | 実装ディレクトリ |
-|---------------|--------|-----------------|
+| Component | Spec | Implementation directory |
+|-----------|------|--------------------------|
 | <component_a> | DESIGN/01_<component_a>.md | <path/to/component_a>/ |
 | <component_b> | DESIGN/02_<component_b>.md | <path/to/component_b>/ |
 ```
 
-**Component Mapping が存在しない場合:**
-1. DESIGN/ ディレクトリが存在するか確認
-2. 存在する場合: DESIGN/*.md のファイル名からコンポーネント名を推定し、プロジェクト構造から実装ディレクトリを探索
-3. 存在しない場合: 「DESIGN/ ディレクトリと Component Mapping が見つかりません」と報告して終了
+If the section is missing:
+1. Check whether `DESIGN/` exists.
+2. If yes, derive component names from the spec filenames and probe the project layout for the implementation directory.
+3. If no, report "missing DESIGN/ and Component Mapping" and stop.
 
-### 対象の決定
+### Determine scope
 
-| 引数 | 動作 |
-|------|------|
-| コンポーネント名 | 該当コンポーネントのみ |
-| `all` | Component Mapping の全コンポーネント |
-| なし | `git diff --name-only HEAD` に関連するコンポーネントを自動判定 |
+| Argument | Behavior |
+|----------|----------|
+| Component name | That component only |
+| `all` | Every component in the mapping |
+| (none) | Components touched by `git diff --name-only HEAD` |
 
-### プロジェクト固有情報
+### Project-specific context
 
-CLAUDE.md から追加取得（存在する場合のみ）:
-- **`## Critical Constraints`** — Constraint チェックに使用
-- **`## Project-Specific Checks`** — 追加のチェック項目
-
----
-
-## 差分分類
-
-| 分類 | 意味 | 典型例 |
-|------|------|--------|
-| **Missing** | 仕様に定義があるが実装が存在しない | 関数未実装、エンドポイント未作成 |
-| **Diverged** | 実装が仕様と異なる | 引数型の不一致、フィールド名の違い |
-| **Extra** | 仕様に無い実装が存在する | 仕様外の追加API（意図的拡張の可能性） |
-| **Constraint** | 設計制約に違反している | アーキテクチャ制約違反、データ形式順序違反 |
+Optional CLAUDE.md sections:
+- `## Critical Constraints` — fed into the Constraint check
+- `## Project-Specific Checks` — additional checks
 
 ---
 
-## チェック手順
+## Diff classes
 
-### Step 1: 公開 API の存在確認
+| Class | Meaning | Typical example |
+|-------|---------|-----------------|
+| **Missing** | Defined in the spec, absent in code | Function not implemented, endpoint not wired |
+| **Diverged** | Implementation differs from the spec | Argument-type mismatch, field-name drift |
+| **Extra** | Implementation has things the spec does not | Undocumented public API (could be intentional) |
+| **Constraint** | Violates a design rule | Architecture violation, data-format ordering breach |
 
-仕様書に記載された公開インターフェースが実装に存在するか:
+---
 
-| 言語 | 検索対象 |
-|------|---------|
+## Procedure
+
+### Step 1: Public-API existence
+
+Look for the public surfaces declared in the spec:
+
+| Language | Targets |
+|----------|---------|
 | Rust | `pub fn`, `pub struct`, `pub enum`, `pub trait`, `pub type` |
 | TypeScript | `export function`, `export class`, `export interface`, `export type`, `export const` |
-| Go | 大文字始まりの関数・型・定数 |
+| Go | identifiers starting uppercase |
 | Java | `public class`, `public interface`, `public enum` |
-| Python | `def` (モジュールレベル), `class` |
+| Python | module-level `def`, `class` |
 
-仕様にあるが実装にない → **Missing**
-実装にあるが仕様にない → **Extra**
+Spec has it, code doesn't → **Missing**
+Code has it, spec doesn't → **Extra**
 
-### Step 2: 関数シグネチャの照合
+### Step 2: Function-signature comparison
 
-仕様書のシグネチャと実装を比較:
-- 引数の名前・型・順序
-- 戻り値の型
-- ジェネリクス / 型パラメータ
-- 可視性 (pub / export)
+Compare spec signature against implementation:
+- Argument names, types, order
+- Return type
+- Generics / type parameters
+- Visibility (`pub` / `export`)
 
-不一致 → **Diverged**
+Mismatch → **Diverged**
 
-**例外**: 実装が仕様より堅牢な場合（例: 戻り値を `Result` でラップ）は Diverged + 仕様更新推奨として報告。
+Exception: when the implementation is strictly more robust than the spec (e.g. wraps the return in `Result`), report as Diverged with a "spec update recommended" note.
 
-### Step 3: 型 / 構造体フィールドの照合
+### Step 3: Type / struct field comparison
 
-仕様書の構造体・インターフェース定義と実装を比較:
-- フィールド名・型・可視性
-- enum バリアント
-- デフォルト値
+Compare structs, interfaces, enums:
+- Field names, types, visibility
+- Enum variants
+- Default values
 
-### Step 4: API エンドポイントの照合
+### Step 4: API endpoint comparison
 
-仕様書に REST API 定義がある場合:
-- Method (GET/POST/PUT/DELETE)
+When the spec lists REST endpoints:
+- Method (GET / POST / PUT / DELETE)
 - Path
-- リクエスト / レスポンス型
-- ステータスコード
+- Request / response types
+- Status codes
 
-実装のルーティング定義（Router, @app.route, @RequestMapping 等）と照合。
+Match against the routing definitions in code (`Router`, `@app.route`, `@RequestMapping`, etc.).
 
-### Step 5: DB スキーマの照合
+### Step 5: DB schema comparison
 
-仕様書にテーブル / コレクション定義がある場合:
-- テーブル名 / カラム名 / 型
-- インデックス
-- 外部キー制約
+When the spec defines tables / collections:
+- Table name, column names, types
+- Indexes
+- Foreign-key constraints
 
-実装のマイグレーション / スキーマ定義と照合。
+Match against migrations / schema definitions in code.
 
-### Step 6: 設計制約の確認
+### Step 6: Constraint check
 
-CLAUDE.md の `## Critical Constraints` に記載された制約が実装で守られているか:
+For each rule in CLAUDE.md `## Critical Constraints`, define a concrete detection method. Examples:
+- Architecture rule (forbidden import in directory X) → grep `import` statements
+- Data-format ordering → check argument order at conversion boundaries
+- Framework convention → argument or decorator order
 
-制約ごとに具体的な検出方法を決定（例）:
-- アーキテクチャ制約（特定ディレクトリで禁止依存）→ import 文の Grep
-- データ形式順序 → 変換境界での引数順序チェック
-- フレームワーク規約 → 引数順序・デコレータ順序等
-
-違反 → **Constraint**
+Violation → **Constraint**
 
 ---
 
-## 出力形式
+## Severity mapping
+
+Findings inherit severity from the diff class:
+
+| Class | Default severity |
+|-------|------------------|
+| Missing (public API or core type) | **Critical** |
+| Diverged (signature, field, endpoint) | **High** |
+| Constraint | **High** |
+| Extra (public surface) | **Medium** |
+| Missing (minor or doc-only) | **Medium** |
+| Other | **Low** |
+
+---
+
+## Output format
 
 ```
 ╔══════════════════════════════════════╗
-║  仕様整合性チェック結果               ║
-║  対象: {component}                   ║
+║  Spec conformance                    ║
+║  Target: <component>                 ║
 ╚══════════════════════════════════════╝
 
-■ サマリー
-  Missing:    {n} 件 — 仕様にあるが未実装
-  Diverged:   {n} 件 — 仕様と実装が不一致
-  Extra:      {n} 件 — 仕様に無い実装
-  Constraint: {n} 件 — 設計制約違反
+■ Summary
+  Missing:    <n>
+  Diverged:   <n>
+  Extra:      <n>
+  Constraint: <n>
 
 ═══ Missing ═══
 
-[SPEC-1] Missing | 公開API
-  仕様: DESIGN/<component>.md:<N> — pub fn <function_name>(<args>) -> <ReturnType>
-  実装: （なし）
-  推奨: 実装を追加
+[SPEC-1] Missing | Public API
+  Spec: DESIGN/<component>.md:<N> — pub fn <function_name>(<args>) -> <ReturnType>
+  Code: (none)
+  Recommendation: implement the function
 
 ═══ Diverged ═══
 
-[SPEC-2] Diverged | 関数シグネチャ
-  仕様: DESIGN/<component>.md:<N> — fn <function_name>(<args>) -> <ReturnType>
-  実装: <path/to/file>:<N> — fn <function_name>(<args>) -> Result<<ReturnType>, Error>
-  推奨: 仕様を更新（実装の方が堅牢）
+[SPEC-2] Diverged | Signature
+  Spec: DESIGN/<component>.md:<N> — fn <function_name>(<args>) -> <ReturnType>
+  Code: <path/to/file>:<N> — fn <function_name>(<args>) -> Result<<ReturnType>, Error>
+  Recommendation: update the spec — implementation is strictly more robust
 
 ═══ Extra ═══
 
-[SPEC-3] Extra | 関数
-  実装: <path/to/file>:<N> — pub fn <helper_name>(<args>)
-  推奨: 仕様に追記、または内部関数に変更
+[SPEC-3] Extra | Function
+  Code: <path/to/file>:<N> — pub fn <helper_name>(<args>)
+  Recommendation: document in spec, or downgrade to internal visibility
 
 ═══ Constraint ═══
 
-[SPEC-4] Constraint | アーキテクチャ制約違反
-  ファイル: <path/to/file>:<N>
-  制約: <component> は <禁止依存>（CLAUDE.md Critical Constraints）
-  違反: <違反している import/呼び出し>
-  修正案: <代替手段>
+[SPEC-4] Constraint | Architecture
+  File: <path/to/file>:<N>
+  Rule: <component> may not depend on <forbidden> (CLAUDE.md Critical Constraints)
+  Violation: <import / call chain>
+  Fix: <alternative>
 ```
 
-全チェック項目がクリーンの場合は「仕様と実装は完全に整合しています」と報告する。
+When everything matches: report "spec and implementation are fully aligned".
 
 ---
 
-## パイプライン統合
+## Pipeline integration
 
-impl-orchestrator の Stage 4 (Agent 3: Spec Compliance Reviewer) から呼ばれる場合:
-- 対象ファイルとマッピングはオーケストレーターから渡される
-- Finding はオーケストレーターの統合フォーマットに変換される
+Inside `impl-orchestrator` Stage 4 (Agent 3: Spec Compliance Reviewer):
+- Target files and mappings flow in from the orchestrator.
+- Findings convert to the orchestrator's unified format.
 
-スタンドアロン実行時:
-- CLAUDE.md から自分で Component Mapping を取得
-- 出力後、`/spec-fix` での修正を推奨
+Standalone:
+- Read CLAUDE.md Component Mapping directly.
+- After the report, recommend `spec-fix` to apply repairs.

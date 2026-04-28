@@ -1,178 +1,180 @@
 ---
 name: spec-audit
-description: DESIGN/*.md 仕様書間の矛盾（型名揺れ、フィールド不一致、API契約不一致、依存循環、DBスキーマ不整合、用語不統一、定数不整合）を検出する。USE WHEN 設計書を追加/更新した後の自己検証、design-phase からの自動呼び出し、PR で DESIGN/*.md 変更がある時の事前チェック。SKIP 仕様↔実装の差分検出は spec-check、自動修正は spec-fix を使うこと。
+description: Use this skill whenever the user wants to detect inconsistencies between design documents under `DESIGN/` — type-name drift, field-name mismatches, divergent API contracts, dependency cycles, DB-schema disagreements, terminology drift, and constant-value mismatches across multiple specs. Trigger phrases include "audit our design docs", "check the DESIGN/ markdowns for inconsistencies", "do the spec markdowns line up", "type names align between specs?", "API contract drift across designs", "scan DESIGN/*.md for mismatches before the freeze", or any cross-document consistency check on spec markdowns. Trigger even when the user does not say "spec-audit" — implicit phrases like "did the design docs drift?", "anything off between these markdowns?", or "find conflicts in DESIGN/" qualify.
 argument-hint: "[component-name or 'all']"
 allowed-tools: Read, Grep, Glob, Bash
 model: claude-opus-4-7
 context: fork
 ---
 
-# 設計仕様書間 矛盾検出
+# Cross-document design-spec audit
 
-DESIGN/*.md 間の整合性をチェックし、仕様書同士の矛盾を検出する。
-`/spec-check` が「仕様 vs 実装」なのに対し、こちらは「仕様 vs 仕様」。
-
----
-
-## 準備
-
-### 仕様書の収集
-
-1. CLAUDE.md の `## Component Mapping` から仕様書パスを取得
-2. Component Mapping がない場合: `DESIGN/*.md` を直接 Glob で収集
-3. DESIGN/ ディレクトリが存在しない場合: 「仕様書が見つかりません」と報告して終了
-
-### 対象の決定
-
-| 引数 | 動作 |
-|------|------|
-| コンポーネント名 | そのコンポーネントの仕様書 + 依存先の仕様書 |
-| `all` | 全仕様書 |
-| なし | 全仕様書（`all` と同じ） |
-
-### 仕様書の全文読み込み
-
-対象の全仕様書を読み込み、以下を抽出する:
-- 型定義（struct / interface / enum / type alias）
-- 関数シグネチャ（pub fn / export function）
-- API エンドポイント定義
-- DB テーブル / コレクション定義
-- 用語定義・ドメインモデル
-- 依存関係の記述
-- 定数・設定値
+Detect contradictions between design documents under `DESIGN/`. While `spec-check` compares spec to implementation, this skill compares spec to spec.
 
 ---
 
-## チェック項目
+## Setup
 
-### Check 1: 型名・フィールド名の揺れ
+### Collect the spec set
 
-同じ概念を表す型が仕様書間で異なる名前を使用していないか。
+1. Read CLAUDE.md `## Component Mapping` to obtain the spec paths.
+2. If absent, glob `DESIGN/*.md` directly.
+3. If neither exists, report "no design docs found" and stop.
 
-検出方法:
-1. 全仕様書から型定義を抽出
-2. 類似名（例: `User` vs `UserInfo`, `Item` vs `ItemRecord`）をペアリング
-3. 同一概念かどうかをフィールド構成から判定
+### Determine scope
 
-出力例:
+| Argument | Behavior |
+|----------|----------|
+| Component name | That component's spec plus its dependency specs |
+| `all` | Every spec |
+| (none) | Every spec (same as `all`) |
+
+### Load every spec
+
+Read each in scope and extract:
+
+- Type definitions (struct / interface / enum / type alias)
+- Function signatures (`pub fn`, `export function`, etc.)
+- API endpoint definitions
+- DB table / collection definitions
+- Domain terms and definitions
+- Dependency declarations
+- Constants and configuration values
+
+---
+
+## Checks
+
+### Check 1: Type / field name drift
+
+Different names for the same concept across specs.
+
+Detection:
+1. Extract type definitions from every spec.
+2. Pair similarly-named types (e.g. `User` vs `UserInfo`, `Item` vs `ItemRecord`).
+3. Decide whether they describe the same concept by comparing field composition.
+
+Example output:
 ```
-[AUDIT-1] 型名揺れ
+[AUDIT-1] Type-name drift
   DESIGN/<component_a>.md:<N> — struct <TypeA> { <field_x>: T, <field_y>: T }
   DESIGN/<component_b>.md:<N> — struct <TypeB> { <field_from>: T, <field_to>: T }
-  推奨: 型名とフィールド名を統一（<TypeA> / <field_x>, <field_y> に統一を推奨）
+  Recommendation: unify the type and field names (suggest <TypeA> / <field_x>, <field_y>)
 ```
 
-### Check 2: 共有型のフィールド不一致
+### Check 2: Shared-type field mismatch
 
-複数の仕様書で参照される型のフィールド定義が一致しているか。
+A type that appears in multiple specs but with diverging fields.
 
-検出方法:
-1. 同名の型が複数の仕様書に出現するケースを抽出
-2. フィールドの名前・型・数を比較
+Detection:
+1. Find shared type names across specs.
+2. Compare field names, types, and counts.
 
-### Check 3: API 契約の不一致
+### Check 3: API contract mismatch
 
-あるコンポーネントが提供する API と、別のコンポーネントが期待する API が一致しているか。
+A provider component's API and a consumer component's expected call shape disagree.
 
-検出方法:
-1. 各仕様書の「公開 API」と「依存関係 / 外部呼び出し」セクションを抽出
-2. 提供側のシグネチャ / エンドポイントと消費側の呼び出し期待を照合
+Detection:
+1. From each spec, extract "public API" and "dependencies / external calls".
+2. Match provider signatures / endpoints with consumer expectations.
 
-出力例:
+Example:
 ```
-[AUDIT-2] API契約不一致
-  提供: DESIGN/<provider>.md:<N> — GET /<api_path> → Vec<<Item>>
-  消費: DESIGN/<consumer>.md:<N> — fetch("/<api_path>") → expects { items: <Item>[] }
-  差分: レスポンスが配列直接 vs オブジェクトラップ
-  推奨: レスポンス形式を統一
+[AUDIT-2] API contract mismatch
+  Provider: DESIGN/<provider>.md:<N> — GET /<api_path> → Vec<<Item>>
+  Consumer: DESIGN/<consumer>.md:<N> — fetch("/<api_path>") → expects { items: <Item>[] }
+  Diff: bare array vs object-wrapped response
+  Recommendation: unify on one response shape
 ```
 
-### Check 4: 依存方向の循環
+### Check 4: Dependency cycles
 
-コンポーネント間の依存関係に循環がないか。
+Cycles in component dependency declarations.
 
-検出方法:
-1. 各仕様書の依存関係セクションから有向グラフを構築
-2. 循環検出（DFS + バックエッジ）
+Detection:
+1. Build a directed graph from each spec's dependency section.
+2. Run DFS + back-edge detection.
 
-### Check 5: DB スキーマの不整合
+### Check 5: DB-schema mismatch
 
-DB 関連の仕様が複数箇所で定義されている場合の不整合。
+When DB definitions appear in multiple specs.
 
-検出方法:
-1. テーブル / カラム定義を全仕様書から抽出
-2. 同一テーブルの定義が複数ある場合、カラム・型・制約を比較
+Detection:
+1. Extract table / column definitions from every spec.
+2. Compare columns, types, constraints when the same table appears more than once.
 
-### Check 6: 用語の不統一
+### Check 6: Terminology drift
 
-ドメイン用語が仕様書間で統一されているか。
+Domain terms not unified across specs.
 
-検出方法:
-1. 各仕様書の見出し・定義セクションから主要用語を抽出
-2. 同義語（例: 「ユーザー」「利用者」「アカウント」などドメイン用語の揺れ）を検出
-3. 英語 / 日本語 / 略語の混在を検出
+Detection:
+1. Pull primary terms from each spec's headings and definition sections.
+2. Detect synonyms (e.g. "user" / "account holder", or English / Japanese / abbreviation drift).
 
-### Check 7: 定数・設定値の不整合
+### Check 7: Constant / configuration value drift
 
-複数仕様書で参照される定数（ポート番号、制限値、タイムアウト等）の値が一致しているか。
+Same named constant (port, limit, timeout, etc.) with different values across specs.
 
 ---
 
-## 深刻度分類
+## Severity scale
 
-| 深刻度 | 基準 | 例 |
-|--------|------|-----|
-| **Critical** | ビルド・実行時に必ず問題を起こす矛盾 | 型フィールドの不一致、API契約の破綻 |
-| **Warning** | 混乱を招く不整合 | 型名揺れ、用語不統一 |
-| **Info** | 改善推奨だが実害なし | 記述スタイルの不統一、コメント不足 |
+| Level | Definition | Example |
+|-------|-----------|---------|
+| **Critical** | Will cause a build or runtime failure | Type-field mismatch, broken API contract |
+| **High** | Causes confusion or data drift but won't break the build | Constant-value mismatch, dependency cycle |
+| **Medium** | Style / consistency issues that hurt readability | Type-name drift, terminology drift |
+| **Low** | Improvement-only, no functional impact | Comment style, documentation gaps |
 
 ---
 
-## 出力形式
+## Output format
 
 ```
 ╔══════════════════════════════════════╗
-║  仕様書間矛盾チェック結果             ║
-║  対象: {n} 仕様書                    ║
+║  Cross-spec audit                    ║
+║  Targets: <n> design docs            ║
 ╚══════════════════════════════════════╝
 
-■ サマリー
-  Critical: {n} 件 — 必ず解決
-  Warning:  {n} 件 — 解決推奨
-  Info:     {n} 件 — 改善余地
+■ Summary
+  Critical: <n> — must resolve
+  High:     <n> — recommended
+  Medium:   <n> — fix when reasonable
+  Low:      <n> — optional
 
 ═══ Critical ═══
 
-[AUDIT-1] API契約不一致
+[AUDIT-1] API contract mismatch
   DESIGN/<provider>.md:<N> — GET /<api_path> → Vec<<Item>>
   DESIGN/<consumer>.md:<N> — expects { items: <Item>[] }
-  推奨: レスポンス形式を統一
+  Recommendation: unify the response shape
 
-═══ Warning ═══
+═══ High ═══
 
-[AUDIT-3] 型名揺れ
+[AUDIT-3] Constant drift
+  DESIGN/<a>.md — CONNECT_TIMEOUT_MS = 3000
+  DESIGN/<b>.md — CONNECT_TIMEOUT_MS = 5000
+  Recommendation: pick one canonical value
+
+═══ Medium ═══
+
+[AUDIT-5] Type-name drift
   DESIGN/<component_a>.md:<N> — <TypeA>
   DESIGN/<component_b>.md:<N> — <TypeB>
-  推奨: <TypeA> に統一
-
-═══ Info ═══
-
-[AUDIT-5] 用語不統一
-  「<用語A>」(DESIGN/<a>, <b>) vs 「<用語B>」(DESIGN/<c>)
-  推奨: 用語集を作成して統一
+  Recommendation: unify on <TypeA>
 ```
 
 ---
 
-## パイプライン統合
+## Pipeline integration
 
-impl-orchestrator では直接使用しない（実装フェーズではなく設計フェーズのツール）。
+Not called from `impl-orchestrator` (it is a design-time tool, not an implementation gate).
 
-design-phase（Sprint 3）から呼ばれる場合:
-- 設計生成後の自己検証として実行
-- Critical の矛盾は自律修正を試行
-- ドメイン知識が必要な矛盾はエスカレーション
+When called from `design-phase` (Sprint 3):
+- Run as a self-check after generation.
+- Critical contradictions trigger autonomous repair.
+- Domain-knowledge contradictions escalate to the user.
 
-スタンドアロン実行:
-- 設計レビュー時に手動で実行
-- PR で DESIGN/*.md に変更がある場合の事前チェック
+Standalone:
+- Run during design review.
+- Run as a pre-flight check on PRs that touch `DESIGN/*.md`.
