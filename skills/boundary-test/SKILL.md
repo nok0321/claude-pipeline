@@ -4,6 +4,7 @@ description: Use this skill whenever the user wants to detect contracts at the b
 argument-hint: "[detect | generate | run | all] [component-name]"
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 model: claude-opus-4-7
+context: fork
 ---
 
 # Boundary contract test

@@ -4,6 +4,7 @@ description: Use this skill whenever the user wants to apply a verified fix or r
 argument-hint: "[finding-source | file:line | issue-description] [--mode=conformance|robust|adhoc] [--spec-wins | --impl-wins | --dry-run | --loop [N]]"
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob
 model: claude-opus-4-7
+context: fork
 ---
 
 # safe-fix: finding-driven remediation with verification gate
