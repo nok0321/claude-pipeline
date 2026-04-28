@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
 # Run trigger-rate eval for all 15 custom skills and save results.
 #
+# Uses evals/scripts/run_eval_compat.py (self-contained, threading-based)
+# instead of skill-creator's scripts/run_eval.py, which fails on Windows
+# due to select.select() not supporting file handles (WinError 10038).
+#
 # Usage:
 #   bash evals/scripts/run_baseline.sh [output-dir]
 #
 # Environment overrides:
-#   SKILL_CREATOR_DIR  Path to skill-creator (default: ~/.claude/plugins/.../skill-creator)
 #   MODEL              Model id (default: claude-opus-4-7)
 #   WORKERS            Parallel workers per skill (default: 10)
 #   TIMEOUT            Per-query timeout in seconds (default: 30)
 #   RUNS               Runs per query for variance smoothing (default: 3)
 #   ONLY_SKILLS        Space-separated subset to run (default: all)
-#
-# Default output: evals/results/baseline/<skill>.json (one per skill)
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-SKILL_CREATOR="${SKILL_CREATOR_DIR:-$HOME/.claude/plugins/marketplaces/claude-plugins-official/plugins/skill-creator/skills/skill-creator}"
-RUN_EVAL_REL="scripts.run_eval"
+RUN_EVAL_SCRIPT="$REPO_ROOT/evals/scripts/run_eval_compat.py"
 QUERIES_DIR="$REPO_ROOT/evals/queries"
 RESULTS_DIR="${1:-$REPO_ROOT/evals/results/baseline}"
 MODEL="${MODEL:-claude-opus-4-7}"
@@ -28,14 +28,18 @@ WORKERS="${WORKERS:-10}"
 TIMEOUT="${TIMEOUT:-30}"
 RUNS="${RUNS:-3}"
 
-if [ ! -f "$SKILL_CREATOR/scripts/run_eval.py" ]; then
-  echo "ERROR: run_eval.py not found at $SKILL_CREATOR/scripts/run_eval.py" >&2
-  echo "Set SKILL_CREATOR_DIR env var. Current: $SKILL_CREATOR" >&2
+if [ ! -f "$RUN_EVAL_SCRIPT" ]; then
+  echo "ERROR: run_eval_compat.py not found at $RUN_EVAL_SCRIPT" >&2
   exit 1
 fi
 
 if ! command -v claude >/dev/null 2>&1; then
   echo "ERROR: 'claude' CLI not found in PATH." >&2
+  exit 1
+fi
+
+if ! command -v python >/dev/null 2>&1; then
+  echo "ERROR: 'python' not found in PATH." >&2
   exit 1
 fi
 
@@ -85,7 +89,7 @@ for skill in "${SKILLS[@]}"; do
 
   echo "[$i/$total] Running $skill ($MODEL, runs=$RUNS, workers=$WORKERS, timeout=${TIMEOUT}s) ..." >&2
 
-  if PYTHONPATH="$SKILL_CREATOR" python -m "$RUN_EVAL_REL" \
+  if python "$RUN_EVAL_SCRIPT" \
        --eval-set "$query_file" \
        --skill-path "$REPO_ROOT/skills/$skill" \
        --num-workers "$WORKERS" \
@@ -94,7 +98,11 @@ for skill in "${SKILLS[@]}"; do
        --model "$MODEL" \
        --verbose \
        > "$result_file" 2> "$log_file"; then
-    echo "  -> $result_file" >&2
+    summary_line=$(tail -n 1 "$log_file" 2>/dev/null | grep -E "Results: " || tail -n 30 "$log_file" 2>/dev/null | grep -E "Results: " | head -n 1 || echo "")
+    if [ -z "$summary_line" ]; then
+      summary_line=$(grep -E "Results: " "$log_file" | head -n 1 || echo "")
+    fi
+    echo "  -> $result_file ${summary_line:+($summary_line)}" >&2
   else
     echo "  WARN: $skill eval failed (see $log_file)" >&2
     failures=$((failures + 1))

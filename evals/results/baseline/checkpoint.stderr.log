@@ -1,0 +1,23 @@
+Evaluating skill='checkpoint' against 20 queries...
+  description (first 100 chars): 長期タスクのセッション継続用チェックポイント（CHECKPOINT.md）を作成・復元する。USE WHEN /clear や /compact の直前、長時間セッションの区切り、明日続きをやる時。S...
+Results: 16/20 passed
+  [FAIL] rate=1/3 expected=True: I'm about to /clear this session — task is half done. Save a checkpoin
+  [PASS] rate=3/3 expected=True: Long session today, I want to wrap up but the implementation isn't don
+  [FAIL] rate=1/3 expected=True: Create a CHECKPOINT.md for the current task. We've been working for 4 
+  [FAIL] rate=1/3 expected=True: save state pls, im about to /compact and dont wanna lose context. were
+  [PASS] rate=3/3 expected=True: Tomorrow I'll continue this task — write down where we are, what files
+  [PASS] rate=3/3 expected=True: Run /checkpoint save before I close my laptop. Git is dirty (12 files 
+  [PASS] rate=2/3 expected=True: I'm going to take a break for 3 hours — when I come back I want to kno
+  [FAIL] rate=0/3 expected=True: Restore the last checkpoint and tell me where we left off. CHECKPOINT.
+  [PASS] rate=3/3 expected=True: long task, gonna take a nap. checkpoint the state so future-me knows w
+  [PASS] rate=3/3 expected=True: Save a checkpoint right now. The task is the OAuth flow rewrite, we ju
+  [PASS] rate=0/3 expected=False: Update PIPELINE-STATE.md with the current dev-pipeline phase — we just
+  [PASS] rate=0/3 expected=False: What's the difference between git stash and git checkout for saving wo
+  [PASS] rate=0/3 expected=False: Initialize the pipeline state for the new task 'auth-rewrite'. Phase 0
+  [PASS] rate=0/3 expected=False: How do I create a snapshot in Postgres for backup purposes before a ri
+  [PASS] rate=0/3 expected=False: Add a small comment to the formatDate function in src/utils/date.ts ex
+  [PASS] rate=0/3 expected=False: Fix the failing test in tests/auth.test.ts and verify the regression t
+  [PASS] rate=0/3 expected=False: Run the full test suite for the release preflight check — integration 
+  [PASS] rate=0/3 expected=False: Transition the pipeline to Phase 3 (test phase) and update PIPELINE-ST
+  [PASS] rate=0/3 expected=False: Rename the variable getUserData to fetchUser across the codebase, incl
+  [PASS] rate=0/3 expected=False: Help me set up VSCode launch configuration for debugging Node.js apps 

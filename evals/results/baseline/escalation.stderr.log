@@ -1,0 +1,13 @@
+Evaluating skill='escalation' against 10 queries...
+  description (first 100 chars): パイプライン全体で参照されるエスカレーション判断基準。Finding を Tier 1（必ずユーザー確認）/ Tier 2（自律対応＋事後報告）/ Tier 3（自律対応・報告不要）の3段階に分類する...
+Results: 6/10 passed
+  [FAIL] rate=1/3 expected=True: robust-review found a S-Critical finding about session token storage. 
+  [PASS] rate=3/3 expected=True: I have 12 findings from spec-check and don't know which to surface to 
+  [FAIL] rate=0/3 expected=True: Classify this finding using the Tier framework: 'Implementation in src
+  [FAIL] rate=1/3 expected=True: verification gate failed twice in a row on the auth component, is this
+  [FAIL] rate=0/3 expected=True: Looking at the Escalation Overrides section in CLAUDE.md — want to ver
+  [PASS] rate=0/3 expected=False: Fix the failing test in tests/auth.test.ts and verify regression tests
+  [PASS] rate=0/3 expected=False: Auto-fix all S-Critical findings from the last robust-review run on sr
+  [PASS] rate=0/3 expected=False: What does Tier 1 support mean in AWS pricing for enterprise customers?
+  [PASS] rate=0/3 expected=False: How do escalation policies work in PagerDuty for on-call rotations?
+  [PASS] rate=0/3 expected=False: Apply spec-fix to the 8 Diverged findings between DESIGN/02_payment.md

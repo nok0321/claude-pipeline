@@ -1,0 +1,171 @@
+{
+  "skill_name": "boundary-test",
+  "description": "コンポーネント間の境界契約（REST API↔Frontend、WASM↔TS、DB↔App、座標/単位/エンコーディング変換）を検出して境界テストを自動生成・実行する。USE WHEN 型不一致や変換ミスを機械的に検出したい、impl-orchestrator 完了後の最終ゲート、API/DB/WASM スキーマ変更後。SKIP 単一ファイル内のロジックバグ、UI 動作確認は対象外。",
+  "results": [
+    {
+      "query": "Just merged the new /api/orders endpoint and the frontend OrderList component that calls it. I want to detect any field name mismatch or type drift between the OpenAPI spec and the React fetch hooks before this hits prod.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "We just changed the DB schema for the events table — added 2 columns, renamed one. Need to verify the application layer reads/writes still match. Run boundary tests on the events table contract.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "After the WASM rebuild, our TypeScript bindings to the geometry module might have drift on the Coord3D struct (x/y/z order vs y/x/z). Run boundary contract tests across the WASM↔TS interface.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "I keep getting weird parsing errors after the API team renamed `userId` → `user_id` in some endpoints. Detect all the boundary mismatches between our API responses and the TypeScript types in src/types/api/.",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "yo we shipped a postgres migration and im paranoid about app code drift. boundary check on the user_account / order_history tables pls",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Generate and run boundary contract tests for the encoding conversion between our internal UTF-8 strings and the legacy SJIS export. Specifically the customer name + address fields in src/export/legacy.ts.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "impl-orchestrator just finished the inventory component. Run boundary-test as the final gate to catch any DB↔App schema drift or REST contract mismatch before I review.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "We have unit conversion (cm→mm) happening in 3 places between the parser and the renderer. Detect any boundary contract violations in the conversion path src/parser/ → src/render/.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "wasm <-> ts type contract check on the math module pls. just rebuilt geo.wasm and i bet something is off with the matrix layout",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Run all boundary tests after the API schema update — REST↔Frontend and DB↔App layers. I want type mismatches surfaced as a list with file:line refs.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "There's a bug in the formatDate function — it's returning UTC instead of local time. Fix it and verify the regression tests don't break.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Implement the inventory component end-to-end from DESIGN/05_inventory.md, including the boundary tests if needed.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "The login button on the homepage is misaligned on mobile breakpoint. Can you fix the CSS in src/components/Header.css?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Help me write integration tests for the search endpoint using Playwright — UI flow validation.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "What's the best way to mock REST APIs in a React test suite? MSW vs nock vs custom?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Compare DESIGN/05_inventory.md against the implementation in src/inventory/ and tell me what's missing or diverged.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Deep security review on the API authentication code in src/api/auth/. Find injection vectors and authorization issues.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Quick PR review on the changes to handlers/order.ts — Critical/Warning/Info levels, 5 min max.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Add a logging middleware that captures request/response bodies for the /api/orders endpoint.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Audit the design docs under DESIGN/ for type name inconsistencies and constant drift between docs.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 20,
+    "passed": 19,
+    "failed": 1
+  }
+}

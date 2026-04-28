@@ -1,0 +1,23 @@
+Evaluating skill='quick-test' against 20 queries...
+  description (first 100 chars): git diff の変更ファイルから関連テストのみ自動選択して高速実行する（フルテスト実行より大幅短縮）。USE WHEN 修正直後の素早い動作確認、impl-orchestrator や code-...
+Results: 18/20 passed
+  [PASS] rate=3/3 expected=True: I just patched 3 files in src/auth/ (login.ts, session.ts, oauth.ts). 
+  [PASS] rate=3/3 expected=True: Before I open this PR for the discount calculation refactor, can you s
+  [FAIL] rate=1/3 expected=True: Made some quick edits to handlers/order.ts and validators/order_valida
+  [PASS] rate=3/3 expected=True: Use git diff to find what I touched in this last hour and run only tho
+  [PASS] rate=3/3 expected=True: fast test plz — ive only changed like 4 lines in handlers/payment.ts a
+  [PASS] rate=3/3 expected=True: Run only the tests related to my git diff changes. Full suite is too h
+  [FAIL] rate=0/3 expected=True: Before committing this small refactor in src/utils/format.ts, just run
+  [PASS] rate=3/3 expected=True: just changed handlers/order.ts and the related schema in schemas/order
+  [PASS] rate=2/3 expected=True: Before opening this PR for the order validation refactor (touched 4 fi
+  [PASS] rate=3/3 expected=True: Run diff-based selective tests right now. I'm about to commit and have
+  [PASS] rate=0/3 expected=False: Run the entire test suite, including integration tests and e2e, for th
+  [PASS] rate=0/3 expected=False: There's a failing test in tests/auth.test.ts — fix the bug that's caus
+  [PASS] rate=0/3 expected=False: What testing framework should I use for a Rust project — cargo test, n
+  [PASS] rate=0/3 expected=False: Write a new test case for the divide-by-zero edge case in src/calculat
+  [PASS] rate=0/3 expected=False: Generate test data for a 100-row CSV file with realistic-looking custo
+  [PASS] rate=0/3 expected=False: Pre-release verification — run the entire test suite end-to-end on tag
+  [PASS] rate=0/3 expected=False: Mock the database connection in tests/order.test.ts — currently it hit
+  [PASS] rate=0/3 expected=False: Add boundary test cases (0, MAX, MIN, NaN) for the decimal handling in
+  [PASS] rate=0/3 expected=False: Recommend a mocking library — torn between jest mocks, vitest mocks, a
+  [PASS] rate=0/3 expected=False: Explain TDD best practices for a junior dev who just joined the team. 

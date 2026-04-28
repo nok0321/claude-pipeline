@@ -1,0 +1,23 @@
+Evaluating skill='code-review' against 20 queries...
+  description (first 100 chars): 軽量な統合コードレビュー（Critical/Warning/Info の3段階）。静的解析+セキュリティ+堅牢性+構造+テスト影響を一通り走らせる。USE WHEN PR 作成前、小〜中規模の変更レビ...
+Results: 13/20 passed
+  [FAIL] rate=1/3 expected=True: Quick PR review on the changes I just made in src/utils/format.ts and 
+  [PASS] rate=3/3 expected=True: Review my last 4 commits before I push the PR. I want a quick pass — s
+  [FAIL] rate=0/3 expected=True: Just finished the order validation refactor (src/order/validators/, ~2
+  [FAIL] rate=0/3 expected=True: Review file src/auth/oauth.ts. 3-tier breakdown please. Focus on the n
+  [FAIL] rate=0/3 expected=True: 5 min PR review on my changes pls. nothing too deep just the obvious s
+  [PASS] rate=3/3 expected=True: Run a code review on the diff between origin/main and HEAD. I want Cri
+  [FAIL] rate=1/3 expected=True: I changed handlers/payment.ts and handlers/refund.ts (~150 lines combi
+  [FAIL] rate=0/3 expected=True: code review on my last commit pls, lemme know if anything jumps out. n
+  [PASS] rate=3/3 expected=True: Review the changes in src/ between commits abc123 and HEAD with a 3-ti
+  [FAIL] rate=0/3 expected=True: I refactored the search query parser in src/search/parser.ts. Light re
+  [PASS] rate=0/3 expected=False: Add JSDoc comments to all the public functions in src/utils/format.ts 
+  [PASS] rate=0/3 expected=False: Deep security audit on src/api/auth/ before merge. Inject vectors, pan
+  [PASS] rate=0/3 expected=False: Compare my implementation in src/order/ against DESIGN/03_order.md. Sh
+  [PASS] rate=0/3 expected=False: There's a bug in handlers/order.ts that's failing tests. Fix it and ve
+  [PASS] rate=0/3 expected=False: What's the best way to handle async errors in TypeScript with strict m
+  [PASS] rate=0/3 expected=False: Pre-release security review on the entire src/auth/ tree. I need this 
+  [PASS] rate=0/3 expected=False: Generate unit tests for the OrderValidator class in src/order/validato
+  [PASS] rate=0/3 expected=False: Help me write a regex that matches valid email addresses including IDN
+  [PASS] rate=0/3 expected=False: Implement the search component end-to-end from DESIGN/02_search.md inc
+  [PASS] rate=0/3 expected=False: Set up ESLint rules for the new TypeScript project — strict mode, no-e

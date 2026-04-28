@@ -1,0 +1,23 @@
+Evaluating skill='spec-check' against 20 queries...
+  description (first 100 chars): DESIGN/*.md と実装コードの整合性チェック。差分を Missing（仕様にあるが未実装）/ Diverged（不一致）/ Extra（仕様外実装）/ Constraint（設計制約違反）の4...
+Results: 10/20 passed
+  [FAIL] rate=0/3 expected=True: Compare DESIGN/01_auth.md against the implementation in src/auth/. Lis
+  [FAIL] rate=0/3 expected=True: diff check between DESIGN/05_inventory.md and src/inventory/. anything
+  [FAIL] rate=0/3 expected=True: Implementation is done for the order component. Verify it matches DESI
+  [FAIL] rate=0/3 expected=True: Run spec-check on all components — I want a full compliance report bet
+  [FAIL] rate=0/3 expected=True: Apply spec-check on the payment component. I want Constraint violation
+  [FAIL] rate=0/3 expected=True: Pre-PR check: does my implementation in src/notification/ match DESIGN
+  [FAIL] rate=0/3 expected=True: We just finished impl-orchestrator on the search component. Stage 4 sp
+  [FAIL] rate=0/3 expected=True: Spec compliance audit on the auth component. DESIGN/01_auth.md vs src/
+  [FAIL] rate=0/3 expected=True: I want to know if my implementation drifted from the design — find wha
+  [FAIL] rate=0/3 expected=True: is what i built actually what the spec says? check src/order/ against 
+  [PASS] rate=0/3 expected=False: Audit the design docs under DESIGN/ for type inconsistencies between d
+  [PASS] rate=0/3 expected=False: I have a list of 5 spec-check findings — fix them automatically based 
+  [PASS] rate=0/3 expected=False: What's the best practice for API design documentation — OpenAPI, Async
+  [PASS] rate=0/3 expected=False: Generate DESIGN/04_payment.md from scratch — we don't have it yet, pla
+  [PASS] rate=0/3 expected=False: Deep security review on src/auth/ — injection, panic sources, S-Critic
+  [PASS] rate=0/3 expected=False: Help me write API documentation in OpenAPI 3.0 format for the order en
+  [PASS] rate=0/3 expected=False: Implement the payment retry logic from DESIGN/04_payment.md end-to-end
+  [PASS] rate=0/3 expected=False: Add a new field `lastLoginAt` to the User type in DESIGN/01_user.md. S
+  [PASS] rate=0/3 expected=False: Quick PR review on my last 3 commits — Critical/Warning/Info breakdown
+  [PASS] rate=0/3 expected=False: Convert these JSON Schema definitions to TypeScript types automaticall
