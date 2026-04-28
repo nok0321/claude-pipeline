@@ -1,0 +1,171 @@
+{
+  "skill_name": "spec-fix",
+  "description": "Use this skill whenever the user wants to repair findings from `spec-check` — patching either the implementation or the design doc bidirectionally — based on heuristics (robustness wins, tests-validate-impl, recent-edit signal, git blame). Supports a `--loop` mode that iterates spec-check → spec-fix until the diff hits zero or a retry cap (succeeds the retired `spec-cycle`). Trigger phrases include \"fix the spec mismatches\", \"reconcile spec and implementation\", \"apply the spec-check findings\", \"update the design doc to match the code\", \"make implementation match the spec\", \"fix the constraint violations\", or any conformance-repair request after spec-check. Trigger even when the user does not say \"spec-fix\" — phrases like \"close the gap between design and code\" or \"make spec and impl agree\" qualify.",
+  "results": [
+    {
+      "query": "Apply spec-fix to the 12 findings from the last spec-check run. Use the standard heuristics — robustness wins for type drift, test existence wins for behavior, git blame wins for ambiguous Diverged.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "spec-check found 8 Constraint violations between DESIGN/02_payment.md and src/payment/. Resolve them — spec wins for the constants, impl wins for the runtime behavior.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Run spec-fix --loop on the auth component until the diff hits zero. Cap at 5 iterations and verify after each pass.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "auto sync DESIGN/03_order.md and src/order/ pls. spec-check has a list ready, let the heuristics decide direction",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Apply the spec-fix heuristics to resolve all Diverged and Extra findings between DESIGN/04_payment.md and src/payment/. Dry-run first, then real after I confirm.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Run spec-fix --spec-wins on the inventory component — DESIGN/05_inventory.md is the source of truth, update src/inventory/ to match.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Constraint violations all over src/api/handlers/ — there's a rule in CLAUDE.md about no direct DB access from handlers. Apply spec-fix to clean them up.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "fix the diff between DESIGN/05_inventory.md and src/inventory/ in batch. let the heuristics decide direction, robustness preferred",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Apply spec-fix --impl-wins on src/notification/ — the implementation has the correct behavior, update DESIGN/07_notification.md to reflect it.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Restore spec-impl alignment after the recent refactor — there are ~10 known divergences in the order component. Use the loop mode until clean.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Implement the new payment retry logic from scratch — DESIGN/04_payment.md is finalized but no impl yet (Missing case at scale, ~500 lines).",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Compare DESIGN/01_auth.md vs src/auth/ — just the diff, don't fix anything yet. I want to review before applying.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "What's the difference between SOA and microservices in modern architecture?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Generate DESIGN/06_inventory.md from plans/INVENTORY.md — we don't have a design doc yet.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Fix the bug in handlers/order.ts:88 — race condition on inventory decrement. Verify regression after.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "How do I version-control the design docs alongside the implementation in a monorepo?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Audit the design docs themselves for inconsistencies between them — type names, constants, API contracts.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Help me write a CONTRIBUTING.md for the project covering PR workflow and review expectations.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Auto-fix all S-Critical findings from robust-review on src/auth/ — unwrap and injection patterns.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Add a section to README.md describing the testing strategy (unit, integration, e2e).",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 20,
+    "passed": 10,
+    "failed": 10
+  }
+}

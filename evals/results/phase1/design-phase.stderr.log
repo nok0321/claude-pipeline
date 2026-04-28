@@ -1,0 +1,23 @@
+Evaluating skill='design-phase' against 20 queries...
+  description (first 100 chars): Use this skill whenever the user wants to autonomously generate or update design documents under `DE...
+Results: 20/20 passed
+  [PASS] rate=3/3 expected=True: Generate DESIGN/*.md for the entire payment system from plans/PAYMENT.
+  [PASS] rate=3/3 expected=True: Starting a new feature — chat. We have plans/CHAT.md with requirements
+  [PASS] rate=2/3 expected=True: Run design-phase on the inventory and shipping components. Generate DE
+  [PASS] rate=3/3 expected=True: I have a plan summary in plans/NOTIFICATION.md and need design docs fo
+  [PASS] rate=3/3 expected=True: spin up design docs for the new auth refactor pls. plans/AUTH-REWRITE.
+  [PASS] rate=3/3 expected=True: Generate design documents for all components in this fresh project. Us
+  [PASS] rate=3/3 expected=True: We're starting Phase 1 of dev-pipeline for the order management system
+  [PASS] rate=3/3 expected=True: new project from scratch, no design docs yet. generate them from plans
+  [PASS] rate=3/3 expected=True: Run /design-phase --from-scratch on the search component. plans/SEARCH
+  [PASS] rate=3/3 expected=True: I have requirements for 5 components and want all the design docs gene
+  [PASS] rate=0/3 expected=False: Fix the divergence between DESIGN/03_order.md and src/order/. The impl
+  [PASS] rate=0/3 expected=False: Update DESIGN/01_user.md to add a new field `lastLoginAt` to the User 
+  [PASS] rate=0/3 expected=False: DESIGN/05_inventory.md is finalized. Implement the component end-to-en
+  [PASS] rate=0/3 expected=False: Help me design a database schema for a multi-tenant SaaS app — what's 
+  [PASS] rate=0/3 expected=False: Audit the existing DESIGN/ docs for type name inconsistencies and API 
+  [PASS] rate=0/3 expected=False: Convert this UML class diagram to a Mermaid diagram for the README.md.
+  [PASS] rate=0/3 expected=False: Write a small Python script that generates test data for the user regi
+  [PASS] rate=0/3 expected=False: spec-check found 8 Constraint violations between DESIGN/02_payment.md 
+  [PASS] rate=0/3 expected=False: Add a new section to README.md describing the deployment process to st
+  [PASS] rate=0/3 expected=False: Edit DESIGN/01_user.md and add the email field to the User type. Singl

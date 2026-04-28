@@ -1,0 +1,23 @@
+Evaluating skill='robust-fix' against 20 queries...
+  description (first 100 chars): Use this skill whenever the user wants to auto-apply pattern-based fixes for the Critical and High f...
+Results: 10/20 passed
+  [FAIL] rate=0/3 expected=True: Auto-fix all S-Critical and S-High findings from the last robust-revie
+  [FAIL] rate=0/3 expected=True: robust-review just dumped 14 findings, 5 are S-Critical (mostly unwrap
+  [FAIL] rate=0/3 expected=True: Apply robust-fix on src/payment/ — focus on injection vectors (paramet
+  [FAIL] rate=0/3 expected=True: fix the s-critical findings from last review pls. unwraps and sql inje
+  [FAIL] rate=0/3 expected=True: Pre-release hotfix pass — robust-review surfaced 8 high-priority issue
+  [FAIL] rate=0/3 expected=True: Run robust-fix --dry-run on the entire src/ tree to preview the patche
+  [FAIL] rate=0/3 expected=True: I have a list of 6 robust-review findings (3 S-Critical, 3 S-High) and
+  [FAIL] rate=0/3 expected=True: auto patch all the high severity stuff from robust-review on src/api/.
+  [FAIL] rate=0/3 expected=True: Run robust-fix on file src/handlers/order.ts — apply all the standard 
+  [FAIL] rate=0/3 expected=True: Tier 2 batch processing — robust-review found 9 actionable findings, f
+  [PASS] rate=0/3 expected=False: Fix the bug in src/auth/login.ts:142 where null email crashes the OAut
+  [PASS] rate=0/3 expected=False: Run a deep security audit on src/auth/ — inject vectors, panic sources
+  [PASS] rate=0/3 expected=False: Resolve the 5 Diverged findings between DESIGN/03_order.md and src/ord
+  [PASS] rate=0/3 expected=False: How do I prevent SQL injection in TypeScript with Prisma? Best practic
+  [PASS] rate=0/3 expected=False: Implement the new payment retry logic from DESIGN/04_payment.md end-to
+  [PASS] rate=0/3 expected=False: Add input validation to the user registration form — email format, pas
+  [PASS] rate=0/3 expected=False: There's a race condition in handlers/checkout.ts — fix it safely with 
+  [PASS] rate=0/3 expected=False: Explain the OWASP Top 10 to a junior dev who just joined the security 
+  [PASS] rate=0/3 expected=False: Light PR review on my last 3 commits — Critical/Warning/Info levels, 5
+  [PASS] rate=0/3 expected=False: What's the difference between encoding and encryption? Need a 1-paragr

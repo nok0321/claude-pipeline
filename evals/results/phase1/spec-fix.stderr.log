@@ -1,0 +1,23 @@
+Evaluating skill='spec-fix' against 20 queries...
+  description (first 100 chars): Use this skill whenever the user wants to repair findings from `spec-check` — patching either the im...
+Results: 10/20 passed
+  [FAIL] rate=0/3 expected=True: Apply spec-fix to the 12 findings from the last spec-check run. Use th
+  [FAIL] rate=0/3 expected=True: spec-check found 8 Constraint violations between DESIGN/02_payment.md 
+  [FAIL] rate=0/3 expected=True: Run spec-fix --loop on the auth component until the diff hits zero. Ca
+  [FAIL] rate=0/3 expected=True: auto sync DESIGN/03_order.md and src/order/ pls. spec-check has a list
+  [FAIL] rate=0/3 expected=True: Apply the spec-fix heuristics to resolve all Diverged and Extra findin
+  [FAIL] rate=0/3 expected=True: Run spec-fix --spec-wins on the inventory component — DESIGN/05_invent
+  [FAIL] rate=0/3 expected=True: Constraint violations all over src/api/handlers/ — there's a rule in C
+  [FAIL] rate=0/3 expected=True: fix the diff between DESIGN/05_inventory.md and src/inventory/ in batc
+  [FAIL] rate=0/3 expected=True: Apply spec-fix --impl-wins on src/notification/ — the implementation h
+  [FAIL] rate=0/3 expected=True: Restore spec-impl alignment after the recent refactor — there are ~10 
+  [PASS] rate=0/3 expected=False: Implement the new payment retry logic from scratch — DESIGN/04_payment
+  [PASS] rate=0/3 expected=False: Compare DESIGN/01_auth.md vs src/auth/ — just the diff, don't fix anyt
+  [PASS] rate=0/3 expected=False: What's the difference between SOA and microservices in modern architec
+  [PASS] rate=0/3 expected=False: Generate DESIGN/06_inventory.md from plans/INVENTORY.md — we don't hav
+  [PASS] rate=0/3 expected=False: Fix the bug in handlers/order.ts:88 — race condition on inventory decr
+  [PASS] rate=0/3 expected=False: How do I version-control the design docs alongside the implementation 
+  [PASS] rate=0/3 expected=False: Audit the design docs themselves for inconsistencies between them — ty
+  [PASS] rate=0/3 expected=False: Help me write a CONTRIBUTING.md for the project covering PR workflow a
+  [PASS] rate=0/3 expected=False: Auto-fix all S-Critical findings from robust-review on src/auth/ — unw
+  [PASS] rate=0/3 expected=False: Add a section to README.md describing the testing strategy (unit, inte

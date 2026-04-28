@@ -1,0 +1,171 @@
+{
+  "skill_name": "fix-with-verify",
+  "description": "Use this skill whenever the user wants to apply a single bug fix or refactor with a built-in safety net — compile/type-check after each edit, run the existing test suite as a regression baseline, and automatically revert if the change breaks anything green. Trigger phrases include \"fix this bug safely\", \"fix and verify\", \"make sure this doesn't break anything\", \"fix with regression check\", \"patch this without breaking other tests\", or any single-issue fix where the user worries about ripple effects. Trigger even when the user does not say \"fix-with-verify\" — implicit phrases like \"fix this but check it works\", \"small fix with safety\", or \"patch this and run the tests\" qualify. For broad feature work, prefer `impl-orchestrator` instead.",
+  "results": [
+    {
+      "query": "There's a bug in src/auth/login.ts:142 — when the OAuth provider returns null email, we crash. Fix it and verify all auth-related regression tests still pass after the fix.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Tests are failing in tests/order.test.ts after my last commit. The issue is in handlers/order.ts:88 — race condition on the inventory decrement. Fix it safely with the verify pipeline.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Apply fix-with-verify on src/payment/refund.ts:55 — the refund amount calculation has an off-by-one when partial refunds are involved. Run regression tests after.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "small bug in formatDate, returning UTC instead of local. fix it but make sure nothing else breaks. heavy regression risk on date stuff",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "I'm scared to refactor handlers/checkout.ts — too much hidden coupling. Apply the safety pipeline (fix → verify → revert if broken) when extracting the validateOrder helper.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Bug report: search results are missing for queries with non-ASCII characters. Issue is in src/search/normalize.ts. Fix and verify with the existing search test suite.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "I want to fix the timeout issue in handlers/api.ts but I'm worried about regression in the retry logic. Run the safe modification pipeline with build/type/test gates.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "rename getUserData to fetchUser everywhere but verify it doesnt break tests. cant afford a rollback today",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Fix the bug at src/inventory/stock.ts:200 (incorrect rounding on stock count) and ensure all inventory tests still pass after the fix. Revert if anything breaks.",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Single-file bug fix needed in src/utils/parse.ts — the JSON parser crashes on trailing commas in some edge inputs. Apply the change with regression safety net.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Implement the new chat component end-to-end from DESIGN/08_chat.md.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Auto-fix all S-Critical findings from the last robust-review run on src/auth/ — unwrap removal, injection mitigation, the standard patterns.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Write a new function to validate email addresses with RFC 5321 compliance.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Resolve the 5 Diverged findings between DESIGN/03_order.md and src/order/. Use the spec-fix heuristics.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Add a logging middleware to the Express app that captures request/response payloads for /api/orders.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Run only the tests related to my git diff changes — speed > coverage right now, full suite is too slow.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "What's the best way to handle async errors in Node.js — global handlers vs try/catch?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Quick PR review on the diff in src/utils/ — Critical/Warning/Info levels, 5 min max.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Help me set up Husky pre-commit hooks for this project to run lint and typecheck.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Build the entire shipping calculator feature from plans/SHIPPING.md — design through tests, autonomous.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 20,
+    "passed": 18,
+    "failed": 2
+  }
+}

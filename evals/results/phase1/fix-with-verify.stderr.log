@@ -1,0 +1,23 @@
+Evaluating skill='fix-with-verify' against 20 queries...
+  description (first 100 chars): Use this skill whenever the user wants to apply a single bug fix or refactor with a built-in safety ...
+Results: 18/20 passed
+  [PASS] rate=3/3 expected=True: There's a bug in src/auth/login.ts:142 — when the OAuth provider retur
+  [PASS] rate=3/3 expected=True: Tests are failing in tests/order.test.ts after my last commit. The iss
+  [FAIL] rate=0/3 expected=True: Apply fix-with-verify on src/payment/refund.ts:55 — the refund amount 
+  [PASS] rate=3/3 expected=True: small bug in formatDate, returning UTC instead of local. fix it but ma
+  [PASS] rate=3/3 expected=True: I'm scared to refactor handlers/checkout.ts — too much hidden coupling
+  [FAIL] rate=0/3 expected=True: Bug report: search results are missing for queries with non-ASCII char
+  [PASS] rate=3/3 expected=True: I want to fix the timeout issue in handlers/api.ts but I'm worried abo
+  [PASS] rate=3/3 expected=True: rename getUserData to fetchUser everywhere but verify it doesnt break 
+  [PASS] rate=2/3 expected=True: Fix the bug at src/inventory/stock.ts:200 (incorrect rounding on stock
+  [PASS] rate=3/3 expected=True: Single-file bug fix needed in src/utils/parse.ts — the JSON parser cra
+  [PASS] rate=0/3 expected=False: Implement the new chat component end-to-end from DESIGN/08_chat.md.
+  [PASS] rate=0/3 expected=False: Auto-fix all S-Critical findings from the last robust-review run on sr
+  [PASS] rate=0/3 expected=False: Write a new function to validate email addresses with RFC 5321 complia
+  [PASS] rate=0/3 expected=False: Resolve the 5 Diverged findings between DESIGN/03_order.md and src/ord
+  [PASS] rate=0/3 expected=False: Add a logging middleware to the Express app that captures request/resp
+  [PASS] rate=0/3 expected=False: Run only the tests related to my git diff changes — speed > coverage r
+  [PASS] rate=0/3 expected=False: What's the best way to handle async errors in Node.js — global handler
+  [PASS] rate=0/3 expected=False: Quick PR review on the diff in src/utils/ — Critical/Warning/Info leve
+  [PASS] rate=0/3 expected=False: Help me set up Husky pre-commit hooks for this project to run lint and
+  [PASS] rate=0/3 expected=False: Build the entire shipping calculator feature from plans/SHIPPING.md — 

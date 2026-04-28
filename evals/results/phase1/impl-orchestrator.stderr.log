@@ -1,0 +1,23 @@
+Evaluating skill='impl-orchestrator' against 20 queries...
+  description (first 100 chars): Use this skill whenever the user wants to autonomously implement one or more components from their `...
+Results: 20/20 passed
+  [PASS] rate=2/3 expected=True: DESIGN/05_inventory.md is finalized. Please implement the inventory tr
+  [PASS] rate=3/3 expected=True: I have the design docs ready for the notification module under DESIGN/
+  [PASS] rate=3/3 expected=True: Take DESIGN/02_search.md and just... implement the whole thing. Don't 
+  [PASS] rate=3/3 expected=True: Run the impl orchestrator on the auth component — DESIGN/01_auth.md is
+  [PASS] rate=2/3 expected=True: ok the design is locked for the export feature (DESIGN/07_export.md). 
+  [PASS] rate=2/3 expected=True: Run autonomous 6-stage implementation on DESIGN/04_payment.md — implem
+  [PASS] rate=3/3 expected=True: The notification module design is finalized in DESIGN/notification/. I
+  [PASS] rate=2/3 expected=True: search feature design is locked in (DESIGN/02_search.md). spin up the 
+  [PASS] rate=3/3 expected=True: DESIGN/06_inventory.md is ready and CLAUDE.md Component Mapping is ali
+  [PASS] rate=3/3 expected=True: Auth component, run impl-orchestrator with the 6-stage loop. Sonnet fo
+  [PASS] rate=0/3 expected=False: We don't have a design doc for the chat feature yet. Can you generate 
+  [PASS] rate=0/3 expected=False: There's a bug in the login flow — when 2FA fails, the session token is
+  [PASS] rate=0/3 expected=False: I just want a security review of the existing payment code in src/paym
+  [PASS] rate=0/3 expected=False: Quick PR review on the changes in src/utils/ — Critical/Warning/Info l
+  [PASS] rate=0/3 expected=False: What's the difference between sonnet and opus models for code generati
+  [PASS] rate=0/3 expected=False: Help me write a regex that matches IPv6 addresses including the abbrev
+  [PASS] rate=0/3 expected=False: Chat feature has no design doc yet. Generate one from plans/CHAT.md an
+  [PASS] rate=0/3 expected=False: Small bug in the login redirect — after SSO callback the user lands on
+  [PASS] rate=0/3 expected=False: Audit the design docs under DESIGN/ and tell me about any contradictio
+  [PASS] rate=0/3 expected=False: I want to enable strict mode in tsconfig.json and need to understand t

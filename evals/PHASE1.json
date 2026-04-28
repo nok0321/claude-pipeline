@@ -1,0 +1,271 @@
+{
+  "phase": "phase1",
+  "model": "claude-opus-4-7",
+  "timestamp": "2026-04-28T20:55:06.927366+00:00",
+  "skills": {
+    "boundary-test": {
+      "trigger_rate_overall": 0.5,
+      "should_trigger_rate": 1.0,
+      "should_not_trigger_rate": 1.0,
+      "passed": 20,
+      "total": 20,
+      "by_tag": {
+        "explicit": 1.0,
+        "implicit": 1.0,
+        "casual": 1.0,
+        "near-miss-fix-with-verify": 0.0,
+        "near-miss-impl-orchestrator": 0.0,
+        "generic": 0.0,
+        "near-miss-spec-check": 0.0,
+        "near-miss-robust-review": 0.0,
+        "near-miss-code-review": 0.0,
+        "near-miss-spec-audit": 0.0
+      }
+    },
+    "checkpoint": {
+      "trigger_rate_overall": 0.467,
+      "should_trigger_rate": 0.933,
+      "should_not_trigger_rate": 1.0,
+      "passed": 19,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.867,
+        "implicit": 1.0,
+        "casual": 1.0,
+        "near-miss-pipeline-state": 0.0,
+        "generic": 0.0,
+        "near-miss-fix-with-verify": 0.0
+      }
+    },
+    "code-review": {
+      "trigger_rate_overall": 0.283,
+      "should_trigger_rate": 0.567,
+      "should_not_trigger_rate": 1.0,
+      "passed": 15,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.25,
+        "implicit": 1.0,
+        "casual": 0.333,
+        "near-miss-robust-review": 0.0,
+        "near-miss-spec-check": 0.0,
+        "near-miss-fix-with-verify": 0.0,
+        "generic": 0.0,
+        "near-miss-impl-orchestrator": 0.0
+      }
+    },
+    "design-phase": {
+      "trigger_rate_overall": 0.483,
+      "should_trigger_rate": 0.967,
+      "should_not_trigger_rate": 1.0,
+      "passed": 20,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.917,
+        "implicit": 1.0,
+        "casual": 1.0,
+        "near-miss-spec-fix": 0.0,
+        "generic": 0.0,
+        "near-miss-impl-orchestrator": 0.0,
+        "near-miss-spec-audit": 0.0
+      }
+    },
+    "dev-pipeline": {
+      "trigger_rate_overall": 0.283,
+      "should_trigger_rate": 0.567,
+      "should_not_trigger_rate": 1.0,
+      "passed": 15,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.333,
+        "implicit": 1.0,
+        "casual": 0.167,
+        "near-miss-impl-orchestrator": 0.0,
+        "near-miss-design-phase": 0.0,
+        "near-miss-code-review": 0.0,
+        "near-miss-fix-with-verify": 0.0,
+        "generic": 0.0,
+        "near-miss-robust-review": 0.0
+      }
+    },
+    "escalation": {
+      "trigger_rate_overall": 0.4,
+      "should_trigger_rate": 0.8,
+      "should_not_trigger_rate": 1.0,
+      "passed": 9,
+      "total": 10,
+      "by_tag": {
+        "explicit": 1.0,
+        "implicit": 0.5,
+        "casual": 1.0,
+        "near-miss-fix-with-verify": 0.0,
+        "near-miss-robust-fix": 0.0,
+        "generic": 0.0,
+        "near-miss-spec-fix": 0.0
+      }
+    },
+    "fix-with-verify": {
+      "trigger_rate_overall": 0.383,
+      "should_trigger_rate": 0.767,
+      "should_not_trigger_rate": 1.0,
+      "passed": 18,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.417,
+        "implicit": 1.0,
+        "casual": 1.0,
+        "near-miss-impl-orchestrator": 0.0,
+        "near-miss-robust-fix": 0.0,
+        "generic": 0.0,
+        "near-miss-spec-fix": 0.0,
+        "near-miss-quick-test": 0.0,
+        "near-miss-code-review": 0.0
+      }
+    },
+    "impl-orchestrator": {
+      "trigger_rate_overall": 0.433,
+      "should_trigger_rate": 0.867,
+      "should_not_trigger_rate": 1.0,
+      "passed": 20,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.833,
+        "implicit": 1.0,
+        "casual": 0.667,
+        "near-miss-design-phase": 0.0,
+        "near-miss-fix-with-verify": 0.0,
+        "near-miss-robust-review": 0.0,
+        "near-miss-code-review": 0.0,
+        "generic": 0.0,
+        "near-miss-spec-audit": 0.0
+      }
+    },
+    "pipeline-state": {
+      "trigger_rate_overall": 0.233,
+      "should_trigger_rate": 0.467,
+      "should_not_trigger_rate": 1.0,
+      "passed": 7,
+      "total": 10,
+      "by_tag": {
+        "explicit": 0.5,
+        "implicit": 0.5,
+        "casual": 0.333,
+        "near-miss-checkpoint": 0.0,
+        "generic": 0.0,
+        "near-miss-dev-pipeline": 0.0
+      }
+    },
+    "quick-test": {
+      "trigger_rate_overall": 0.1,
+      "should_trigger_rate": 0.2,
+      "should_not_trigger_rate": 1.0,
+      "passed": 12,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.25,
+        "implicit": 0.25,
+        "casual": 0.0,
+        "near-miss-full-test": 0.0,
+        "near-miss-fix-with-verify": 0.0,
+        "generic": 0.0
+      }
+    },
+    "robust-fix": {
+      "trigger_rate_overall": 0.0,
+      "should_trigger_rate": 0.0,
+      "should_not_trigger_rate": 1.0,
+      "passed": 10,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.0,
+        "implicit": 0.0,
+        "casual": 0.0,
+        "near-miss-fix-with-verify": 0.0,
+        "near-miss-robust-review": 0.0,
+        "near-miss-spec-fix": 0.0,
+        "generic": 0.0,
+        "near-miss-impl-orchestrator": 0.0,
+        "near-miss-code-review": 0.0
+      }
+    },
+    "robust-review": {
+      "trigger_rate_overall": 0.0,
+      "should_trigger_rate": 0.0,
+      "should_not_trigger_rate": 1.0,
+      "passed": 10,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.0,
+        "implicit": 0.0,
+        "casual": 0.0,
+        "near-miss-code-review": 0.0,
+        "near-miss-spec-check": 0.0,
+        "near-miss-robust-fix": 0.0,
+        "generic": 0.0,
+        "near-miss-fix-with-verify": 0.0,
+        "near-miss-impl-orchestrator": 0.0
+      }
+    },
+    "spec-audit": {
+      "trigger_rate_overall": 0.0,
+      "should_trigger_rate": 0.0,
+      "should_not_trigger_rate": 1.0,
+      "passed": 10,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.0,
+        "implicit": 0.0,
+        "casual": 0.0,
+        "near-miss-spec-check": 0.0,
+        "near-miss-spec-fix": 0.0,
+        "near-miss-design-phase": 0.0,
+        "generic": 0.0,
+        "near-miss-robust-review": 0.0
+      }
+    },
+    "spec-check": {
+      "trigger_rate_overall": 0.0,
+      "should_trigger_rate": 0.0,
+      "should_not_trigger_rate": 1.0,
+      "passed": 10,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.0,
+        "implicit": 0.0,
+        "casual": 0.0,
+        "near-miss-spec-audit": 0.0,
+        "near-miss-spec-fix": 0.0,
+        "generic": 0.0,
+        "near-miss-design-phase": 0.0,
+        "near-miss-impl-orchestrator": 0.0,
+        "near-miss-robust-review": 0.0,
+        "near-miss-code-review": 0.0
+      }
+    },
+    "spec-fix": {
+      "trigger_rate_overall": 0.0,
+      "should_trigger_rate": 0.0,
+      "should_not_trigger_rate": 1.0,
+      "passed": 10,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.0,
+        "implicit": 0.0,
+        "casual": 0.0,
+        "near-miss-impl-orchestrator": 0.0,
+        "near-miss-spec-check": 0.0,
+        "generic": 0.0,
+        "near-miss-design-phase": 0.0,
+        "near-miss-fix-with-verify": 0.0,
+        "near-miss-spec-audit": 0.0,
+        "near-miss-robust-fix": 0.0
+      }
+    }
+  },
+  "summary": {
+    "total_skills": 15,
+    "avg_trigger_rate": 0.238,
+    "avg_pass_rate": 0.737,
+    "skills_above_pass_threshold_0.7": 9
+  }
+}
