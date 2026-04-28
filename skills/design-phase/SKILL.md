@@ -8,7 +8,13 @@ model: claude-opus-4-7
 
 # Design phase automation
 
-Generate `DESIGN/*.md` from a plan summary, then auto-detect and resolve cross-spec contradictions.
+Generate `DESIGN/*.md` from a plan summary, then auto-detect and resolve
+cross-spec contradictions.
+
+For the default DESIGN template, the sub-agent generation prompt, and the
+final output format, see [references/templates.md](references/templates.md).
+For the audit prompt and contradiction-resolution rules, see
+[references/spec-audit-handoff.md](references/spec-audit-handoff.md).
 
 ---
 
@@ -79,56 +85,14 @@ Glob: DESIGN/*.md, docs/design/*.md, spec/*.md
 
 When `DESIGN/*.md` already exists:
 1. Read all of them.
-2. Extract the shared structure:
-   - Section ordering and naming
-   - Code-snippet language and style
-   - Type-definition notation
-   - Table and list conventions
-   - Frontmatter (if any)
-3. Use the learned structure as the template.
+2. Extract the shared structure (section ordering, code-snippet language,
+   type-definition notation, table conventions, frontmatter).
+3. Use the learned structure as the template for generation.
 
 ### 2-3: Default template
 
-Fall back to this structure when no existing spec is available:
-
-```markdown
-# <Component Name>
-
-## Overview
-<purpose and responsibilities>
-
-## Dependencies
-| Depends on | Use |
-|------------|-----|
-
-## Public API
-
-### <function/method_name>
-```<lang>
-<signature>
-```
-<description>
-
-## Type definitions
-
-### <TypeName>
-```<lang>
-<definition>
-```
-
-## Internals
-<module breakdown, major internal types>
-
-## Error handling
-<error type, error cases>
-
-## Test requirements
-- [ ] <test case 1>
-- [ ] <test case 2>
-
-## Constraints
-<applicable Critical Constraints>
-```
+When no existing spec is available, fall back to the default template in
+[references/templates.md](references/templates.md).
 
 ---
 
@@ -151,110 +115,36 @@ e.g. <foundation> → <domain> → <persistence> → <API> → <UI>
 
 ### 3-3: Generation (sonnet sub-agent)
 
-Generate one component spec per sub-agent (sonnet model, cost-efficient for code-style output):
+Spawn one sonnet sub-agent per component. The full prompt template,
+generation rules, and `--update` mode behavior are in
+[references/templates.md](references/templates.md).
 
-```
-Agent(
-  description: "<component> spec generation",
-  model: "sonnet",
-  prompt: "
-    Generate a design document for the component below.
-
-    ## Requirements
-    <relevant slice of the plan summary>
-
-    ## Project constraints
-    <CLAUDE.md Critical Constraints>
-
-    ## Tech stack
-    <CLAUDE.md Tech Stack, or inferred from existing code>
-
-    ## Dependency specs (already generated)
-    <public-API sections of upstream specs>
-
-    ## Format
-    <Step 2 template, or default>
-
-    ## Rules
-    - Public APIs include concrete signatures (argument types, return types)
-    - Type definitions go down to the field level
-    - Enumerate every error case
-    - Test requirements list concrete cases
-    - State constraints in a dedicated section
-    - Align with the public APIs of upstream specs
-  "
-)
-```
-
-### 3-4: --update mode
-
-When `DESIGN/*.md` already exists:
-1. Identify what changed in the plan summary.
-2. Update only the affected sections.
-3. Preserve prior design decisions (e.g. resolved escalations).
+Inputs threaded into each sub-agent:
+- Relevant slice of the plan summary
+- CLAUDE.md Critical Constraints + Tech Stack
+- Public-API sections of upstream specs already generated this run
+- The Step 2 learned template (or the default template)
 
 ---
 
 ## Step 4: Detect contradictions
 
-Run an opus sub-agent (judgment-quality matters) over the generated set, equivalent to `/spec-audit`:
-
-```
-Agent(
-  description: "Cross-spec audit",
-  model: "opus",
-  prompt: "
-    You are a design reviewer. Read the spec set below and surface contradictions.
-
-    <full content of every generated DESIGN/*.md>
-
-    Checks:
-    1. Type / field name drift
-    2. Shared-type field mismatch
-    3. API contract mismatch (provider vs consumer)
-    4. Dependency cycles
-    5. DB schema mismatch
-    6. Terminology drift
-    7. Constant / configuration drift
-
-    Each finding:
-    [AUDIT-N] <Critical|High|Medium|Low> | <category>
-      Refs: <file1:line> ↔ <file2:line>
-      Issue: <description>
-      Recommendation: <fix>
-  "
-)
-```
+Run an opus sub-agent over the freshly generated set, equivalent to
+`/spec-audit --mode=cross`. The exact prompt and the seven check
+categories (type drift, shared-type field mismatch, API contract,
+dependency cycles, DB schema, terminology, constant drift) live in
+[references/spec-audit-handoff.md](references/spec-audit-handoff.md).
 
 ---
 
 ## Step 5: Resolve contradictions
 
-### 5-1: Classify
+Classify each finding against the escalation framework, then auto-resolve
+Tier 2/3 and queue Tier 1 for the user. Re-run Step 4 after fixes (max 2
+iterations).
 
-Apply the escalation framework:
-
-| Contradiction | Class | Action |
-|---------------|-------|--------|
-| Type-name drift, terminology drift | Tier 2 | Auto-resolve to the more general / accurate name |
-| Field mismatch (minor) | Tier 2 | Auto-resolve to the dependent's definition |
-| API contract mismatch | Tier 2 | Auto-resolve to the provider's definition |
-| Constant drift | Tier 2 | Pick the first defined value |
-| Design-policy contradiction | Tier 1 | Ask the user |
-| Domain-model fundamental mismatch | Tier 1 | Ask the user |
-| Dependency cycle | Tier 1 | Architecture decision required |
-
-### 5-2: Auto-resolve
-
-For Tier 2 / Tier 3:
-1. Edit the relevant `DESIGN/*.md`.
-2. Log the change.
-
-### 5-3: Re-check
-
-Re-run Step 4 after fixes (max 2 iterations):
-- Confirm no new contradictions emerged.
-- Two iterations still showing contradictions → escalate.
+The full classification table and the auto-resolve / re-check loop are in
+[references/spec-audit-handoff.md](references/spec-audit-handoff.md).
 
 ---
 
@@ -264,21 +154,14 @@ Re-run Step 4 after fixes (max 2 iterations):
 
 When `PIPELINE-STATE.md` exists:
 
-1. Update the Design Artifacts section:
-   ```markdown
-   ## Design artifacts
-   - [x] DESIGN/01_<component_a>.md
-   - [x] DESIGN/02_<component_b>.md
-   - [x] DESIGN/03_<component_c>.md
-   - [ ] DESIGN/04_<component_d>.md  ← awaiting escalation
-   ```
+1. Update the Design Artifacts section with `[x]` per generated spec and
+   `[ ]` for any spec blocked on a Tier 1 escalation.
 2. Push Tier 1 items into the escalation queue.
-3. Write the hand-off note:
-   ```markdown
-   ## Hand-off to next phase
-   Design complete. Once escalation #1 is resolved, ready for implementation.
-   Note: <component_d>'s <unresolved aspect> is pending (#1).
-   ```
+3. Write a hand-off note for the next phase (impl-orchestrator).
+
+The exact PIPELINE-STATE.md layout is in
+[references/spec-audit-handoff.md](references/spec-audit-handoff.md);
+the canonical pipeline state format is ARCHITECTURE.md §B 補章.
 
 ### 6-2: Component Mapping proposal
 
@@ -290,56 +173,21 @@ When CLAUDE.md lacks a Component Mapping:
 
 ## Output format
 
-```
-╔══════════════════════════════════════╗
-║  Design phase report                 ║
-║  Components: <n>                     ║
-╚══════════════════════════════════════╝
+Final report renders the generated spec list, the audit summary, the
+auto-resolved findings, the escalated findings, and (when applicable) the
+Component Mapping proposal.
 
-■ Generated specs
-  [1] DESIGN/01_<component_a>.md    — <responsibility>
-  [2] DESIGN/02_<component_b>.md    — <responsibility>
-  [3] DESIGN/03_<component_c>.md    — <responsibility>
-  [4] DESIGN/04_<component_d>.md    — <responsibility>
-
-■ Audit
-  Detected: <n> → auto-resolved: <n> / escalated: <n>
-
-═══ Auto-resolved ═══
-
-[1] AUDIT-2 | Medium | Type-name drift
-  Resolution: <TypeA> / <TypeB> → unified to <TypeA>
-  Affected: DESIGN/01, DESIGN/03
-
-═══ Escalated ═══
-
-[E-1] AUDIT-5 | Critical | <design judgement needed>
-  DESIGN/<component_x>.md — option A vs option B
-  DESIGN/<component_y>.md — assumes option C
-  Question: which option do we adopt?
-
-═══ Component Mapping proposal ═══
-(only when CLAUDE.md has none)
-
-## Component Mapping
-| Component | Spec | Implementation directory |
-|-----------|------|--------------------------|
-| <component_a> | DESIGN/01_<component_a>.md | <path/to/component_a>/ |
-| <component_b> | DESIGN/02_<component_b>.md | <path/to/component_b>/ |
-| <component_c> | DESIGN/03_<component_c>.md | <path/to/component_c>/ |
-| <component_d> | DESIGN/04_<component_d>.md | <path/to/component_d>/ |
-
-→ Append to CLAUDE.md? [y/n]
-```
+The full output template is in
+[references/templates.md](references/templates.md).
 
 ---
 
 ## Pipeline integration
 
-Inside `dev-pipeline` (Sprint 4) Phase 1:
+Inside `impl-orchestrator` (Phase 1, when DESIGN/*.md is missing):
 - Pull the plan summary from `PIPELINE-STATE.md`.
 - If escalation queue has pending items, present them and wait for the user.
-- Only advance to Phase 2 (implementation) once every escalation is resolved.
+- Only advance to implementation once every escalation is resolved.
 
 Standalone:
 - Take the requirements straight from the conversation.
