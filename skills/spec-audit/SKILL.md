@@ -1,139 +1,139 @@
 ---
 name: spec-audit
-description: Use this skill whenever the user wants to detect inconsistencies between design documents under `DESIGN/` — type-name drift, field-name mismatches, divergent API contracts, dependency cycles, DB-schema disagreements, terminology drift, and constant-value mismatches across multiple specs. Trigger phrases include "audit our design docs", "check the DESIGN/ markdowns for inconsistencies", "do the spec markdowns line up", "type names align between specs?", "API contract drift across designs", "scan DESIGN/*.md for mismatches before the freeze", or any cross-document consistency check on spec markdowns. Trigger even when the user does not say "spec-audit" — implicit phrases like "did the design docs drift?", "anything off between these markdowns?", or "find conflicts in DESIGN/" qualify.
-argument-hint: "[component-name or 'all']"
+description: Use this skill whenever the user wants a unified design-spec audit — either detecting inconsistencies BETWEEN design documents under `DESIGN/` (type / field drift, divergent API contracts, dependency cycles, DB-schema disagreements, terminology and constant drift) OR comparing design documents AGAINST the implementation (Missing / Diverged / Extra / Constraint). Trigger phrases include "audit our design docs", "do the spec markdowns line up", "API contract drift across designs", "scan DESIGN/*.md for mismatches" (cross-spec mode), as well as "check spec vs implementation", "does the code match DESIGN/01_auth.md?", "verify implementation matches the spec", "list missing items from the design doc", "find diverged signatures between spec and code" (conformance mode). Trigger even when the user does not say "spec-audit" — implicit phrases like "did the design docs drift?", "is the implementation behind the spec?", "anything off between these markdowns?", or "compare what we built against what we designed" qualify.
+argument-hint: "[component-name or 'all'] [--mode=cross|conformance|both]"
 allowed-tools: Read, Grep, Glob, Bash
 model: claude-opus-4-7
 context: fork
 ---
 
-# Cross-document design-spec audit
+# Spec audit (cross-spec + implementation conformance)
 
-Detect contradictions between design documents under `DESIGN/`. While `spec-check` compares spec to implementation, this skill compares spec to spec.
+Two-mode skill that audits design specs in `DESIGN/`:
+
+- **Cross-spec mode** — contradictions between specs (the original `spec-audit` job).
+- **Conformance mode** — diff between spec and implementation (replaces the retired `spec-check`).
+
+Mode is chosen by the user request or the explicit `--mode=` argument; default is `both`.
 
 ---
 
 ## Setup
 
-### Collect the spec set
+### Resolve component mapping
 
-1. Read CLAUDE.md `## Component Mapping` to obtain the spec paths.
-2. If absent, glob `DESIGN/*.md` directly.
-3. If neither exists, report "no design docs found" and stop.
+Read CLAUDE.md `## Component Mapping`:
+
+```markdown
+## Component Mapping
+| Component | Spec | Implementation directory |
+|-----------|------|--------------------------|
+| <component_a> | DESIGN/01_<component_a>.md | <path/to/component_a>/ |
+```
+
+If absent: glob `DESIGN/*.md`, infer component names from filenames, probe the project layout for the implementation directory. If neither `DESIGN/` nor a mapping exists, report "no design docs found" and stop.
 
 ### Determine scope
 
 | Argument | Behavior |
 |----------|----------|
-| Component name | That component's spec plus its dependency specs |
-| `all` | Every spec |
-| (none) | Every spec (same as `all`) |
+| Component name | That component (plus its dependency specs in cross mode) |
+| `all` | Every spec / every component |
+| (none) | Components touched by `git diff --name-only HEAD` (conformance) or every spec (cross) |
 
-### Load every spec
+### Mode dispatch
 
-Read each in scope and extract:
+| `--mode=` | Effect |
+|-----------|--------|
+| `cross` | Cross-spec checks only |
+| `conformance` | Spec-vs-impl checks only |
+| `both` (default) | Cross-spec first, then conformance; merge findings |
 
-- Type definitions (struct / interface / enum / type alias)
-- Function signatures (`pub fn`, `export function`, etc.)
-- API endpoint definitions
-- DB table / collection definitions
-- Domain terms and definitions
-- Dependency declarations
-- Constants and configuration values
+If the user request mentions only design docs (no implementation noun), default to `cross`. If it mentions code, implementation, signatures, or endpoints, default to `conformance`.
 
----
+### Project-specific context
 
-## Checks
-
-### Check 1: Type / field name drift
-
-Different names for the same concept across specs.
-
-Detection:
-1. Extract type definitions from every spec.
-2. Pair similarly-named types (e.g. `User` vs `UserInfo`, `Item` vs `ItemRecord`).
-3. Decide whether they describe the same concept by comparing field composition.
-
-Example output:
-```
-[AUDIT-1] Type-name drift
-  DESIGN/<component_a>.md:<N> — struct <TypeA> { <field_x>: T, <field_y>: T }
-  DESIGN/<component_b>.md:<N> — struct <TypeB> { <field_from>: T, <field_to>: T }
-  Recommendation: unify the type and field names (suggest <TypeA> / <field_x>, <field_y>)
-```
-
-### Check 2: Shared-type field mismatch
-
-A type that appears in multiple specs but with diverging fields.
-
-Detection:
-1. Find shared type names across specs.
-2. Compare field names, types, and counts.
-
-### Check 3: API contract mismatch
-
-A provider component's API and a consumer component's expected call shape disagree.
-
-Detection:
-1. From each spec, extract "public API" and "dependencies / external calls".
-2. Match provider signatures / endpoints with consumer expectations.
-
-Example:
-```
-[AUDIT-2] API contract mismatch
-  Provider: DESIGN/<provider>.md:<N> — GET /<api_path> → Vec<<Item>>
-  Consumer: DESIGN/<consumer>.md:<N> — fetch("/<api_path>") → expects { items: <Item>[] }
-  Diff: bare array vs object-wrapped response
-  Recommendation: unify on one response shape
-```
-
-### Check 4: Dependency cycles
-
-Cycles in component dependency declarations.
-
-Detection:
-1. Build a directed graph from each spec's dependency section.
-2. Run DFS + back-edge detection.
-
-### Check 5: DB-schema mismatch
-
-When DB definitions appear in multiple specs.
-
-Detection:
-1. Extract table / column definitions from every spec.
-2. Compare columns, types, constraints when the same table appears more than once.
-
-### Check 6: Terminology drift
-
-Domain terms not unified across specs.
-
-Detection:
-1. Pull primary terms from each spec's headings and definition sections.
-2. Detect synonyms (e.g. "user" / "account holder", or English / Japanese / abbreviation drift).
-
-### Check 7: Constant / configuration value drift
-
-Same named constant (port, limit, timeout, etc.) with different values across specs.
+Optional CLAUDE.md sections:
+- `## Critical Constraints` — fed into the conformance Constraint check.
+- `## Project-Specific Checks` — additional checks for either mode.
 
 ---
 
-## Severity scale
+## Mode A: Cross-spec checks
 
-| Level | Definition | Example |
-|-------|-----------|---------|
-| **Critical** | Will cause a build or runtime failure | Type-field mismatch, broken API contract |
-| **High** | Causes confusion or data drift but won't break the build | Constant-value mismatch, dependency cycle |
-| **Medium** | Style / consistency issues that hurt readability | Type-name drift, terminology drift |
-| **Low** | Improvement-only, no functional impact | Comment style, documentation gaps |
+### Inputs
+
+For each spec in scope, extract: type definitions (struct / interface / enum / alias), function signatures (`pub fn`, `export function`, etc.), API endpoint definitions, DB table / collection definitions, domain terms, dependency declarations, constants and configuration values.
+
+### Checks
+
+1. **Type / field name drift** — same concept named differently. Pair similarly-named types, compare field composition.
+2. **Shared-type field mismatch** — same type name, diverging fields across specs.
+3. **API contract mismatch** — provider signature vs consumer expectation (response shape, status codes).
+4. **Dependency cycles** — DFS + back-edge detection on declared deps.
+5. **DB-schema mismatch** — same table with diverging columns / types / constraints.
+6. **Terminology drift** — synonyms, language drift, abbreviation drift across specs.
+7. **Constant / configuration drift** — same named constant with different values.
+
+---
+
+## Mode B: Implementation conformance
+
+### Diff classes
+
+| Class | Meaning | Default severity |
+|-------|---------|------------------|
+| **Missing** | Spec has it, code doesn't | Critical (public API / core type) or Medium (doc-only) |
+| **Diverged** | Implementation differs from spec | High (signature, field, endpoint) |
+| **Extra** | Code has it, spec doesn't | Medium (public surface) or Low (otherwise) |
+| **Constraint** | Violates a CLAUDE.md `## Critical Constraints` rule | High |
+
+### Procedure
+
+1. **Public-API existence** — by language:
+
+   | Language | Targets |
+   |----------|---------|
+   | Rust | `pub fn`, `pub struct`, `pub enum`, `pub trait`, `pub type` |
+   | TypeScript | `export function`, `export class`, `export interface`, `export type`, `export const` |
+   | Go | identifiers starting uppercase |
+   | Java | `public class`, `public interface`, `public enum` |
+   | Python | module-level `def`, `class` |
+
+   Spec has it, code doesn't → **Missing**. Code has it, spec doesn't → **Extra**.
+
+2. **Function-signature comparison** — argument names / types / order, return type, generics, visibility. Mismatch → **Diverged**. If the implementation is strictly more robust than the spec (e.g. wraps return in `Result`), report Diverged with a "spec update recommended" note.
+
+3. **Type / struct field comparison** — field names, types, visibility, enum variants, default values.
+
+4. **API endpoint comparison** — method, path, request / response types, status codes. Match against routing definitions (`Router`, `@app.route`, `@RequestMapping`, etc.).
+
+5. **DB schema comparison** — table name, columns, types, indexes, foreign-key constraints. Match against migrations / schema definitions.
+
+6. **Constraint check** — for each rule in CLAUDE.md `## Critical Constraints`, define a detection. Architecture rules → grep `import` statements. Data-format ordering → check arg order at conversion boundaries. Framework convention → arg / decorator order.
+
+---
+
+## Severity scale (both modes)
+
+| Level | Definition |
+|-------|-----------|
+| **Critical** | Will cause a build or runtime failure |
+| **High** | Causes confusion or data drift but won't break the build |
+| **Medium** | Style / consistency issues that hurt readability |
+| **Low** | Improvement-only, no functional impact |
 
 ---
 
 ## Output format
 
+Cross-mode finding tag = `AUDIT-<n>`. Conformance-mode tag = `SPEC-<n>`. When `both`, emit one combined report per severity bucket.
+
 ```
 ╔══════════════════════════════════════╗
-║  Cross-spec audit                    ║
-║  Targets: <n> design docs            ║
+║  Spec audit                          ║
+║  Mode: <cross | conformance | both>  ║
+║  Targets: <n> specs / <n> components ║
 ╚══════════════════════════════════════╝
 
 ■ Summary
@@ -144,12 +144,22 @@ Same named constant (port, limit, timeout, etc.) with different values across sp
 
 ═══ Critical ═══
 
+[SPEC-1] Missing | Public API
+  Spec: DESIGN/<component>.md:<N> — pub fn <function_name>(<args>) -> <ReturnType>
+  Code: (none)
+  Recommendation: implement the function
+
 [AUDIT-1] API contract mismatch
-  DESIGN/<provider>.md:<N> — GET /<api_path> → Vec<<Item>>
-  DESIGN/<consumer>.md:<N> — expects { items: <Item>[] }
+  Provider: DESIGN/<provider>.md:<N> — GET /<api_path> -> Vec<<Item>>
+  Consumer: DESIGN/<consumer>.md:<N> — expects { items: <Item>[] }
   Recommendation: unify the response shape
 
 ═══ High ═══
+
+[SPEC-2] Diverged | Signature
+  Spec: DESIGN/<component>.md:<N> — fn <function_name>(<args>) -> <ReturnType>
+  Code: <path/to/file>:<N> — fn <function_name>(<args>) -> Result<<ReturnType>, Error>
+  Recommendation: update spec — implementation is strictly more robust
 
 [AUDIT-3] Constant drift
   DESIGN/<a>.md — CONNECT_TIMEOUT_MS = 3000
@@ -158,23 +168,23 @@ Same named constant (port, limit, timeout, etc.) with different values across sp
 
 ═══ Medium ═══
 
+[SPEC-3] Extra | Function
+  Code: <path/to/file>:<N> — pub fn <helper_name>(<args>)
+  Recommendation: document in spec, or downgrade to internal visibility
+
 [AUDIT-5] Type-name drift
   DESIGN/<component_a>.md:<N> — <TypeA>
   DESIGN/<component_b>.md:<N> — <TypeB>
   Recommendation: unify on <TypeA>
 ```
 
+When everything matches: report "specs are mutually consistent and aligned with the implementation".
+
 ---
 
 ## Pipeline integration
 
-Not called from `impl-orchestrator` (it is a design-time tool, not an implementation gate).
-
-When called from `design-phase` (Sprint 3):
-- Run as a self-check after generation.
-- Critical contradictions trigger autonomous repair.
-- Domain-knowledge contradictions escalate to the user.
-
-Standalone:
-- Run during design review.
-- Run as a pre-flight check on PRs that touch `DESIGN/*.md`.
+- **Standalone (cross mode)** — design review, or pre-flight on PRs that touch `DESIGN/*.md`.
+- **From `design-phase`** — run in cross mode as a self-check after generation. Critical contradictions trigger autonomous repair; domain-knowledge contradictions escalate to the user.
+- **From `impl-orchestrator` Stage 4 (Spec Compliance Reviewer)** — run in conformance mode. Findings convert to the orchestrator's unified format.
+- **Standalone (conformance mode)** — after the report, recommend `safe-fix` to apply repairs.
