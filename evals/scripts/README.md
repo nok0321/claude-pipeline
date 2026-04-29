@@ -1,15 +1,19 @@
 # evals/scripts/
 
-Self-contained eval framework for measuring trigger rates of the 15 custom
-skills in this repository. No dependency on the upstream skill-creator
-framework — see [Design rationale](#design-rationale) below for why.
+Self-contained eval framework for measuring trigger rates of the 8
+surviving custom skills (post Phase 2 drop). Phase 0 / Phase 1 measured
+the original 15-skill lineup; the 7 retired skills (dev-pipeline,
+escalation, fix-with-verify, pipeline-state, quick-test, robust-fix,
+spec-check, spec-fix) are no longer in `skills/` and are excluded from
+re-runs. No dependency on the upstream skill-creator framework — see
+[Design rationale](#design-rationale) below for why.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
 | `run_eval_compat.py` | Per-skill trigger eval. Spawns `claude -p` subprocesses, parses streaming JSON for `Skill` tool_use events, writes per-query results in the same schema as skill-creator's `run_eval.py` |
-| `run_baseline.sh` | Iterates 15 skills × 20 (or 10) queries × N runs through `run_eval_compat.py`, saves per-skill JSON to `evals/results/<phase>/` |
+| `run_baseline.sh` | Iterates 8 skills × ~20 queries × N runs through `run_eval_compat.py`, saves per-skill JSON to `evals/results/<phase>/` |
 | `aggregate.py` | Reads per-skill JSONs and produces a single summary (`BASELINE.json`, `PHASE1.json`, `POST.json`) with metrics broken down by tag |
 
 ## Prerequisites
@@ -71,9 +75,11 @@ Other env overrides:
 
 ## Cost / time estimate
 
-- 15 skills × ~17 queries (avg of 20+10) × 3 runs ≈ **765 `claude -p` invocations**
-- With `WORKERS=10`, expect 30–60 minutes wall clock
-- With `WORKERS=3`, expect ~2× longer but no rate-limit hits
+- 8 skills × ~20 queries × 3 runs ≈ **480 `claude -p` invocations**
+- With `WORKERS=10`, expect 20–40 minutes wall clock
+- With `WORKERS=3`, expect 60–90 minutes but no rate-limit hits
+  (PHASE1 saw 5/15 skills hit 0.0 with WORKERS=10 — silent rate-limit
+  artifact, see Troubleshooting)
 - Cost: depends on prompt-cache hit rate; first run is most expensive
 
 ## Output schema (BASELINE.json)

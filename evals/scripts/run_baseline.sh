@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
-# Run trigger-rate eval for all 15 custom skills and save results.
+# Run trigger-rate eval for the 8 surviving custom skills and save results.
+#
+# Skill set is the post-Phase-2 lineup (8 skills). Phase 0 / Phase 1 ran
+# 15 skills; the 7 dropped (dev-pipeline, escalation, fix-with-verify,
+# pipeline-state, quick-test, robust-fix, spec-check, spec-fix) have no
+# implementation in skills/ anymore and are not measurable. Their
+# baseline trigger rates remain in evals/BASELINE.json for historical
+# reference. New `safe-fix` replaces the 3 retired *fix skills (Mode
+# A/B/C); its proxy baseline is max(fix-with-verify, robust-fix,
+# spec-fix) = 0.317 — not measured directly in BASELINE.
 #
 # Uses evals/scripts/run_eval_compat.py (self-contained, threading-based)
 # instead of skill-creator's scripts/run_eval.py, which fails on Windows
@@ -10,7 +19,8 @@
 #
 # Environment overrides:
 #   MODEL              Model id (default: claude-opus-4-7)
-#   WORKERS            Parallel workers per skill (default: 10)
+#   WORKERS            Parallel workers per skill (default: 10, drop to
+#                      3 if rate-limit artifacts (0.0 trigger) appear)
 #   TIMEOUT            Per-query timeout in seconds (default: 30)
 #   RUNS               Runs per query for variance smoothing (default: 3)
 #   ONLY_SKILLS        Space-separated subset to run (default: all)
@@ -50,17 +60,10 @@ ALL_SKILLS=(
   checkpoint
   code-review
   design-phase
-  dev-pipeline
-  escalation
-  fix-with-verify
   impl-orchestrator
-  pipeline-state
-  quick-test
-  robust-fix
   robust-review
+  safe-fix
   spec-audit
-  spec-check
-  spec-fix
 )
 
 if [ -n "${ONLY_SKILLS:-}" ]; then
