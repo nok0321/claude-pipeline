@@ -1,12 +1,12 @@
 # Redesign Checkpoint: Phase 6 進行中 (dogfooding 期間)
 
-Updated: 2026-04-29 (Phase 6 session 1 完了、dogfooding 開始)
+Updated: 2026-04-29 (Phase 6 session 2 完了、`~/.claude/skills/` 配置整備、dogfooding 本格化)
 
 ## 現在地
 
-- ブランチ: `redesign/heavy` (main は触らない、Phase 6 dogfooding 完了時に 1 回マージ)
+- ブランチ: `redesign/heavy` (main は触らない、dogfooding で効果実感後に 1 回マージ)
 - 計画書: [REDESIGN-PLAN.md](REDESIGN-PLAN.md)
-- **状態**: Phase 6 session 1 完了。dogfooding 開始 (1 週間予定)。
+- **状態**: Phase 6 session 2 完了。`~/.claude/skills/` を新 8 skill 構成に整備済み (safe-fix 追加 + 旧 dropped 8 skill broken リンク削除)。dogfooding 体験フェーズ進行中。
 - 完了 commits (新しい順、Phase 6 session 1):
   - `2a99134` Phase 6 Step 4: MIGRATION Phase 5 results + Sub-V options + Option C interim (Sub-U-3 + Sub-V)
   - `4cc5538` Phase 6 Step 3: ARCHITECTURE §11.1 Phase 5 evaluation table (Sub-U-2)
@@ -156,7 +156,38 @@ Phase 5 で観測した tag 名陳腐化:
 
 ### 観察エントリ
 
-(dogfooding 期間中にここへ追記)
+#### 2026-04-29 Phase 5 期間中の retroactive 観察 (5 セッション)
+
+Phase 5 着手 (01:17) 〜 Phase 6 session 1 着手 (06:54) の間、claude-pipeline working dir 上で発生した自然な実運用クエリ 5 セッションを Claude Code セッションログから retroactive に集計。
+
+| セッション | 起動時刻 | Query (要約) | 期待 skill | 実呼び出し tool | 判定 |
+|---|---|---|---|---|---|
+| 831852e1 | 01:39 | "long task, gonna take a nap. checkpoint the state..." | checkpoint | Skill(checkpoint), Bash×2, Glob×2, Read×2 | ✅ 発火 |
+| e20426b0 | 01:44 | "Transition the pipeline to Phase 3 ... PIPELINE-STATE.md..." | impl-orchestrator | Glob×3, Read×4 | ❌ 不発火 (Read/Glob 直呼び) |
+| e4d7edcc | 01:47 | "5 min PR review on my changes..." | code-review | Bash×4 | ❌ 不発火 (Bash 直呼び) |
+| 613dd06e | 01:47 | "5 min PR review..." (重複起動) | code-review | Bash×2 | ❌ 不発火 (Bash 直呼び) |
+| 43be4571 | 02:32 | "Help me write a CONTRIBUTING.md..." | (skill 対象外) | Glob×3, Read×3 | — (対象外) |
+
+**集計**: Skill 発火 1/5 (checkpoint のみ) / 不発火 3/5 (impl-orchestrator ×1, code-review ×2) / 誤発火 0 / safe-fix 経由委譲 0 / skill 対象外 1/5。
+
+**気付き**: Phase 5 で safe-fix 0.000 を「Opus 4.7 の "fix" 動詞 routing 由来」と判定したが、実運用観察では **impl-orchestrator (PIPELINE-STATE 更新依頼)** と **code-review (PR review 依頼)** も Skill 経由されず Bash/Read 直呼びになっている。safe-fix 単独の routing 問題ではなく、**主要 Layer 1/2 skill 全体に系統的に発生している現象** の可能性が高い。eval (構造化トリガーフレーズ含む 20 query 平均) では 7/8 個別 M1 PASS だが、自然な口語短文クエリ (5〜50 文字) では発火率が大幅に下がる。eval スコアと実運用体感のギャップを示唆。
+
+**注**: 上記 5 セッションは Phase 5 着手後の偶発的観察であり、Phase 6 dogfooding 期間 (1 週間) の正式観察ではない。本格的 dogfooding (`~/.claude/skills/` 経由で全プロジェクトから新 8 skill を呼べる状態) は session 2 で初めて整備された (下記)。
+
+#### 2026-04-29 Phase 6 環境整備 (session 2)
+
+- `~/.claude/skills/` の状況確認:
+  - 旧 15 skill 構造 (4月12日作成) のシンボリックリンクが残存していた
+  - 新 8 skill 中 7 個 (boundary-test, checkpoint, code-review, design-phase, impl-orchestrator, robust-review, spec-audit) は OK
+  - **safe-fix MISSING**、旧 dropped 8 skill (dev-pipeline, escalation, fix-with-verify, pipeline-state, quick-test, robust-fix, spec-check, spec-fix) が **BROKEN** として残存
+- 配置修正:
+  - `ln -s` で safe-fix シンボリックリンク作成 (Windows directory junction として作成、Claude Code は認識)
+  - 旧 dropped 8 個の broken シンボリックリンクを削除
+- 検証: 起動中セッションの skill list に新 8 skill 全て出現を確認
+
+**方針更新**: ある程度実運用 (dogfooding) で効果実感してから main マージへ。Sub-V Option 確定 / ARCHITECTURE §11.1 ⏳ 項目最終評価 / orphan query JSON 整理 / main マージは全て **dogfooding 体験後に保留**。
+
+#### (dogfooding 期間中、新規セッションでの観察はここへ追記)
 
 ### Sub-V 判断材料 (1 週間後に集計)
 
@@ -164,6 +195,14 @@ Phase 5 で観測した tag 名陳腐化:
 - safe-fix 単発呼び出し (Mode C / `/safe-fix` slash) 件数: ___
 - safe-fix 不発で impl-orchestrator が直接 Edit + Bash で remediation した件数: ___
 - → Option A / B / C 採用判断 (詳細条件は [docs/MIGRATION.md](../docs/MIGRATION.md) §Phase 6 Sub-V)
+
+#### Phase 5 期間中 retroactive 観察 (暫定値、上記 5 セッション分のみ)
+
+- impl-orchestrator → safe-fix 経由委譲: 0/5
+- safe-fix 単発呼び出し: 0
+- impl-orchestrator が発火しなかった件数: 1/1 (期待されたが Read/Glob 直呼び)
+- code-review が発火しなかった件数: 2/2 (期待されたが Bash 直呼び)
+- 暫定判断: Option C 妥当だが、**構造的課題が safe-fix 単独でなく系統的** なため、Option A/B 採用しても上流不発火を解決しない可能性。Phase 6 dogfooding で正式再検証必要。
 
 ---
 
