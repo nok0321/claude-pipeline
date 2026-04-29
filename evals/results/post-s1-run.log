@@ -1,0 +1,7 @@
+[1/1] Running safe-fix (claude-opus-4-7, runs=3, workers=3, timeout=30s) ...
+  -> evals/results/post-s1/safe-fix.json (Results: 10/20 passed)
+
+Done in 568s. Results in evals/results/post-s1
+Failures: 0 / 1
+
+Next: python evals/scripts/aggregate.py evals/results/post-s1 > evals/BASELINE.json
