@@ -9,14 +9,14 @@
   {"query": "long task, gonna take a nap. checkpoint the state so future-me knows whats up and which files are dirty", "should_trigger": true, "tag": "casual"},
   {"query": "Restore the last checkpoint and tell me where we left off. CHECKPOINT.md should be in the project root.", "should_trigger": true, "tag": "explicit"},
   {"query": "Save a checkpoint right now. The task is the OAuth flow rewrite, we just finished the token refresh logic but haven't tested it. Next step is integration tests against the staging IDP.", "should_trigger": true, "tag": "explicit"},
-  {"query": "Update PIPELINE-STATE.md with the current dev-pipeline phase — we just finished design, moving to implementation. Update the component table too.", "should_trigger": false, "tag": "near-miss-pipeline-state"},
-  {"query": "Initialize the pipeline state for the new task 'auth-rewrite'. Phase 0 starts now, components are oauth/session-mgmt/mfa.", "should_trigger": false, "tag": "near-miss-pipeline-state"},
+  {"query": "Update PIPELINE-STATE.md with the current dev-pipeline phase — we just finished design, moving to implementation. Update the component table too.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
+  {"query": "Initialize the pipeline state for the new task 'auth-rewrite'. Phase 0 starts now, components are oauth/session-mgmt/mfa.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
   {"query": "What's the difference between git stash and git checkout for saving work in progress?", "should_trigger": false, "tag": "generic"},
   {"query": "How do I create a snapshot in Postgres for backup purposes before a risky migration?", "should_trigger": false, "tag": "generic"},
-  {"query": "Fix the failing test in tests/auth.test.ts and verify the regression tests still pass after.", "should_trigger": false, "tag": "near-miss-fix-with-verify"},
+  {"query": "Fix the failing test in tests/auth.test.ts and verify the regression tests still pass after.", "should_trigger": false, "tag": "near-miss-safe-fix"},
   {"query": "Add a small comment to the formatDate function in src/utils/date.ts explaining the timezone handling.", "should_trigger": false, "tag": "generic"},
   {"query": "Run the full test suite for the release preflight check — integration and e2e included.", "should_trigger": false, "tag": "generic"},
-  {"query": "Transition the pipeline to Phase 3 (test phase) and update PIPELINE-STATE.md accordingly.", "should_trigger": false, "tag": "near-miss-pipeline-state"},
+  {"query": "Transition the pipeline to Phase 3 (test phase) and update PIPELINE-STATE.md accordingly.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
   {"query": "Rename the variable getUserData to fetchUser across the codebase, including all .ts and .tsx files.", "should_trigger": false, "tag": "generic"},
   {"query": "Help me set up VSCode launch configuration for debugging Node.js apps with sourcemap support.", "should_trigger": false, "tag": "generic"}
 ]
