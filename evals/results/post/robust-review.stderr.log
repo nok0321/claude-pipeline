@@ -1,0 +1,23 @@
+Evaluating skill='robust-review' against 20 queries...
+  description (first 100 chars): Use this skill whenever the user wants a deep, dedicated security and robustness review on changed o...
+Results: 17/20 passed
+  [FAIL] rate=0/3 expected=True: Run robust-review on src/auth/ — full depth, S-Critical to S-Low. Pre-
+  [PASS] rate=2/3 expected=True: Pre-merge security audit on the new payment integration (src/payment/)
+  [PASS] rate=2/3 expected=True: Robust review on file src/handlers/checkout.ts. I want axis 1 (securit
+  [PASS] rate=2/3 expected=True: deep sec review on src/api/ before release pls. dont miss anything — w
+  [PASS] rate=3/3 expected=True: We're cutting a release tag tomorrow. Need a final security/robustness
+  [FAIL] rate=1/3 expected=True: Run robust-review --all on the impl-orchestrator output for the invent
+  [FAIL] rate=0/3 expected=True: Audit src/api/handlers/ for all the standard issues — SQL injection, c
+  [PASS] rate=2/3 expected=True: review src/auth deep, im paranoid about the new oauth flow and the new
+  [PASS] rate=2/3 expected=True: Robust review pass on glob 'src/**/*.ts' — flag S-Critical and S-High 
+  [PASS] rate=2/3 expected=True: Security/robustness deep dive on the new search query parser (src/sear
+  [PASS] rate=0/3 expected=False: Quick PR review on src/utils/format.ts — 5 min Critical/Warning/Info p
+  [PASS] rate=0/3 expected=False: Compare src/order/ implementation against DESIGN/03_order.md — Missing
+  [PASS] rate=0/3 expected=False: Auto-fix the S-Critical findings from the last robust-review on src/au
+  [PASS] rate=0/3 expected=False: Help me write a regex for IPv6 addresses with abbreviated zero groups.
+  [PASS] rate=0/3 expected=False: Fix the bug in handlers/order.ts:88 — race condition on inventory decr
+  [PASS] rate=0/3 expected=False: How do I store API keys securely in a Node.js app — env vars, secret m
+  [PASS] rate=0/3 expected=False: Light review on my last commit, just structure and naming. No deep aud
+  [PASS] rate=0/3 expected=False: What's the OWASP Top 10? Need a quick reference for a security trainin
+  [PASS] rate=0/3 expected=False: Implement the auth refactor from DESIGN/01_auth.md autonomously with t
+  [PASS] rate=0/3 expected=False: Set up Snyk scanning in CI for vulnerability detection on the npm depe

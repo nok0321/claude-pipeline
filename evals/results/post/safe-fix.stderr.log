@@ -1,0 +1,23 @@
+Evaluating skill='safe-fix' against 20 queries...
+  description (first 100 chars): Use this skill whenever the user wants to apply a verified fix or refactor — driven either by findin...
+Results: 10/20 passed
+  [FAIL] rate=0/3 expected=True: Apply safe-fix Mode A on the 12 spec-audit conformance findings agains
+  [FAIL] rate=0/3 expected=True: spec-audit found 8 Constraint violations between DESIGN/02_payment.md 
+  [FAIL] rate=0/3 expected=True: auto sync DESIGN/03_order.md and src/order/ pls. spec-audit conformanc
+  [FAIL] rate=0/3 expected=True: Run safe-fix --mode=conformance --loop on the auth component until the
+  [FAIL] rate=0/3 expected=True: Auto-fix the 5 SEC-Critical and 4 ROB-High findings from robust-review
+  [FAIL] rate=0/3 expected=True: robust-review just dumped 14 findings (5 Critical, 4 High in src/payme
+  [FAIL] rate=0/3 expected=True: patch all the high severity stuff from robust-review on src/api/. dont
+  [FAIL] rate=0/3 expected=True: There's a bug in src/auth/login.ts:142 — when the OAuth provider retur
+  [FAIL] rate=0/3 expected=True: I'm scared to refactor handlers/checkout.ts — too much hidden coupling
+  [FAIL] rate=0/3 expected=True: small bug in formatDate at src/utils/date.ts:88, returning UTC instead
+  [PASS] rate=0/3 expected=False: Make sure the JSON shape returned by GET /api/orders matches what the 
+  [PASS] rate=0/3 expected=False: Light PR review on the diff in src/utils/ — Critical/High/Medium/Low r
+  [PASS] rate=0/3 expected=False: Run a deep security and robustness audit on src/auth/ — injection vect
+  [PASS] rate=0/3 expected=False: Compare DESIGN/01_auth.md vs src/auth/ — just the diff, don't fix anyt
+  [PASS] rate=0/3 expected=False: Generate DESIGN/06_inventory.md from plans/INVENTORY.md — we don't hav
+  [PASS] rate=0/3 expected=False: Implement the entire chat component end-to-end from DESIGN/08_chat.md 
+  [PASS] rate=0/3 expected=False: Save my session state before /clear — capture progress, git state, dec
+  [PASS] rate=0/3 expected=False: What's the best way to handle async errors in Node.js — global handler
+  [PASS] rate=0/3 expected=False: Help me write a CONTRIBUTING.md for the project covering PR workflow a
+  [PASS] rate=0/3 expected=False: What's the difference between encoding and encryption? Need a 1-paragr

@@ -1,0 +1,23 @@
+Evaluating skill='boundary-test' against 20 queries...
+  description (first 100 chars): Use this skill whenever the user wants to detect contracts at the boundaries between components — RE...
+Results: 20/20 passed
+  [PASS] rate=3/3 expected=True: Just merged the new /api/orders endpoint and the frontend OrderList co
+  [PASS] rate=3/3 expected=True: After the WASM rebuild, our TypeScript bindings to the geometry module
+  [PASS] rate=3/3 expected=True: We just changed the DB schema for the events table — added 2 columns, 
+  [PASS] rate=3/3 expected=True: I keep getting weird parsing errors after the API team renamed `userId
+  [PASS] rate=3/3 expected=True: yo we shipped a postgres migration and im paranoid about app code drif
+  [PASS] rate=3/3 expected=True: Generate and run boundary contract tests for the encoding conversion b
+  [PASS] rate=3/3 expected=True: impl-orchestrator just finished the inventory component. Run boundary-
+  [PASS] rate=3/3 expected=True: We have unit conversion (cm→mm) happening in 3 places between the pars
+  [PASS] rate=3/3 expected=True: wasm <-> ts type contract check on the math module pls. just rebuilt g
+  [PASS] rate=3/3 expected=True: Run all boundary tests after the API schema update — REST↔Frontend and
+  [PASS] rate=0/3 expected=False: There's a bug in the formatDate function — it's returning UTC instead 
+  [PASS] rate=0/3 expected=False: Implement the inventory component end-to-end from DESIGN/05_inventory.
+  [PASS] rate=0/3 expected=False: The login button on the homepage is misaligned on mobile breakpoint. C
+  [PASS] rate=0/3 expected=False: Help me write integration tests for the search endpoint using Playwrig
+  [PASS] rate=0/3 expected=False: Compare DESIGN/05_inventory.md against the implementation in src/inven
+  [PASS] rate=0/3 expected=False: What's the best way to mock REST APIs in a React test suite? MSW vs no
+  [PASS] rate=0/3 expected=False: Deep security review on the API authentication code in src/api/auth/. 
+  [PASS] rate=0/3 expected=False: Quick PR review on the changes to handlers/order.ts — Critical/Warning
+  [PASS] rate=0/3 expected=False: Add a logging middleware that captures request/response bodies for the
+  [PASS] rate=0/3 expected=False: Audit the design docs under DESIGN/ for type name inconsistencies and 
