@@ -109,5 +109,67 @@ spec-check を吸収した結果、旧 spec-audit query の「near-miss-spec-che
 - **M3 (200 行以下)**: 達成継続 (Phase 4 後 168 行平均、最大 200)
 - **M4 (遊休 skill 0 個)**: drop 7 + safe-fix 統合により 0 個 (M4 達成)
 - **M5 (severity Critical/High/Medium/Low 統一)**: Phase 4 finding.schema.json で達成
-- **M1 (trigger rate)**: 7/8 個別 PASS + 平均は safe-fix 救出待ち
+- **M1 (trigger rate)**: 7/8 個別 PASS、8 skill 平均 MISS (-0.034)、7 skill 平均 PASS (+36.3%)
 - **M2 (skill 本数 7-8)**: 8 skill 達成
+
+---
+
+## Sub-S 結果 (safe-fix description 反復、2026-04-29)
+
+### iter1 (description v1: skill 名引用排除版、~900 字)
+
+```
+Use this skill whenever the user wants to apply a fix, patch, or
+remediation with a built-in verification gate ... single-file bug fixes,
+severity-tagged finding remediation ..., and design-vs-implementation
+reconciliation loops.
+```
+
+→ 結果 `evals/results/post-s1/safe-fix.json`: trigger 0/30 (10/10 should_trigger 全失敗、変化なし)
+
+### iter2 (description v2: batch/loop/pipeline 強調版)
+
+```
+Use this skill whenever the user has a batch of remediation items
+... wants them processed in a controlled loop — one edit at a time,
+with a verification gate ... running between every edit and an
+automatic revert when the gate goes red, optionally iterating until
+the diff converges.
+```
+
+→ 結果 `evals/results/post-s2/safe-fix.json`: trigger 0/30 (同上)
+
+### 手動 probe による根本原因診断
+
+`claude -p` を 2 回手動実行 (query: 1) "There's a bug in src/auth/login.ts:142 — fix it and verify ..."、2) "Apply safe-fix Mode A on the 12 spec-audit conformance findings against src/order/ ..."):
+
+| 試行 | Skill emit | Bash | Glob | Read |
+|------|----------:|-----:|-----:|-----:|
+| 暗黙 query | 0 | 10 | 4 | 3 |
+| 明示 query (safe-fix Mode A) | 0 | 3 | 5 | 3 |
+
+→ Claude (claude-opus-4-7) は **「fix」動詞を含む query** に対し、Skill tool 経由ではなく **Bash/Glob/Read** を直接呼び出してファイル探索 → 該当ファイル不在で「ファイルが存在しません」回答で終了。description を v0/v1/v2 のいずれに変えても routing 行動は変化せず。
+
+### 構造的解釈
+
+| skill | trigger 動詞 | 直接ツールで代替可? | POST trigger |
+|-------|-------------|------------------|---:|
+| boundary-test | "test the contract" | × (boundary 検出は専用 logic) | 0.500 |
+| design-phase | "generate DESIGN/X.md" | × (template + sonnet 委譲) | 0.500 |
+| impl-orchestrator | "autonomously implement" | × (multi-stage loop) | 0.483 |
+| robust-review | "audit for vulnerabilities" | △ (専用 axes / severity) | 0.267 |
+| spec-audit | "audit DESIGN drift" | △ (cross-spec 走査) | 0.583 |
+| **safe-fix** | "fix and verify" | **○ (Edit + Bash test + Bash revert)** | **0.000** |
+
+safe-fix の value-add (verification gate, attribution-level revert, 3 連続失敗 escalation) は Bash/Edit 直接呼びの 3 step sequence で代替可能。Opus 4.7 は **wrapper skill が直接ツールに対し優位性を提供しない場合、Skill 経由を選ばない** という routing pattern が観測された。
+
+### 採用方針
+
+- description は **v2 を採用** (v0 比で skill 名引用 6 → 0 でクリーン、本文 quality 上の改善)
+- POST trigger 0.000 を **受容**、M1 個別 MISS を確定とする
+- iter3 (e.g., 「remediate」動詞のみ使用、algorithmic value 強調) も同じ routing 行動に阻まれる蓋然性が極めて高いため見送り
+- Phase 6 で safe-fix の **構造再考** を課題化:
+  - **Option A**: skill を廃止し、impl-orchestrator Stage 4 (escalation/remediation) に inline 化
+  - **Option B**: skill を `process-findings` (batch only、Mode C 削除) にリネーム + Mode A/B 専用化、impl-orchestrator から explicit 委譲のみで使う
+  - **Option C**: 現状維持 (impl-orchestrator から `Skill` tool 経由で explicit 呼び出しは機能しているはず、skill 自身の trigger は諦める)
+- Sub-Q/R/S を経て **M1 全達成は不能、しかし 7/8 + 7-skill 平均 +36.3% で main マージ判断可能水準** という結論
