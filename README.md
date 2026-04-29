@@ -4,7 +4,9 @@ Claude Code 向け自律開発パイプラインのスキル集。
 
 `~/.claude/skills/` からシンボリックリンクされており、このリポジトリが唯一の真実源。
 
-設計原則・スキル間の関係は [ARCHITECTURE.md](ARCHITECTURE.md) を参照。
+設計原則・スキル間の関係は [ARCHITECTURE.md](ARCHITECTURE.md)、旧 15 skill から新 8 skill への移行は [docs/MIGRATION.md](docs/MIGRATION.md) を参照。
+
+> **注 (2026-04-29 / Phase 5 完了)**: 旧 15 skill 構造から新 8 skill 構造へ再編済み (Phase 2)。Phase 5 POST eval 結果は 7/8 個別 M1 PASS、7-skill 平均 trigger rate +36.3% 改善 (詳細: [evals/POST-DIFF.md](evals/POST-DIFF.md))。Phase 6 dogfooding 期間中 (2026-04-29 〜)。
 
 ---
 
@@ -12,53 +14,61 @@ Claude Code 向け自律開発パイプラインのスキル集。
 
 ```
 claude-pipeline/
-├── skills/           # Claude Code スキル群（~/.claude/skills/ へシンボリックリンク）
-│   ├── escalation/           # エスカレーション分類フレームワーク
-│   ├── pipeline-state/       # PIPELINE-STATE.md 管理
-│   ├── impl-orchestrator/    # 実装オーケストレーター
-│   ├── design-phase/         # 設計フェーズ自動化
-│   ├── dev-pipeline/         # 計画→設計→実装→テスト→報告の統合
-│   ├── boundary-test/        # 境界契約テスト生成
-│   ├── robust-review/        # セキュリティ/堅牢性レビュー
-│   ├── robust-fix/           # S-Critical/S-High 自動修正
-│   ├── spec-check/           # 仕様↔実装差分検出
-│   ├── spec-fix/             # 仕様↔実装双方向修正（--loop で旧 spec-cycle 相当）
-│   ├── spec-audit/           # 仕様書間矛盾検出
-│   ├── code-review/          # 5軸統合レビュー（軽量・PR向け）
-│   ├── fix-with-verify/      # 安全修正+自動リバート
-│   ├── quick-test/           # 差分ベース高速テスト
-│   └── checkpoint/           # セッション引き継ぎ
-├── hooks/            # Claude Code Hook スクリプト（設定は settings.json 参照）
-│   ├── pre-bash-safety.sh    # PreToolUse(Bash): 破壊的コマンドブロック
-│   ├── post-edit-lint.sh     # PostToolUse(Write/Edit): 編集毎の lint/型チェック
-│   ├── stop-verify.sh        # Stop: タスク完了時の検証ゲート（差分言語自動検出）
-│   └── session-start.sh      # SessionStart: プロジェクト種別・ツールチェーン検出
+├── skills/                    # Claude Code スキル群（~/.claude/skills/ へシンボリックリンク）
+│   ├── impl-orchestrator/     # 実装フェーズ専任 + エントリーポイント (4 ステージループ)
+│   ├── design-phase/          # 設計書自動生成 (plans/*.md → DESIGN/*.md)
+│   ├── spec-audit/            # 仕様書間矛盾検出 + 仕様↔実装差分検出 (Mode A/B)
+│   ├── robust-review/         # 深層セキュリティ・堅牢性レビュー
+│   ├── code-review/           # 軽量 PR レビュー (5 軸統合)
+│   ├── boundary-test/         # 境界契約テスト (API/WASM/DB/変換)
+│   ├── safe-fix/              # 検査結果の自動修正 (Mode A 仕様準拠 / B 堅牢性 / C 単発)
+│   └── checkpoint/            # セッション継続管理 (/clear 前の状態保存)
+├── hooks/                     # Claude Code Hook スクリプト集（settings.json から参照）
+│   ├── pre-bash-safety.sh     # PreToolUse(Bash): 破壊的コマンドブロック
+│   ├── post-edit-lint.sh      # PostToolUse(Write/Edit): 編集毎の lint/型チェック
+│   ├── stop-verify.sh         # Stop: タスク完了時の検証ゲート（差分言語自動検出）
+│   └── session-start.sh       # SessionStart: プロジェクト種別・ツールチェーン検出
+├── evals/                     # トリガー評価フレームワーク (skill-creator ベース)
+│   ├── queries/               # 各 skill の triggerable query 集 (20 件/skill)
+│   ├── BASELINE.json          # Phase 0 ベースライン
+│   └── POST-DIFF.md           # Phase 5 POST 評価と BASELINE 差分
+├── docs/
+│   └── MIGRATION.md           # 旧 15 skill → 新 8 skill 対応表
 └── plans/
-    └── PLAN.md               # 自律開発パイプライン実装計画
+    ├── REDESIGN-PLAN.md       # 重量整理計画 (Phase 0-6)
+    └── REDESIGN-CHECKPOINT.md # 進捗チェックポイント
 ```
 
 ---
 
-## パイプライン概要
+## エントリーポイント
 
 ```
-Phase 0: 計画（対話）      ← ユーザー承認必須
-Phase 1: 設計（自律）      ← design-phase
-Phase 2: 実装（自律）      ← impl-orchestrator + boundary-test
-Phase 3: テスト（自律）    ← spec-fix --loop + robust-review
-Phase 4: 報告
+/impl-orchestrator <component>     # 実装パイプラインを起動
+                                   # DESIGN/*.md 不在時は自動的に design-phase へフォールバック
+/design-phase <component>          # 設計書のみ生成 (plans/*.md から)
+/spec-audit --mode=cross           # 仕様書間矛盾検出
+/spec-audit --mode=conformance     # 仕様↔実装差分検出
+/robust-review <files>             # マージ前の深層レビュー
+/code-review <files>               # PR 前の軽量レビュー
+/boundary-test <component>         # 境界契約テスト生成
+/safe-fix --mode=<conformance|robust|adhoc>  # 検査結果の自動修正
+/checkpoint save | restore         # セッション継続管理
 ```
 
-エントリーポイント: `/dev-pipeline <task-description>`
+旧 `/dev-pipeline` (フェーズ統合エントリ) は廃止。`impl-orchestrator` が DESIGN/*.md 不在時に design-phase を Agent 委譲する形に統合。
 
 ---
 
-## 設計原則
+## 設計原則 (要約)
 
-1. **スキルから Agent ツール経由でサブエージェント化** — スキル直接呼び出しは不可
-2. **ハードコードなし** — `CLAUDE.md` の `## Component Mapping` / `## Critical Constraints` / `## Project-Specific Checks` から動的取得
+1. **2 層委譲のみ** — オーケストレーター (`impl-orchestrator`) → 各 skill。3 層は廃止。
+2. **検査↔修正の JSON Finding 契約化** — `skills/safe-fix/references/finding.schema.json` で形式定義。検査系 skill は schema 準拠 JSON を末尾出力。
 3. **モデル配分** — オーケストレーター=opus, 実装=sonnet, レビュー=opus
-4. **機械的検証ゲート先行** — ビルド/型/テストをレビューより先に通す
+4. **機械的検証ゲート先行** — ビルド/型/テスト/境界契約 → 並列レビュー → 修正 + 再検証 (impl-orchestrator Stage 2/3)
+5. **CLAUDE.md 駆動の動的設定** — プロジェクト固有のパスやチェック項目はハードコードせず、対象プロジェクトの CLAUDE.md から動的取得
+
+詳細は [ARCHITECTURE.md](ARCHITECTURE.md)。
 
 ---
 
@@ -67,18 +77,17 @@ Phase 4: 報告
 スキルはこのリポジトリで編集し、`~/.claude/skills/` のシンボリックリンク経由で Claude Code に反映される。
 
 ```bash
-# 編集
 cd ~/work/private/claude-pipeline
 # skills/<skill-name>/SKILL.md を編集
-
-# 変更確認
 git diff
-
-# コミット
 git add skills/
 git commit -m "feat(skill): ..."
 git push
 ```
+
+skill 編集中は eval (`evals/scripts/run_baseline.sh`) を回さないこと (測定汚染防止)。
+
+---
 
 ## Hooks のインストール
 
@@ -91,11 +100,11 @@ hooks/ は Claude Code の Hook 機能で使うシェルスクリプト集。`~/
 全プロジェクトで同一の hooks を使いたい場合。`$HOME/.claude/hooks/` に実体を置き、`settings.json` から `$HOME` で参照する。
 
 ```bash
-# インストール（ホームの ~/.claude/hooks/ にコピー or junction）
 cp hooks/*.sh ~/.claude/hooks/
 chmod +x ~/.claude/hooks/*.sh
+```
 
-# settings.json の例（ユーザーレベル ~/.claude/settings.json）
+```json
 {
   "hooks": {
     "PreToolUse":  [{"matcher": "Bash", "hooks": [{"type":"command","command":"bash \"$HOME/.claude/hooks/pre-bash-safety.sh\"","timeout":5000}]}],
@@ -108,14 +117,14 @@ chmod +x ~/.claude/hooks/*.sh
 
 ### パターン B: プロジェクトレベル上書き
 
-特定プロジェクトだけ独自の hooks を適用したい場合（例: プロジェクト固有の破壊的コマンドを追加ブロック）。各プロジェクトの `.claude/hooks/` に実体を置き、`$CLAUDE_PROJECT_DIR` で参照する。
+特定プロジェクトだけ独自の hooks を適用したい場合。各プロジェクトの `.claude/hooks/` に実体を置き、`$CLAUDE_PROJECT_DIR` で参照する。
 
 ```bash
-# プロジェクト毎にインストール（コピー or junction）
 cp hooks/*.sh <project>/.claude/hooks/
 chmod +x <project>/.claude/hooks/*.sh
+```
 
-# settings.json の例（該当プロジェクトの .claude/settings.json、もしくはユーザーレベルで全体適用）
+```json
 {
   "hooks": {
     "PreToolUse":  [{"matcher": "Bash", "hooks": [{"type":"command","command":"bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-bash-safety.sh\"","timeout":5000}]}],
@@ -129,14 +138,17 @@ chmod +x <project>/.claude/hooks/*.sh
 `$CLAUDE_PROJECT_DIR` をユーザーレベル `settings.json` で使うと、各プロジェクトに `.claude/hooks/` が必須になる点に注意。junction で `claude-pipeline/hooks/` を指すのが真実源を一元化する一般的な運用。
 
 ### 各 Hook の動作
+
 - **pre-bash-safety.sh**: `rm -rf /`, `git push --force main`, `DROP DATABASE`, `cargo/npm publish` 等を検出して exit 2 でブロック
-- **post-edit-lint.sh**: 編集ファイルの拡張子から `cargo clippy` / `tsc --noEmit` / `svelte-check` / `ruff` / `go vet` を自動選択して実行。エラーだけを additionalContext として返す
+- **post-edit-lint.sh**: 編集ファイルの拡張子から `cargo clippy` / `tsc --noEmit` / `svelte-check` / `ruff` / `go vet` を自動選択して実行。エラーだけを additionalContext として返す。旧 `quick-test` skill の差分ベース確認はこちらに吸収済み
 - **stop-verify.sh**: `git diff` で変更言語を検出し、該当する検証ツールを一括実行。エラーがあれば `decision: block` で完了を止める
-- **session-start.sh**: Git ブランチ・未コミット数・Rust/Node/Python/Go/Java/Docker のバージョンを1行で表示
+- **session-start.sh**: Git ブランチ・未コミット数・Rust/Node/Python/Go/Java/Docker のバージョンを 1 行で表示
 
 ---
 
 ## CLAUDE.md に追加すべきセクション（対象プロジェクト側）
+
+スキル群は対象プロジェクトの CLAUDE.md から構造化セクションを動的取得する。
 
 ```markdown
 ## Component Mapping
@@ -159,4 +171,38 @@ chmod +x <project>/.claude/hooks/*.sh
 ## Escalation Overrides（オプション）
 - promote: ...
 - demote: ...
+
+## Boundary Definitions（boundary-test 用、オプション）
+- API ↔ Frontend: ...
+- WASM ↔ TypeScript: ...
+- DB ↔ App: ...
 ```
+
+各セクションの詳細用途は [ARCHITECTURE.md §6](ARCHITECTURE.md) を参照。
+
+---
+
+## 評価フレームワーク (evals/)
+
+skill-creator の `run_eval.py` を Windows 互換に port した独自フレームワーク。詳細は [evals/README.md](evals/README.md) と [evals/scripts/README.md](evals/scripts/README.md)。
+
+```bash
+# 全 8 skill の trigger rate を測定 (Phase 0/5 用 wrapper、~30-80 分、WORKERS=3 で並列)
+bash evals/scripts/run_baseline.sh
+
+# 単一 skill の測定 (debug 用)
+python evals/scripts/run_eval_compat.py \
+  --eval-set evals/queries/<skill>.json \
+  --skill-path skills/<skill> \
+  --runs-per-query 3 --num-workers 3 --timeout 30 --model claude-opus-4-7
+
+# 結果集計 (per-skill JSON → 集計 JSON)
+python evals/scripts/aggregate.py evals/results/<phase>/ > evals/<PHASE>.json
+
+# BASELINE vs POST 差分
+python evals/scripts/compare.py evals/BASELINE.json evals/POST.json
+```
+
+各 skill の query セットは `evals/queries/<skill>.json` に 20 件 (explicit/implicit/casual の triggerable + near-miss/generic の non-triggerable)。
+
+**skill 編集中は測定汚染防止のため eval を回さないこと**。
