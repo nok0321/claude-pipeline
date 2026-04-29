@@ -6,6 +6,8 @@
 将来スキル群を見直す際、本文書の各原則が **依然として妥当か** を判断材料に使う。
 
 > **注 (Phase 2 / 2026-04-29)**: 旧 `escalation` skill と旧 `pipeline-state` skill は本ドキュメントの **§A 補章 (Escalation framework)** と **§B 補章 (Pipeline state file)** に吸収。各 skill は本ドキュメントを参照する形に変更された。
+>
+> **注 (Phase 5 完了 / 2026-04-29)**: 新 8 skill の trigger rate を再測定し 7/8 個別 M1 PASS、7-skill 平均 +36.3% (詳細: [evals/POST-DIFF.md](evals/POST-DIFF.md))。`safe-fix` のみ 0.000 で routing 構造由来 (Opus 4.7 が "fix" 動詞 query を Bash/Edit 直接呼びへ流す)、Phase 6 で構造再考予定 (§11.1 参照)。
 
 ---
 
@@ -234,6 +236,27 @@ CLAUDE.md の `## Escalation Overrides` で promote/demote を上書き可能。
 - [ ] **§A / §B 補章** が SKILL に戻すべき粒度に成長していないか (補章が長くなりすぎたら skill 復活を検討)
 
 これらの問いに「No」が増えてきたら、本リポジトリ全体の再設計を検討する時期。
+
+### 11.1 Phase 5 完了時 (2026-04-29) 暫定評価
+
+Phase 5 POST eval 結果と Phase 1〜4 の構造変更を踏まえた、各チェック項目の暫定状況。
+Phase 6 dogfooding (1 週間) で実運用観察を加え、最終評価は dogfooding 終了時に実施。
+
+| チェック項目 | 暫定状況 | 根拠 / 補足 |
+|------------|---------|----|
+| G1〜G5 の設計目標 | ✅ 合致 | 7/8 個別 M1 PASS、7-skill 平均 +36.3% trigger rate 改善が G1 (後追いループ排除) と G4 (コンテキスト爆発回避) を間接支持 |
+| 3 層構造 | ✅ 維持 | 新 8 skill 全てが Layer 1/2/3 に収まる。dev-pipeline drop による旧 Layer 0 廃止以外、新規逸脱なし |
+| Agent 委譲モデル | ✅ 許容範囲 | Phase 4 で `context: fork` を 5 skill に適用後もオーバーヘッド許容。Phase 5 eval (76min, 8 skill × 20 query × 3 run) は rate-limit 0 件 |
+| モデル配分 | ✅ Opus 4.7 統一 | Phase 5 measure 時点で全 skill が `claude-opus-4-7`。コスト/性能再評価は Phase 6 dogfooding で観察予定 |
+| CLAUDE.md 動的読み取り | ⏳ dogfooding で確認 | claude-pipeline 自体は skill リポジトリのため CLAUDE.md なし。対象プロジェクト側の運用度は Phase 6 dogfooding で実例観察 |
+| PIPELINE-STATE / CHECKPOINT / memory 役割分離 | ⏳ dogfooding で確認 | CHECKPOINT.md は Phase 0〜5 で機能。memory も active 利用中。PIPELINE-STATE.md は実プロジェクト稼働時に分離維持を観察 |
+| 検証ゲート→レビュー の順序 | ⏳ dogfooding で確認 | impl-orchestrator Stage 2 → Stage 3 順序を Phase 4 で formalize。実バグ追いループ防止効果は dogfooding 期間中の実装で測定 |
+| Hook 4 種 | ✅ 全 4 種維持 | `hooks/{pre-bash-safety,post-edit-lint,stop-verify,session-start}.sh` 全稼働中。誤検出/無効化は Phase 6 dogfooding で観察 |
+| §A / §B 補章の粒度 | ✅ 維持 | §A ≈ 70 行 / §B ≈ 80 行。SKILL 復活粒度 (200 行) には至らず、補章として適切 |
+
+**保留事項 (Phase 6 で再考)**:
+
+- **safe-fix の構造**: Phase 5 で trigger 0.000 を観測。Opus 4.7 が "fix" 動詞 query を Skill 経由ではなく Bash/Edit/Glob 直接呼びでルーティングする structural pattern が確定。description 最適化 (Sub-S 2 iter) では覆せず。Phase 6 Sub-V で **Option A (impl-orchestrator inline 化) / Option B (process-findings リネーム + Mode C 削除) / Option C (現状維持)** を dogfooding ログを根拠に判断。詳細は [docs/MIGRATION.md](docs/MIGRATION.md) §Phase 6 Sub-V。
 
 ---
 
