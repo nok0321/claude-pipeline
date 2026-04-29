@@ -1,0 +1,153 @@
+{
+  "phase": "post",
+  "model": "claude-opus-4-7",
+  "timestamp": "2026-04-29T06:08:57.080724+00:00",
+  "skills": {
+    "boundary-test": {
+      "trigger_rate_overall": 0.5,
+      "should_trigger_rate": 1.0,
+      "should_not_trigger_rate": 1.0,
+      "passed": 20,
+      "total": 20,
+      "by_tag": {
+        "explicit": 1.0,
+        "implicit": 1.0,
+        "casual": 1.0,
+        "near-miss-fix-with-verify": 0.0,
+        "near-miss-impl-orchestrator": 0.0,
+        "generic": 0.0,
+        "near-miss-spec-check": 0.0,
+        "near-miss-robust-review": 0.0,
+        "near-miss-code-review": 0.0,
+        "near-miss-spec-audit": 0.0
+      }
+    },
+    "checkpoint": {
+      "trigger_rate_overall": 0.433,
+      "should_trigger_rate": 0.867,
+      "should_not_trigger_rate": 1.0,
+      "passed": 19,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.8,
+        "implicit": 0.889,
+        "casual": 1.0,
+        "near-miss-pipeline-state": 0.0,
+        "generic": 0.0,
+        "near-miss-fix-with-verify": 0.0
+      }
+    },
+    "code-review": {
+      "trigger_rate_overall": 0.233,
+      "should_trigger_rate": 0.467,
+      "should_not_trigger_rate": 1.0,
+      "passed": 14,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.25,
+        "implicit": 0.833,
+        "casual": 0.167,
+        "near-miss-robust-review": 0.0,
+        "near-miss-spec-check": 0.0,
+        "near-miss-fix-with-verify": 0.0,
+        "generic": 0.0,
+        "near-miss-impl-orchestrator": 0.0
+      }
+    },
+    "design-phase": {
+      "trigger_rate_overall": 0.5,
+      "should_trigger_rate": 1.0,
+      "should_not_trigger_rate": 1.0,
+      "passed": 20,
+      "total": 20,
+      "by_tag": {
+        "explicit": 1.0,
+        "implicit": 1.0,
+        "casual": 1.0,
+        "near-miss-spec-fix": 0.0,
+        "generic": 0.0,
+        "near-miss-impl-orchestrator": 0.0,
+        "near-miss-spec-audit": 0.0
+      }
+    },
+    "impl-orchestrator": {
+      "trigger_rate_overall": 0.483,
+      "should_trigger_rate": 0.967,
+      "should_not_trigger_rate": 1.0,
+      "passed": 20,
+      "total": 20,
+      "by_tag": {
+        "explicit": 1.0,
+        "implicit": 1.0,
+        "casual": 0.833,
+        "near-miss-design-phase": 0.0,
+        "near-miss-fix-with-verify": 0.0,
+        "near-miss-robust-review": 0.0,
+        "near-miss-code-review": 0.0,
+        "generic": 0.0,
+        "near-miss-spec-audit": 0.0
+      }
+    },
+    "robust-review": {
+      "trigger_rate_overall": 0.267,
+      "should_trigger_rate": 0.533,
+      "should_not_trigger_rate": 1.0,
+      "passed": 17,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.417,
+        "implicit": 0.583,
+        "casual": 0.667,
+        "near-miss-code-review": 0.0,
+        "near-miss-spec-check": 0.0,
+        "near-miss-robust-fix": 0.0,
+        "generic": 0.0,
+        "near-miss-fix-with-verify": 0.0,
+        "near-miss-impl-orchestrator": 0.0
+      }
+    },
+    "safe-fix": {
+      "trigger_rate_overall": 0.0,
+      "should_trigger_rate": 0.0,
+      "should_not_trigger_rate": 1.0,
+      "passed": 10,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.0,
+        "implicit": 0.0,
+        "casual": 0.0,
+        "near-miss-boundary-test": 0.0,
+        "near-miss-code-review": 0.0,
+        "near-miss-robust-review": 0.0,
+        "near-miss-spec-audit": 0.0,
+        "near-miss-design-phase": 0.0,
+        "near-miss-impl-orchestrator": 0.0,
+        "near-miss-checkpoint": 0.0,
+        "generic": 0.0
+      }
+    },
+    "spec-audit": {
+      "trigger_rate_overall": 0.583,
+      "should_trigger_rate": 0.967,
+      "should_not_trigger_rate": 0.8,
+      "passed": 18,
+      "total": 20,
+      "by_tag": {
+        "explicit": 1.0,
+        "implicit": 0.889,
+        "casual": 1.0,
+        "near-miss-spec-check": 1.0,
+        "near-miss-spec-fix": 0.0,
+        "near-miss-design-phase": 0.0,
+        "generic": 0.0,
+        "near-miss-robust-review": 0.0
+      }
+    }
+  },
+  "summary": {
+    "total_skills": 8,
+    "avg_trigger_rate": 0.375,
+    "avg_pass_rate": 0.863,
+    "skills_above_pass_threshold_0.7": 7
+  }
+}

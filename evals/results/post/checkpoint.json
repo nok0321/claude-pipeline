@@ -1,0 +1,171 @@
+{
+  "skill_name": "checkpoint",
+  "description": "Use this skill whenever the user is about to break a long-running task across sessions — before `/clear` or `/compact`, at the end of a working day, when picking up unfinished work the next morning, or any time the user mentions saving or restoring state with phrases like \"save my place\", \"where was I\", \"pick up tomorrow\", \"checkpoint this\". The skill writes or reads `CHECKPOINT.md` at the project root, capturing task progress, git state, decisions, and a hand-off note for the next session. Trigger even if the user does not say the word \"checkpoint\" — phrases like \"let me come back to this later\" or \"I want to step away\" are sufficient.",
+  "results": [
+    {
+      "query": "I'm about to /clear this session — task is half done. Save a checkpoint so I can pick up tomorrow with full context. The work is the auth refactor (touched src/auth/, ~600 lines) and we're mid-tests.",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Long session today, I want to wrap up but the implementation isn't done. Need a way to hand off to my next session — what files I touched, what's next, what blockers exist.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Create a CHECKPOINT.md for the current task. We've been working for 4 hours on the payment integration, halfway through the integration tests, and I need to come back to this in 2 days.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "save state pls, im about to /compact and dont wanna lose context. were in the middle of the search refactor, like 60% done",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Tomorrow I'll continue this task — write down where we are, what files are dirty, what tests are passing/failing, and the next 3 things on the plate.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Run /checkpoint save before I close my laptop. Git is dirty (12 files modified), tests are at 18/22 passing, and I want a written record of why I deviated from the original plan.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "I'm going to take a break for 3 hours — when I come back I want to know exactly where I left off without re-reading the entire conversation. The current task is the OAuth flow rewrite.",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "long task, gonna take a nap. checkpoint the state so future-me knows whats up and which files are dirty",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Restore the last checkpoint and tell me where we left off. CHECKPOINT.md should be in the project root.",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Save a checkpoint right now. The task is the OAuth flow rewrite, we just finished the token refresh logic but haven't tested it. Next step is integration tests against the staging IDP.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Update PIPELINE-STATE.md with the current dev-pipeline phase — we just finished design, moving to implementation. Update the component table too.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Initialize the pipeline state for the new task 'auth-rewrite'. Phase 0 starts now, components are oauth/session-mgmt/mfa.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "What's the difference between git stash and git checkout for saving work in progress?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "How do I create a snapshot in Postgres for backup purposes before a risky migration?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Fix the failing test in tests/auth.test.ts and verify the regression tests still pass after.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Add a small comment to the formatDate function in src/utils/date.ts explaining the timezone handling.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Run the full test suite for the release preflight check — integration and e2e included.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Transition the pipeline to Phase 3 (test phase) and update PIPELINE-STATE.md accordingly.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Rename the variable getUserData to fetchUser across the codebase, including all .ts and .tsx files.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Help me set up VSCode launch configuration for debugging Node.js apps with sourcemap support.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 20,
+    "passed": 19,
+    "failed": 1
+  }
+}

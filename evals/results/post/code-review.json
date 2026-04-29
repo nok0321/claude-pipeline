@@ -1,0 +1,171 @@
+{
+  "skill_name": "code-review",
+  "description": "Use this skill whenever the user wants a lightweight integrated code review for a small-to-medium change — typically right after editing code, before opening a PR, or as a sanity pass before commit. Covers static analysis, security spot-check, robustness spot-check, structure smells, and test-coverage gaps in one report ranked Critical / High / Medium / Low. Trigger phrases include \"review my changes\", \"look over this PR\", \"give me a code review\", \"check this diff\", \"spot-check this commit\", or any pre-PR / pre-commit review request. Trigger even when the user does not say \"code-review\" — implicit phrases like \"anything wrong with this?\", \"anything to fix here?\", or \"ready to ship?\" qualify when the context is a code diff. For deeper pre-merge security audits use `robust-review` instead.",
+  "results": [
+    {
+      "query": "Quick PR review on the changes I just made in src/utils/format.ts and src/utils/parse.ts — Critical/Warning/Info breakdown. Should take 5 min, just the obvious issues.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Review my last 4 commits before I push the PR. I want a quick pass — security/correctness/structure/test impact, but not a deep audit.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Just finished the order validation refactor (src/order/validators/, ~280 lines). Run a 5-axis review pass on the diff before I open the PR.",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Review file src/auth/oauth.ts. 3-tier breakdown please. Focus on the new token refresh logic I added at the bottom.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "5 min PR review on my changes pls. nothing too deep just the obvious stuff. last 2 commits",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Run a code review on the diff between origin/main and HEAD. I want Critical/Warning/Info findings — keep it light, this is a small PR.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "I changed handlers/payment.ts and handlers/refund.ts (~150 lines combined). Want a quick sanity check on style, security, and edge cases before I push to the PR branch.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "code review on my last commit pls, lemme know if anything jumps out. nothing crazy, just a small refactor of the search query builder",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Review the changes in src/ between commits abc123 and HEAD with a 3-tier severity breakdown — Critical/Warning/Info.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "I refactored the search query parser in src/search/parser.ts. Light review pass — am I missing obvious things? PR-quality, not merge-quality.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Deep security audit on src/api/auth/ before merge. Inject vectors, panic sources, race conditions — S-Critical/S-High findings only.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Compare my implementation in src/order/ against DESIGN/03_order.md. Show me Missing/Diverged/Extra/Constraint findings.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "There's a bug in handlers/order.ts that's failing tests. Fix it and verify regression tests still pass after.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Add JSDoc comments to all the public functions in src/utils/format.ts — formatDate, parseDate, formatCurrency, parseCurrency.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "What's the best way to handle async errors in TypeScript with strict mode enabled?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Generate unit tests for the OrderValidator class in src/order/validators/OrderValidator.ts — 80%+ coverage target.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Pre-release security review on the entire src/auth/ tree. I need this to be thorough — authorization, session handling, token storage, everything.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Help me write a regex that matches valid email addresses including IDN (international domain names).",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Implement the search component end-to-end from DESIGN/02_search.md including reviews and tests.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Set up ESLint rules for the new TypeScript project — strict mode, no-explicit-any, etc.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 20,
+    "passed": 14,
+    "failed": 6
+  }
+}

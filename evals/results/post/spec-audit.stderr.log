@@ -1,0 +1,23 @@
+Evaluating skill='spec-audit' against 20 queries...
+  description (first 100 chars): Use this skill whenever the user wants a unified design-spec audit — either detecting inconsistencie...
+Results: 18/20 passed
+  [PASS] rate=3/3 expected=True: Just added DESIGN/03_payment.md and DESIGN/04_refund.md. Could you che
+  [PASS] rate=3/3 expected=True: I've updated 3 of our component design docs (DESIGN/02_user.md, DESIGN
+  [PASS] rate=3/3 expected=True: We have 8 markdown files under DESIGN/ and I keep finding little incon
+  [PASS] rate=3/3 expected=True: yo can u sanity check the design docs in DESIGN/ for me, especially th
+  [PASS] rate=3/3 expected=True: Run a cross-document audit on our spec markdowns under DESIGN/ — I wan
+  [PASS] rate=3/3 expected=True: I want to verify type names are consistent between DESIGN/01_user.md a
+  [PASS] rate=2/3 expected=True: Editing the auth component spec right now, but I'm worried about const
+  [PASS] rate=3/3 expected=True: wanna do a one-shot check on the spec markdowns in DESIGN/, anything m
+  [PASS] rate=3/3 expected=True: Audit the 6 design docs we just generated from design-phase as a batch
+  [PASS] rate=3/3 expected=True: We have a constant CONNECT_TIMEOUT_MS defined in DESIGN/01_gateway.md 
+  [FAIL] rate=3/3 expected=False: Compare my implementation in src/auth/ against DESIGN/01_auth.md and t
+  [PASS] rate=0/3 expected=False: I have a list of 12 spec mismatches from the last spec-check run, can 
+  [PASS] rate=0/3 expected=False: Generate a brand new design document for the payment retry workflow, w
+  [PASS] rate=0/3 expected=False: Audit the security logs from last month for unauthorized access attemp
+  [PASS] rate=0/3 expected=False: Rename the variable getUserData to fetchUser across the codebase, incl
+  [FAIL] rate=3/3 expected=False: Verify whether the src/order/ implementation matches DESIGN/03_order.m
+  [PASS] rate=0/3 expected=False: Deep security review on the auth code under src/auth/ — focus on injec
+  [PASS] rate=0/3 expected=False: I want to implement an audit log feature and need a spec for the log f
+  [PASS] rate=0/3 expected=False: Update the dependencies in package.json to their latest versions — npm
+  [PASS] rate=0/3 expected=False: Write DESIGN/04_payment.md from scratch for the new payment component,
