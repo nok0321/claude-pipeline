@@ -1,12 +1,19 @@
-# Redesign Checkpoint: Phase 5 完了 → Phase 6 着手
+# Redesign Checkpoint: Phase 6 進行中 (dogfooding 期間)
 
-Updated: 2026-04-29
+Updated: 2026-04-29 (Phase 6 session 1 完了、dogfooding 開始)
 
 ## 現在地
 
-- ブランチ: `redesign/heavy` (main は触らない、Phase 6 完了時に 1 回マージ)
+- ブランチ: `redesign/heavy` (main は触らない、Phase 6 dogfooding 完了時に 1 回マージ)
 - 計画書: [REDESIGN-PLAN.md](REDESIGN-PLAN.md)
-- 完了 commits (新しい順、Phase 5):
+- **状態**: Phase 6 session 1 完了。dogfooding 開始 (1 週間予定)。
+- 完了 commits (新しい順、Phase 6 session 1):
+  - `2a99134` Phase 6 Step 4: MIGRATION Phase 5 results + Sub-V options + Option C interim (Sub-U-3 + Sub-V)
+  - `4cc5538` Phase 6 Step 3: ARCHITECTURE §11.1 Phase 5 evaluation table (Sub-U-2)
+  - `e560e24` Phase 6 Step 2: rewrite README for new 8-skill structure (Sub-U-1)
+  - `67be84c` Phase 6 Step 1: relabel near-miss-* tags to new 8-skill names (Sub-W)
+- Phase 5:
+  - `505d540` Phase 5 Step 5: Sub-T decisions + CHECKPOINT for Phase 6 handoff
   - `04ada85` Phase 5 Step 4: Sub-S safe-fix description optimization (2 iter, accepted 0.000)
   - `ea440fc` Phase 5 Step 3: BASELINE → POST diff + M1 evaluation (Sub-R)
   - `e7bd1ea` Phase 5 Step 2: POST eval results (8 skills, WORKERS=3, 76min)
@@ -112,6 +119,54 @@ Phase 5 で観測した tag 名陳腐化:
 
 ---
 
+## Phase 6 session 1 完了サマリ (2026-04-29)
+
+| Sub | 内容 | 判定 | commit |
+|-----|------|------|--------|
+| W | query tag リラベル (8 現役 skill) | 完了 (literal rename) | `67be84c` |
+| U-1 | README.md を新 8 skill 構造で書き直し | 完了 | `e560e24` |
+| U-2 | ARCHITECTURE.md §11.1 Phase 5 評価追記 | 完了 | `4cc5538` |
+| U-3 + V | MIGRATION.md に Phase 5 findings + Sub-V Options + Option C 暫定採択 | 完了 (eval 再実行なし) | `2a99134` |
+| X | dogfooding 観察ログ受け皿 | (本 commit) 受け皿のみ準備、観察は 1 週間 |  |
+
+**未完**: Sub-X dogfooding 期間 (1 週間)、その後 Sub-V Option 確定 + main マージ。
+
+---
+
+## Phase 6 dogfooding 観察ログ (2026-04-29 〜 2026-05-06 予定)
+
+**目的**: 新 8 skill 構造を実運用に乗せ、(1) skill 発火/誤発火、(2) impl-orchestrator → safe-fix の Skill 経由委譲頻度、(3) ARCHITECTURE §11.1 ⏳ 項目 (CLAUDE.md 動的読み取り、状態管理レイヤ役割分離、検証ゲート→レビュー順序) の実運用観察。
+
+### 観察テンプレート (実例追記、日付順)
+
+```
+### YYYY-MM-DD <短いタスク名>
+- プロジェクト: <repo / 用途>
+- 起動 skill: </impl-orchestrator | /spec-audit | ...>
+- 実行モデル: <claude-opus-4-7 / sonnet / etc>
+- 観察:
+  - skill 発火: <成功 | 失敗 (Bash/Edit 直接呼びへ流れた等)>
+  - 誤発火: <あり/なし、内容>
+  - safe-fix 経由委譲: <あり (件数) / なし>
+  - CLAUDE.md セクション活用: <Component Mapping / Critical Constraints / etc 何が読まれたか>
+  - 検証ゲート→レビュー順序: <順守 / 逸脱>
+  - hook 動作: <pre-bash-safety / post-edit-lint / stop-verify / session-start の発動 + 効果>
+- 課題 / hotfix 候補: <あれば>
+```
+
+### 観察エントリ
+
+(dogfooding 期間中にここへ追記)
+
+### Sub-V 判断材料 (1 週間後に集計)
+
+- impl-orchestrator → safe-fix 経由委譲 観察件数: ___ / ___
+- safe-fix 単発呼び出し (Mode C / `/safe-fix` slash) 件数: ___
+- safe-fix 不発で impl-orchestrator が直接 Edit + Bash で remediation した件数: ___
+- → Option A / B / C 採用判断 (詳細条件は [docs/MIGRATION.md](../docs/MIGRATION.md) §Phase 6 Sub-V)
+
+---
+
 ## 維持事項
 
 - ARCHITECTURE.md / README.md / plans/* / docs/MIGRATION.md / evals/POST-DIFF.md は日本語維持
@@ -145,11 +200,28 @@ Phase 5 で観測した tag 名陳腐化:
 
 ## 新規セッション開始プロンプト
 
+### dogfooding 中の hotfix セッション (Phase 6 session 1.5)
+
 ```
-claude-pipeline 重量整理 Phase 5 完了、Phase 6 (ドキュメント整備 + dogfooding + safe-fix 構造再考) 着手をお願いします。
+claude-pipeline Phase 6 dogfooding 中、観察ログ追記 / hotfix の作業をお願いします。
 - 作業ブランチ: redesign/heavy
-- 状況: plans/REDESIGN-CHECKPOINT.md と plans/REDESIGN-PLAN.md §3.6 を最初に読んでください
-- Phase 5 結果: 7/8 個別 M1 PASS、7-skill 平均 +36.3% PASS、safe-fix のみ 0.000 (Opus 4.7 の routing 構造由来、description で覆せず)。Sub-M案A/B + Sub-O は全て見送り維持。
-- Phase 6 のスコープ: PLAN §3.6 + Sub-V (safe-fix 構造再考 Option A/B/C)、Sub-W (query tag リラベル)、Sub-U (README/ARCHITECTURE 更新)、Sub-X (1 週間 dogfooding → main マージ)
-- 注意: main にはマージしない (Sub-X 完了まで)、Bash/Agent 並列禁止、Sub-V で safe-fix 編集する場合は eval を 1 回打ち直す
+- 状況: plans/REDESIGN-CHECKPOINT.md §Phase 6 dogfooding 観察ログ を最初に読んでください
+- 今回の観察 / hotfix 内容: <ここに具体タスク>
+- 注意: main にマージしない、Bash/Agent 並列禁止、skill SKILL.md 編集中は eval を回さない
+```
+
+### dogfooding 完了後の最終セッション (Phase 6 session 2)
+
+```
+claude-pipeline Phase 6 dogfooding 完了、Sub-V 確定 + main マージをお願いします。
+- 作業ブランチ: redesign/heavy
+- 状況: plans/REDESIGN-CHECKPOINT.md §Phase 6 dogfooding 観察ログ を最初に読んでください
+- 集計済み観察結果: <skill 発火 / safe-fix 経由委譲 / 誤発火 件数を要約>
+- 必要作業:
+  1. Sub-V Option (A/B/C) の最終確定 (条件は docs/MIGRATION.md §Phase 6 Sub-V)
+  2. Option A/B 採用時は SKILL 編集 → eval 1 回打ち直し
+  3. ARCHITECTURE.md §11.1 ⏳ 項目を実運用結果で更新
+  4. evals/queries/ の旧 8 skill orphan JSON を整理 (削除 or アーカイブ)
+  5. main にマージ (Phase 6 完了)
+- 注意: Bash/Agent 並列禁止、main マージは最後の操作
 ```
