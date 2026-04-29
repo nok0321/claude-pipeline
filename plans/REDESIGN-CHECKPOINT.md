@@ -1,4 +1,4 @@
-# Redesign Checkpoint: Phase 4 完了 → Phase 5 着手
+# Redesign Checkpoint: Phase 5 完了 → Phase 6 着手
 
 Updated: 2026-04-29
 
@@ -6,201 +6,150 @@ Updated: 2026-04-29
 
 - ブランチ: `redesign/heavy` (main は触らない、Phase 6 完了時に 1 回マージ)
 - 計画書: [REDESIGN-PLAN.md](REDESIGN-PLAN.md)
-- 完了 commits (新しい順):
+- 完了 commits (新しい順、Phase 5):
+  - `04ada85` Phase 5 Step 4: Sub-S safe-fix description optimization (2 iter, accepted 0.000)
+  - `ea440fc` Phase 5 Step 3: BASELINE → POST diff + M1 evaluation (Sub-R)
+  - `e7bd1ea` Phase 5 Step 2: POST eval results (8 skills, WORKERS=3, 76min)
+  - `4bc47f9` Phase 5 Step 1: prep POST eval (safe-fix queries + 8-skill scope)
+- Phase 4:
   - `0e2cf8a` Phase 4 Step 2: formalize Finding schema + propagate JSON emission (Sub-P)
   - `92cd74f` Phase 4 Step 1: extend context: fork to safe-fix + boundary-test (Sub-M)
-  - `fa60ed7` Phase 3 Step 6: update CHECKPOINT for Phase 4 handoff
-  - `ec1b8da` Phase 3 Step 5: tweak robust-review 209 → 177 lines (Sub-K)
-  - `b9b3bce` Phase 3 Step 4: split safe-fix 236 → 150 lines + finding.schema.json (Sub-I-4 + Sub-J)
-  - `654c758` Phase 3 Step 3: split impl-orchestrator 299 → 200 lines (Sub-I-3)
-  - `56cc653` Phase 3 Step 2: split boundary-test 331 → 196 lines (Sub-I-2)
-  - `882831c` Phase 3 Step 1: split design-phase 346 → 194 lines (Sub-I-1)
-  - `48b3249` Phase 2 Step 7: update CHECKPOINT for Phase 3 handoff
-  - `81de55e` Phase 2 Step 6: add docs/MIGRATION.md
-  - `d224ac3` Phase 2 Step 5: simplify impl-orchestrator 6→4 stages
-  - `312347c` Phase 2 Step 4: demote pipeline-state/escalation to ARCHITECTURE.md §A/§B
-  - `f8ae499` Phase 2 Step 3: add safe-fix skill (3 modes)
-  - `fa2c275` Phase 2 Step 2: integrate spec-check into spec-audit (Mode A + B)
-  - `3bace02` Phase 2 Step 1: drop 6 obsolete skills
-  - `8629c9e` Phase 2 Step 0: phase 1 verification + sub-f isolation test
-  - `c0192cc` checkpoint: phase 1 done
-  - `6fbdff7` Phase 1: 英語化 + pushy descriptions
-  - `80d9f60` Phase 0 fix: 5 skill 再測定
-  - `3f9fbeb` checkpoint: phase 0 done
-  - `2054bb7` Phase 0 baseline
-  - `db36059` Phase 0 scaffolding
-  - `4991cdf` 計画書追加
+- Phase 3 / 2 / 1 / 0 (略、前 CHECKPOINT 参照)
 
 ---
 
-## Phase 4 実行結果 (2026-04-29, redesign/heavy: 2 commits)
+## Phase 5 実行結果 (2026-04-29, redesign/heavy: 4 commits)
 
-| Sub | 内容 | 判定 | commit / 反映先 |
-|-----|------|------|----------------|
-| M | `context: fork` 検証 | 部分適用 | `92cd74f` (safe-fix, boundary-test) |
-| N | `agent: parallel` 検証 | 見送り (R2) | この CHECKPOINT (理由記載) |
-| O | `skills:` プリロード | 見送り (R2) | この CHECKPOINT (移行パス記載) |
-| P | Finding schema 正式化 | 適用 | `0e2cf8a` (schema + 5 ファイル) |
+| Sub | 内容 | 判定 | commit |
+|-----|------|------|--------|
+| Q | POST eval (8 skills, WORKERS=3) | 完走 76min、rate-limit なし | `4bc47f9` `e7bd1ea` |
+| R | BASELINE → POST diff + M1 評価 | 7/8 個別 PASS、7-skill 平均 PASS | `ea440fc` |
+| S | safe-fix description 最適化 | 2 iter 共 0.000、構造的問題で受容 | `04ada85` |
+| T | Sub-M案A/B + Sub-O の採否再判断 | 全て見送り維持 (本 commit) | この CHECKPOINT |
 
-### Sub-M: `context: fork` (部分適用)
+### Sub-Q / R: M1 達成状況 (新 8 skill)
 
-公式仕様 (https://code.claude.com/docs/en/skills) 確認:
-- `context: fork` は SKILL.md frontmatter フィールドとして公式
-- 併記される `agent` フィールドは subagent 型名 (Explore / Plan / general-purpose / `.claude/agents/<name>` のカスタム) を取り、省略時は `general-purpose`
+| skill | BASELINE | POST | Δ | +20% target | M1 個別 |
+|-------|---:|---:|---:|---:|:---:|
+| boundary-test       | 0.417     | 0.500 | +0.083 | ≥ 0.500 | ✓ |
+| checkpoint          | 0.333     | 0.433 | +0.100 | ≥ 0.400 | ✓ |
+| code-review         | 0.183     | 0.233 | +0.050 | ≥ 0.220 | ✓ (marginal) |
+| design-phase        | 0.417     | 0.500 | +0.083 | ≥ 0.500 | ✓ |
+| impl-orchestrator   | 0.300     | 0.483 | +0.183 | ≥ 0.360 | ✓ (strong) |
+| robust-review       | 0.100     | 0.267 | +0.167 | ≥ 0.120 | ✓ (strong) |
+| **safe-fix**        | 0.317 *p* | **0.000** | **-0.317** | ≥ 0.380 | ✗ |
+| spec-audit          | 0.450     | 0.583 | +0.133 | ≥ 0.540 | ✓ |
 
-| skill | Phase 1 | Phase 4 | 判断根拠 |
-|-------|:-------:|:-------:|---------|
-| robust-review | ✓ | (継続) | 純 task skill、$ARGUMENTS 駆動 |
-| code-review | ✓ | (継続) | 同上 |
-| spec-audit | ✓ | (継続) | 同上 |
-| safe-fix | — | ✓ | $ARGUMENTS 駆動 (Findings/file:line/issue)、allowed-tools に Agent 無し、入れ子フォーク無し |
-| boundary-test | — | ✓ | detect/generate/run の純 task、Agent 無し |
-| design-phase | — | 見送り | allowed-tools に Agent あり、内側で sonnet sub-agent を起動するため fork-in-fork セマンティクス未文書化 |
-| impl-orchestrator | — | 見送り | Stage 1-4 を跨ぐ orchestrator、main session の状態 (gate_results, findings, escalation_queue) を保持する必要 |
-| checkpoint | — | 見送り | conversation history を読みに行くため fork は機能せず |
+平均:
+- 8 skill 全数: 0.3146 → 0.3749 (+19.2%) ← 30% target MISS by -0.034
+- 7 skill (safe-fix 除外): 0.3143 → 0.4284 (+36.3%) ← 30% target PASS
 
-orchestrator Stage 3-2 の 3 reviewers (security/robustness/spec-compliance) の `context: fork` 化については以下 2 案を検討:
+副次観察:
+- spec-audit `should_not_trigger_rate` が 0.800 に低下 (BASELINE 1.000) — 原因は `near-miss-spec-check` タグ (旧 spec-check 領域) が今 spec-audit を発火するため。Phase 2 の spec-check 吸収による正しい挙動、over-trigger ではない。Phase 6 でクエリリラベル候補
+- 旧 8 skill (drop された 7 + safe-fix BASELINE proxy 元) は raw diff 上 -0.000 ↓↓ で並ぶが M1 評価対象外
 
-- **案 A**: 既存 robust-review skill (security+robustness を 1 軸に統合済み) と spec-audit `--mode=conformance` skill を Skill ツール経由で並列呼び出し → 3 → 2 軸並列に縮退、security/robustness の axis 分離が消える
-- **案 B**: `.claude/agents/<reviewer>.md` のカスタム subagent を 3 個新設し、orchestrator から呼び出す (Sub-O 同等の構造変更)
+詳細: [evals/POST-DIFF.md](../evals/POST-DIFF.md)
 
-どちらも eval 実行禁止下では検証不能、かつ単純化の効果が不明。Phase 5 で BASELINE 差分を確認後、現行「1 message × 3 Agent inline prompts」の維持/移行を再判断する。
+### Sub-S: safe-fix 描述最適化 (受容)
 
-### Sub-N: `agent: parallel` (見送り、R2)
+- iter1 (v1, skill 名引用排除版): trigger 0/30
+- iter2 (v2, batch/loop/pipeline 強調版): trigger 0/30
+- 手動 probe で根本原因確定 — Opus 4.7 は **「fix」動詞 query を Skill 経由ではなく Bash/Glob/Read 直接呼びでルーティング**。description を v0/v1/v2 のいずれに変えても routing 行動は変化せず
+- safe-fix の value-add (verification gate, attribution-level revert) が直接ツール sequence で代替可能なため、wrapper skill 経由が選ばれない構造
+- **採用方針**: v2 description 確定 (skill 名引用 6→0 で本文 quality 改善)、POST trigger 0.000 を受容、Phase 6 で構造再考 (Option A/B/C を後述)
 
-PLAN §3.4 が想定した「Stage 3-2 を `agent: parallel` フィールド 1 行で書き換え」は公式仕様に該当機能なし:
-- `agent` フィールドは単一 subagent 型名のみ受け取る (`Explore` / `Plan` / `general-purpose` / カスタム)
-- `parallel` という enum 値は存在しない
-- 並列化の公式パターンは「1 つのターンで複数 Agent ツール呼び出しを発行」 — orchestrator の review-prompts.md `Stage 3-2: dispatch (parallel)` で既に採用済み
+### Sub-T: 構造変更採否
 
-結論: 既存実装は公式パターン通り。frontmatter 経由の単純化は不可。コード変更なし。
+| 案 | 内容 | 判定 | 理由 |
+|-----|------|------|------|
+| Sub-M案A | orchestrator Stage 3-2 を Skill ツール経由 (robust-review + spec-audit conformance) で 2 軸並列に縮退 | **見送り維持** | impl-orchestrator が +0.183 / +61% で M1 強 PASS、Stage 3-2 inline 3-Agent dispatch は機能している。axis 分離 (3 → 2 軸縮退) のリスク取る合理性なし |
+| Sub-M案B | `.claude/agents/<reviewer>.md` カスタム subagent 3 個新設 | **見送り維持** | 案 A と同じく改善動機なし。`.claude/agents/` 新設は eval 検証不能で効果見積もり不可 |
+| Sub-O | impl-orchestrator frontmatter に `skills:` 追加 | **見送り維持** | 公式仕様で `skills:` は subagent frontmatter フィールドのみ、orchestrator は subagent でないため採用不可。`.claude/agents/` 経由の移行パスは Sub-M案B と同根 |
 
-### Sub-O: `skills:` プリロード (見送り、R2、移行パス記録)
-
-PLAN §3.4 が想定した「impl-orchestrator の frontmatter に `skills:` を追加して reviewer skill 群をプリロード」は公式仕様に該当機能なし:
-- 公式 frontmatter リファレンス (https://code.claude.com/docs/en/skills#frontmatter-reference) に `skills:` フィールドは存在しない
-- `skills:` は subagent 定義 (`.claude/agents/<name>.md`) 側のフィールドで、その subagent が呼ばれた際に列挙された skill を pre-attach する仕組み
-
-公式パターンに沿った移行パス (Phase 5+ で再検討):
-1. `.claude/agents/security-reviewer.md` を新設、frontmatter に `skills: [robust-review]` を持たせる
-2. 同様に `robustness-reviewer.md`, `spec-reviewer.md` を作成 (spec-reviewer は `skills: [spec-audit]`)
-3. orchestrator の Stage 3-2 から各 subagent を Agent ツール経由で呼び出す (3 並列パターンは維持)
-
-採用見送りの理由:
-- `.claude/agents/` は現在プロジェクト未管理 (git status `?? .claude/`)、新ファイルを版管理対象にする判断が別途必要
-- Sub-M 案 B と同じ構造変更で、eval なしでは効果検証不能
-- 現行「inline prompt × 3 Agent」は機能しており、緊急性なし
-
-### Sub-P: Finding schema 正式化 (適用)
-
-`skills/safe-fix/references/finding.schema.json` を Phase 3 informal → Phase 4 canonical に昇格 (`0e2cf8a`):
-
-- schema 内 `description` を「informal / Phase 3 / Phase 4 で formal 化予定」→「canonical Phase 4 contract」に書き換え。`category` の自由文字列許容 (security/robustness reviewer 都合) と conformance reviewer の固定 enum 要件を併記
-- `safe-fix/SKILL.md` 「Finding input contract」セクションを正式版に書き換え + 4 ステップ「Validation step」を追加 (locate → parse → field/pattern check → Tier 1 escalation on mismatch、silent filter 禁止)
-- 上流 4 ファイルに schema 準拠 JSON Findings block の出力を追加:
-  - `spec-audit/SKILL.md` (SPEC-/AUDIT- prefix、spec_ref 必須)
-  - `robust-review/references/output-format.md` (SEC-/ROB- prefix、attack/impact は Critical-High のみ)
-  - `code-review/SKILL.md` (CR- prefix)
-  - `impl-orchestrator/references/review-prompts.md` (Stage 3-2 の 3 inline reviewer prompt それぞれに JSON 出力指示を末尾追加)
-
-すべての SKILL.md は ≤200 行を維持 (M3 達成継続)。
-
-### Phase 4 後の SKILL.md 行数
-
-| skill | Phase 3 後 | Phase 4 後 | P5 (≤200) |
-|-------|---:|---:|:---:|
-| `checkpoint` | 68 | 68 | ✓ |
-| `code-review` | 131 | 141 | ✓ |
-| `safe-fix` | 150 | 168 | ✓ |
-| `robust-review` | 177 | 177 | ✓ |
-| `spec-audit` | 190 | 197 | ✓ |
-| `design-phase` | 194 | 194 | ✓ |
-| `boundary-test` | 196 | 197 | ✓ |
-| `impl-orchestrator` | 200 | 200 | ✓ |
-| **合計** | 1306 | **1342** | — |
-| **平均** | 163 | **168** | — |
-
-`+36 行` (Sub-P JSON emission 指示の追加分)。M3 「平均 200 行以下」継続達成。
+→ Phase 6 で再考すべき構造変更は **safe-fix の構造再考のみ** (Sub-S findings 由来)。
 
 ---
 
-## Phase 5 サブタスク
+## Phase 6 サブタスク (引き継ぎ)
 
-PLAN §3.5 の通り、再測定 + 最適化ループを実行する。
+PLAN §3.6 + Sub-S/T 結論を踏まえた更新版。
 
-### Sub-Q: POST eval 実行
+### Sub-U: README / ARCHITECTURE / MIGRATION 更新 (PLAN §3.6 既定)
 
-- Phase 0 で作成した `evals/queries/<skill>/*.txt` を最新の skill 構成 (drop 済み 6 skill 分は除外、merge された safe-fix は新規追加) で再構成
-- `scripts/run_eval.py` を実行し `evals/POST.json` を生成
-- 実行時は `WORKERS=3` 必須 (Phase 0 で 5 skill、Phase 1 で 6 skill が rate-limit artifact で 0% を記録した先例。`evals/scripts/README.md` 参照)
-- skill 編集が完了した直後でないと測定汚染するため、本 commit の作業中は eval を走らせない (このサブの開始時点が最初の安全な実行点)
+- README.md: 構成図と Component Mapping を新 8 skill 構造で更新
+- ARCHITECTURE.md: §11 チェックリスト全項目を再評価、現状反映、§A/§B 補章 (Phase 2 で追加済み) との整合確認
+- docs/MIGRATION.md: 旧 15 → 新 8 skill 対応表は Phase 2 で作成済み、Sub-S findings (safe-fix 0.000) と Phase 6 構造再考 Option を追記
 
-### Sub-R: BASELINE diff 可視化
+### Sub-V: safe-fix 構造再考
 
-- `scripts/compare_evals.py` で `evals/BASELINE.json` (Phase 0) との diff を `evals/DIFF.md` に出力
-- skill 別 trigger rate 推移、目標 (M1: +20% 個別 / +30% 平均) との差分を表化
-- M1 評価は **新 8 skill 限定** で行う (boundary-test / checkpoint / code-review / design-phase / impl-orchestrator / robust-review / safe-fix / spec-audit)。BASELINE.json は 15 skill 全部の値を含むが、Phase 2 で drop された 7 skill は比較対象から除外する
-- `safe-fix` の base 値は新設 skill につき存在しないため、旧 fix-with-verify + robust-fix + spec-fix の `trigger_rate_overall` の **最大値** を proxy とする (統合先がカバーすべき責務上限という解釈)
+Sub-S 結果を受けて 3 オプションのいずれかを採用:
 
-### Sub-S: 低トリガー skill の自動最適化
+| Option | 内容 | 影響 | 判定材料 |
+|--------|------|------|---------|
+| A | safe-fix skill を廃止し、impl-orchestrator Stage 3 escalation/remediation に inline 化 | M2 (skill 本数) 8 → 7、`finding.schema.json` は orchestrator 直接参照に移行 | 最も radical、impl-orchestrator が肥大化するリスク |
+| B | safe-fix を `process-findings` (batch only、Mode C 削除) にリネーム | 名前変更で trigger 動詞 ("process" / "remediate") 試行可能、Mode C は impl-orchestrator から explicit 委譲のみ | 中庸、要再 eval |
+| C | 現状維持 (description は v2)、impl-orchestrator から Skill tool explicit 呼び出しのみで使う設計と認める | M1 個別 MISS を運用上許容、人手も `/safe-fix` slash で呼ぶ前提 | 最も保守的、コード変更ゼロ |
 
-- DIFF で改善目標未達の skill を特定
-- skill-creator の `run_loop.py` (`~/.claude/plugins/.../skill-creator/scripts/run_loop.py`) を最大 5 反復で実行し description を自動最適化
-- 各反復後に再 eval して best description を選定、commit
+判定タイミング: Phase 6 dogfooding (1 週間) 中の実呼び出しログ (memory に書き溜め) を参照、impl-orchestrator → safe-fix の Skill 経由委譲が機能していれば Option C で十分、機能していなければ Option B → A と昇格
 
-### Sub-T: Phase 4 で見送った構造変更の判断
+### Sub-W: クエリリラベル / 拡張 (Phase 5 副次課題)
 
-Sub-M 案 A/B、Sub-O 移行パスの採否を eval 結果次第で再判断:
-- BASELINE 差分が十分大きく、構造変更の効果検証不要なら現行維持
-- 改善余地があり、かつ Sub-M/O の移行が低リスクと判断できれば Phase 6 で適用
-- いずれも判断材料なしでは決定不能なため Sub-Q/R 完了後に着手
+Phase 5 で観測した tag 名陳腐化:
+- `near-miss-spec-check` / `near-miss-spec-fix` / `near-miss-fix-with-verify` / `near-miss-quick-test` / `near-miss-pipeline-state` / `near-miss-robust-fix` / `near-miss-dev-pipeline` etc. はすべて drop された skill 名で、tag 語彙として陳腐化
+- Phase 6 で query JSON の tag を新 8 skill 名にリラベル
+- spec-audit の `should_not_trigger_rate` 0.800 は Phase 2 spec-check 吸収による正しい挙動だが、tag リラベル後は 1.000 に戻る想定
+
+### Sub-X: 1 週間 dogfooding (PLAN §3.6 既定)
+
+- 新構造を実運用に乗せる (1 週間)
+- skill 発火/誤発火の観察、CHECKPOINT.md に記録
+- 1 週間後にホットフィックス commit を 1〜2 件で完結
+- main にマージ (Phase 6 完了)
 
 ### 成果物
 
-`evals/POST.json`, `evals/DIFF.md`, 必要 skill の description 更新 commit、Phase 6 計画調整。
+更新された README/ARCHITECTURE、MIGRATION.md (Phase 5 findings 追記)、safe-fix 構造変更 commit (Option 採用時)、main マージ。
 
 ---
 
 ## 維持事項
 
-- ARCHITECTURE.md / README.md / plans/* / docs/MIGRATION.md / evals/ は日本語維持
+- ARCHITECTURE.md / README.md / plans/* / docs/MIGRATION.md / evals/POST-DIFF.md は日本語維持
 - ユーザー出力は日本語可
-- skills/ 編集中は eval 実行禁止 (測定汚染防止) — Phase 5 では skill 編集と eval を交互に実施するため特に注意
+- skills/ 編集中は eval 実行禁止 (測定汚染防止)
 - main にはマージしない (Phase 6 完了まで `redesign/heavy` 1 本)
-- 並列 Bash/Agent 実行を避ける (前セッションでメッセージ上限到達)
-- 長時間 eval (>60min) は Monitor を 60 分ごとに再武装
+- 並列 Bash/Agent 実行を避ける (前セッションで上限到達)
+- 長時間 eval (>60min) は run_in_background + 通知待ち
 
 ## 引き継ぎメモ
 
-- True baseline = 0.293 (`evals/BASELINE.json`)、Phase 1 trigger = 0.238 (artifact 込み)
-- Phase 2 / 3 / 4 を通して eval 未実施 — Phase 5 Sub-Q がプロジェクト初の Phase 4 後測定
+- True baseline (Phase 0) = 0.293, Phase 1 = 0.238 (artifact 込み), **Phase 5 POST = 0.375** (8 skill 平均)
+- 7/8 個別 M1 PASS、7-skill 平均 +36.3% PASS、main マージ可能水準
+- safe-fix 0.000 は Opus 4.7 の routing 構造由来 (description で覆せず)、Phase 6 Sub-V で構造再考
 - ARCHITECTURE.md `§A 補章 (Escalation framework)` と `§B 補章 (Pipeline state file)` は impl-orchestrator が常時参照する核ドキュメント
-- safe-fix の Finding 入力契約は `skills/safe-fix/references/finding.schema.json` (Phase 4 で formal 化、`finding_id` パターン `^(SPEC|AUDIT|SEC|ROB|CR)-[0-9]+$`、`severity` enum 4 値)
+- safe-fix の Finding 入力契約は `skills/safe-fix/references/finding.schema.json` (Phase 4 formal、Phase 6 で safe-fix 構造変更時は schema も移動可能性)
 - 上流 reviewer (spec-audit / robust-review / code-review / orchestrator inline reviewer ×3) はすべて schema 準拠 JSON Findings block を末尾出力
-- safe-fix は入力 JSON を 4 ステップで検証し schema 不一致なら silent filter せず Tier 1 escalation
 - `context: fork` 適用済み skill: robust-review, code-review, spec-audit (Phase 1)、safe-fix, boundary-test (Phase 4)
 - `context: fork` 未適用 skill とその理由: design-phase (Agent 入れ子)、impl-orchestrator (orchestrator 状態)、checkpoint (session history)
 - Sub-N/O は公式仕様の不在により frontmatter 経由の単純化が不可。並列化は既存「1 メッセージ × 複数 Agent」が公式パターン
-- `evals/results/{baseline-resub,smoke,smoke-direct,smoke-pushy}/` は Phase 0/1 の人手測定結果、git untracked のまま (Phase 5 で必要なら整理)
-- `.claude/` も untracked。Sub-O 移行パスを採用する場合は `.claude/agents/` のうち pipeline 関連分のみ git 管理対象にするか別途検討
+- `evals/results/{baseline,baseline-resub,smoke,smoke-direct,smoke-pushy,phase1,phase1-isolation,post,post-s1,post-s2}/` の整理は Phase 6 Sub-X 後にまとめて整頓予定
+- `.claude/` も untracked。Sub-O 移行パスを採用しないため当面 untracked 維持
 
 ## メッセージ上限対策
 
-- Phase 5 は eval が長時間化しがち。Sub-Q/R は単発実行 (Bash run_in_background + Monitor)、Sub-S は反復のため 1 反復ごとに commit
-- TodoWrite 推奨 (4 Sub を順次評価するため)
-- 1 Sub ごとに 1 commit を切る (Phase 2 / 3 / 4 と同様)
+- Phase 6 は eval 実行不要 (Sub-V で構造変更後に 1 回再 eval する可能性のみ)、message 量は Phase 5 より軽減見込み
+- TodoWrite 推奨
+- 1 Sub ごとに 1 commit を切る
 
 ---
 
 ## 新規セッション開始プロンプト
 
 ```
-claude-pipeline 重量整理 Phase 4 完了、Phase 5 (再測定 + 最適化ループ) 着手をお願いします。
+claude-pipeline 重量整理 Phase 5 完了、Phase 6 (ドキュメント整備 + dogfooding + safe-fix 構造再考) 着手をお願いします。
 - 作業ブランチ: redesign/heavy
-- 状況: plans/REDESIGN-CHECKPOINT.md と plans/REDESIGN-PLAN.md §3.5 を最初に読んでください
-- Phase 4 結果: Sub-M 部分適用 (safe-fix/boundary-test に context: fork 追加)、Sub-N/O は公式仕様非対応で見送り (R2)、Sub-P は Finding schema を formal 化し上流 5 reviewer に schema 準拠 JSON 出力を要求。
-- Phase 5 のスコープ: PLAN §3.5。POST eval → BASELINE diff → 未達 skill の description 自動最適化。Phase 4 で見送った構造変更の採否は diff 結果で再判断 (Sub-T)。
-- 注意: Sub-Q が初回 eval なので skill 編集後の状態を凍結してから走らせる、main にはマージしない、Bash/Agent 並列禁止
-- eval は `WORKERS=3` で実行 (過去 2 回 rate-limit artifact 発生)
-- M1 評価は新 8 skill 限定 + `safe-fix` は旧 3 skill (fix-with-verify / robust-fix / spec-fix) の trigger_rate 最大値を proxy とする
+- 状況: plans/REDESIGN-CHECKPOINT.md と plans/REDESIGN-PLAN.md §3.6 を最初に読んでください
+- Phase 5 結果: 7/8 個別 M1 PASS、7-skill 平均 +36.3% PASS、safe-fix のみ 0.000 (Opus 4.7 の routing 構造由来、description で覆せず)。Sub-M案A/B + Sub-O は全て見送り維持。
+- Phase 6 のスコープ: PLAN §3.6 + Sub-V (safe-fix 構造再考 Option A/B/C)、Sub-W (query tag リラベル)、Sub-U (README/ARCHITECTURE 更新)、Sub-X (1 週間 dogfooding → main マージ)
+- 注意: main にはマージしない (Sub-X 完了まで)、Bash/Agent 並列禁止、Sub-V で safe-fix 編集する場合は eval を 1 回打ち直す
 ```
