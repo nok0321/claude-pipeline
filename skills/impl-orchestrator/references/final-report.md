@@ -22,7 +22,7 @@ Detail for SKILL.md Stage 4 — the report emitted when iteration finishes
   Spec:        Missing: <n> / Diverged: <n> / Extra: <n> / Constraint: <n>
 
 ■ Resolution
-  Auto-fixed:  <n> (Tier 2 + Tier 3 via safe-fix)
+  Auto-fixed:  <n> (Tier 2 + Tier 3 inline per conformance-fix / robust-fix)
   Escalated:   <n> (Tier 1, see below)
 
 ═══ Auto-fix log (Tier 2: post-report) ═══

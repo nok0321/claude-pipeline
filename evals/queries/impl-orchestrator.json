@@ -10,13 +10,13 @@
   {"query": "DESIGN/06_inventory.md is ready and CLAUDE.md Component Mapping is aligned for the inventory component. Run Phase 2 autonomous implementation on it.", "should_trigger": true, "tag": "implicit"},
   {"query": "Auth component, run impl-orchestrator with the 6-stage loop. Sonnet for impl agents, opus parallel for the security/robustness/spec reviewers.", "should_trigger": true, "tag": "explicit"},
   {"query": "We don't have a design doc for the chat feature yet. Can you generate the design first based on the user stories in plans/CHAT.md?", "should_trigger": false, "tag": "near-miss-design-phase"},
-  {"query": "There's a bug in the login flow — when 2FA fails, the session token isn't cleared. Fix it and verify the regression tests still pass.", "should_trigger": false, "tag": "near-miss-safe-fix"},
+  {"query": "There's a bug in the login flow — when 2FA fails, the session token isn't cleared. Fix it and verify the regression tests still pass.", "should_trigger": false, "tag": "near-miss-fix-only"},
   {"query": "I just want a security review of the existing payment code in src/payment/. Don't implement anything new — just S-Critical/S-High findings.", "should_trigger": false, "tag": "near-miss-robust-review"},
   {"query": "Quick PR review on the changes in src/utils/ — Critical/Warning/Info levels. Should take 5 min max.", "should_trigger": false, "tag": "near-miss-code-review"},
   {"query": "What's the difference between sonnet and opus models for code generation tasks? Trying to decide for a new project.", "should_trigger": false, "tag": "generic"},
   {"query": "Help me write a regex that matches IPv6 addresses including the abbreviated zero-group form (::1, fe80::, etc).", "should_trigger": false, "tag": "generic"},
   {"query": "Chat feature has no design doc yet. Generate one from plans/CHAT.md and the customer stories in plans/customer-stories/chat.md before any implementation.", "should_trigger": false, "tag": "near-miss-design-phase"},
-  {"query": "Small bug in the login redirect — after SSO callback the user lands on /home instead of the original deep link. Fix it and run regression tests to verify.", "should_trigger": false, "tag": "near-miss-safe-fix"},
+  {"query": "Small bug in the login redirect — after SSO callback the user lands on /home instead of the original deep link. Fix it and run regression tests to verify.", "should_trigger": false, "tag": "near-miss-fix-only"},
   {"query": "Audit the design docs under DESIGN/ and tell me about any contradictions you find between them — type names, API contracts, anything that drifted.", "should_trigger": false, "tag": "near-miss-spec-audit"},
   {"query": "I want to enable strict mode in tsconfig.json and need to understand the impact across our codebase before flipping the switch.", "should_trigger": false, "tag": "generic"}
 ]

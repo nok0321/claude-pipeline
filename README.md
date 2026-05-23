@@ -4,9 +4,9 @@ Claude Code 向け自律開発パイプラインのスキル集。
 
 `~/.claude/skills/` からシンボリックリンクされており、このリポジトリが唯一の真実源。
 
-設計原則・スキル間の関係は [ARCHITECTURE.md](ARCHITECTURE.md)、旧 15 skill から新 8 skill への移行は [docs/MIGRATION.md](docs/MIGRATION.md) を参照。
+設計原則・スキル間の関係は [ARCHITECTURE.md](ARCHITECTURE.md)、旧 15 skill から新 7 skill への移行は [docs/MIGRATION.md](docs/MIGRATION.md) を参照。
 
-> **注 (2026-04-29 / Phase 5 完了)**: 旧 15 skill 構造から新 8 skill 構造へ再編済み (Phase 2)。Phase 5 POST eval 結果は 7/8 個別 M1 PASS、7-skill 平均 trigger rate +36.3% 改善 (詳細: [evals/POST-DIFF.md](evals/POST-DIFF.md))。Phase 6 dogfooding 期間中 (2026-04-29 〜)。
+> **注 (2026-05-23 / Phase 6 Sub-V 確定)**: 旧 15 skill 構造 → Phase 2 で 8 skill → Phase 6 Sub-V Option A で `safe-fix` 廃止 (impl-orchestrator Stage 3 inline 化)、**現在 7 skill 構造**。Phase 5 POST eval 結果は 7/8 個別 M1 PASS、7-skill 平均 trigger rate +36.3% 改善 (safe-fix 除く、詳細: [evals/POST-DIFF.md](evals/POST-DIFF.md))。Escalation 削減のため `technical-arbiter` / `regression-judge` subagent (`agents/`) と Stop hook drift gate を追加 ([plans/ESCALATION-REDESIGN.md](plans/ESCALATION-REDESIGN.md))。
 
 ---
 
@@ -15,28 +15,34 @@ Claude Code 向け自律開発パイプラインのスキル集。
 ```
 claude-pipeline/
 ├── skills/                    # Claude Code スキル群（~/.claude/skills/ へシンボリックリンク）
-│   ├── impl-orchestrator/     # 実装フェーズ専任 + エントリーポイント (4 ステージループ)
+│   ├── impl-orchestrator/     # 実装フェーズ専任 + エントリーポイント (4 ステージループ + inline 修正)
 │   ├── design-phase/          # 設計書自動生成 (plans/*.md → DESIGN/*.md)
 │   ├── spec-audit/            # 仕様書間矛盾検出 + 仕様↔実装差分検出 (Mode A/B)
 │   ├── robust-review/         # 深層セキュリティ・堅牢性レビュー
 │   ├── code-review/           # 軽量 PR レビュー (5 軸統合)
 │   ├── boundary-test/         # 境界契約テスト (API/WASM/DB/変換)
-│   ├── safe-fix/              # 検査結果の自動修正 (Mode A 仕様準拠 / B 堅牢性 / C 単発)
 │   └── checkpoint/            # セッション継続管理 (/clear 前の状態保存)
+├── agents/                    # Claude Code Subagents（~/.claude/agents/ へシンボリックリンク）
+│   ├── technical-arbiter.md   # 命名/型 drift の technical-judgment 委譲 (sonnet 4.6, read-only)
+│   ├── regression-judge.md    # test failure の fix-related / pre-existing 判定 (sonnet 4.6)
+│   └── curriculum-comparator.md # (educational curriculum 比較用、本パイプライン外)
 ├── hooks/                     # Claude Code Hook スクリプト集（settings.json から参照）
 │   ├── pre-bash-safety.sh     # PreToolUse(Bash): 破壊的コマンドブロック
 │   ├── post-edit-lint.sh      # PostToolUse(Write/Edit): 編集毎の lint/型チェック
 │   ├── stop-verify.sh         # Stop: タスク完了時の検証ゲート（差分言語自動検出）
 │   └── session-start.sh       # SessionStart: プロジェクト種別・ツールチェーン検出
+├── .claude/settings.json      # プロジェクトレベル設定 (Stop hook drift gate を含む)
 ├── evals/                     # トリガー評価フレームワーク (skill-creator ベース)
 │   ├── queries/               # 各 skill の triggerable query 集 (20 件/skill)
 │   ├── BASELINE.json          # Phase 0 ベースライン
-│   └── POST-DIFF.md           # Phase 5 POST 評価と BASELINE 差分
+│   ├── POST-DIFF.md           # Phase 5 POST 評価と BASELINE 差分
+│   └── arbiter-decisions.jsonl # technical-arbiter 判定ログ (append-only)
 ├── docs/
-│   └── MIGRATION.md           # 旧 15 skill → 新 8 skill 対応表
+│   └── MIGRATION.md           # 旧 15 skill → 新 7 skill 対応表
 └── plans/
     ├── REDESIGN-PLAN.md       # 重量整理計画 (Phase 0-6)
-    └── REDESIGN-CHECKPOINT.md # 進捗チェックポイント
+    ├── REDESIGN-CHECKPOINT.md # 進捗チェックポイント
+    └── ESCALATION-REDESIGN.md # Escalation 削減リデザイン (technical-arbiter / regression-judge / drift gate)
 ```
 
 ---
@@ -46,27 +52,29 @@ claude-pipeline/
 ```
 /impl-orchestrator <component>     # 実装パイプラインを起動
                                    # DESIGN/*.md 不在時は自動的に design-phase へフォールバック
+                                   # Stage 3 で findings を inline 修正、technical-arbiter / regression-judge を活用
 /design-phase <component>          # 設計書のみ生成 (plans/*.md から)
 /spec-audit --mode=cross           # 仕様書間矛盾検出
 /spec-audit --mode=conformance     # 仕様↔実装差分検出
 /robust-review <files>             # マージ前の深層レビュー
 /code-review <files>               # PR 前の軽量レビュー
 /boundary-test <component>         # 境界契約テスト生成
-/safe-fix --mode=<conformance|robust|adhoc>  # 検査結果の自動修正
 /checkpoint save | restore         # セッション継続管理
 ```
 
-旧 `/dev-pipeline` (フェーズ統合エントリ) は廃止。`impl-orchestrator` が DESIGN/*.md 不在時に design-phase を Agent 委譲する形に統合。
+旧 `/dev-pipeline` (フェーズ統合エントリ) は Phase 2 で廃止、`impl-orchestrator` が DESIGN/*.md 不在時に design-phase を Agent 委譲する形に統合。
+旧 `/safe-fix` (検査結果の自動修正) は Phase 6 Sub-V Option A で廃止、impl-orchestrator Stage 3 に inline 化 (詳細: [docs/MIGRATION.md](docs/MIGRATION.md))。
 
 ---
 
 ## 設計原則 (要約)
 
 1. **2 層委譲のみ** — オーケストレーター (`impl-orchestrator`) → 各 skill。3 層は廃止。
-2. **検査↔修正の JSON Finding 契約化** — `skills/safe-fix/references/finding.schema.json` で形式定義。検査系 skill は schema 準拠 JSON を末尾出力。
-3. **モデル配分** — オーケストレーター=opus, 実装=sonnet, レビュー=opus
+2. **検査↔修正の JSON Finding 契約化** — `skills/impl-orchestrator/references/finding.schema.json` で形式定義。検査系 skill は schema 準拠 JSON を末尾出力。
+3. **モデル配分** — オーケストレーター=opus, 実装=sonnet, レビュー=opus, 判定 subagent=sonnet 4.6
 4. **機械的検証ゲート先行** — ビルド/型/テスト/境界契約 → 並列レビュー → 修正 + 再検証 (impl-orchestrator Stage 2/3)
 5. **CLAUDE.md 駆動の動的設定** — プロジェクト固有のパスやチェック項目はハードコードせず、対象プロジェクトの CLAUDE.md から動的取得
+6. **Technical judgment は subagent 委譲** — 命名/型 drift / regression attribution は user 中断前に `technical-arbiter` / `regression-judge` を経由 (Phase 6: ESCALATION-REDESIGN P1/P2)
 
 詳細は [ARCHITECTURE.md](ARCHITECTURE.md)。
 
@@ -187,7 +195,7 @@ chmod +x <project>/.claude/hooks/*.sh
 skill-creator の `run_eval.py` を Windows 互換に port した独自フレームワーク。詳細は [evals/README.md](evals/README.md) と [evals/scripts/README.md](evals/scripts/README.md)。
 
 ```bash
-# 全 8 skill の trigger rate を測定 (Phase 0/5 用 wrapper、~30-80 分、WORKERS=3 で並列)
+# 全 7 skill の trigger rate を測定 (Phase 0/5 用 wrapper、~30-70 分、WORKERS=3 で並列)
 bash evals/scripts/run_baseline.sh
 
 # 単一 skill の測定 (debug 用)

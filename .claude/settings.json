@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "You are a drift gate for claude-pipeline. Inspect the recent edits in the current working tree against DESIGN/*.md (or skills/*/SKILL.md when DESIGN/ is absent — this repo itself has no DESIGN/, so the SKILL.md set is the authoritative spec). Return ONLY a single fenced JSON block as the last element of your response: {\"compliant\": bool, \"gap\": string|null}. `compliant` is false only when an edit clearly contradicts the spec (e.g. a removed public surface, a renamed field that breaks the schema, a constant value drift). `gap` is one short sentence describing the contradiction, or null when compliant. Do not block — this hook only logs.",
+            "model": "claude-sonnet-4-6",
+            "timeout": 15000
+          }
+        ]
+      }
+    ]
+  }
+}

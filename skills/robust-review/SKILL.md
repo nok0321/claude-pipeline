@@ -168,10 +168,12 @@ findings exist, report "all checks clean".
 When called from `impl-orchestrator` Stage 3 (Review & Remediate):
 - Target files arrive as `{target_files}` from the orchestrator
 - Project checks arrive as `{project_checks}`
-- The findings list feeds the Stage 3-5 dispatch (safe-fix or
-  escalation) directly
+- The findings list feeds the Stage 3-5 inline remediation
+  ([robust-fix.md](../impl-orchestrator/references/robust-fix.md)) or
+  escalation directly
 
 When run standalone:
 - Read CLAUDE.md context independently
-- After output, recommend `safe-fix --mode=robust` to apply the
-  Critical / High auto-fixable subset
+- After output, recommend invoking `impl-orchestrator` to drive the
+  Critical / High auto-fixable subset per [robust-fix.md](../impl-orchestrator/references/robust-fix.md), or apply
+  the fixes manually using the JSON Findings block as a checklist

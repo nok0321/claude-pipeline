@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Run trigger-rate eval for the 8 surviving custom skills and save results.
+# Run trigger-rate eval for the 7 surviving custom skills and save results.
 #
-# Skill set is the post-Phase-2 lineup (8 skills). Phase 0 / Phase 1 ran
-# 15 skills; the 7 dropped (dev-pipeline, escalation, fix-with-verify,
-# pipeline-state, quick-test, robust-fix, spec-check, spec-fix) have no
-# implementation in skills/ anymore and are not measurable. Their
-# baseline trigger rates remain in evals/BASELINE.json for historical
-# reference. New `safe-fix` replaces the 3 retired *fix skills (Mode
-# A/B/C); its proxy baseline is max(fix-with-verify, robust-fix,
-# spec-fix) = 0.317 — not measured directly in BASELINE.
+# Skill set is the post-Phase-6-Sub-V lineup (7 skills). Phase 0 / Phase 1
+# ran 15 skills; Phase 2 dropped 7 (dev-pipeline, escalation,
+# fix-with-verify, pipeline-state, quick-test, robust-fix, spec-check,
+# spec-fix) and added safe-fix. Phase 6 Sub-V Option A retired safe-fix
+# itself — its remediation logic is now inlined into impl-orchestrator
+# Stage 3 (see skills/impl-orchestrator/references/conformance-fix.md
+# and robust-fix.md). Baseline trigger rates for all dropped skills
+# remain in evals/BASELINE.json for historical reference.
 #
 # Uses evals/scripts/run_eval_compat.py (self-contained, threading-based)
 # instead of skill-creator's scripts/run_eval.py, which fails on Windows
@@ -62,7 +62,6 @@ ALL_SKILLS=(
   design-phase
   impl-orchestrator
   robust-review
-  safe-fix
   spec-audit
 )
 

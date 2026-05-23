@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://claude-pipeline.local/skills/safe-fix/finding.schema.json",
+  "$id": "https://claude-pipeline.local/skills/impl-orchestrator/finding.schema.json",
   "title": "Finding (claude-pipeline shared contract)",
-  "description": "Canonical contract for findings consumed by safe-fix from spec-audit (--mode=conformance), robust-review, and code-review. Phase 4 formalization (REDESIGN-PLAN.md §3.4 Sub-P): every upstream reviewer emits a JSON Findings block conforming to this schema; safe-fix validates input against this schema before processing. The pattern in `category` is intentionally open (free-form string) so security and robustness reviewers can use natural-language category labels; conformance reviewers must use the four enum values listed in the examples.",
+  "description": "Canonical contract for findings consumed by impl-orchestrator Stage 3 from spec-audit (--mode=conformance), robust-review, and code-review. Phase 4 formalization (REDESIGN-PLAN.md §3.4 Sub-P): every upstream reviewer emits a JSON Findings block conforming to this schema; impl-orchestrator validates input against this schema before remediation dispatch. The pattern in `category` is intentionally open (free-form string) so security and robustness reviewers can use natural-language category labels; conformance reviewers must use the four enum values listed in the examples.",
   "type": "object",
   "required": ["finding_id", "severity", "category", "file", "description"],
   "additionalProperties": false,
@@ -14,7 +14,7 @@
     },
     "severity": {
       "type": "string",
-      "description": "Unified severity scale (Phase 1 Action A3). Mode B uses this directly to decide auto-fix vs report-only; Mode A uses it only for ordering.",
+      "description": "Unified severity scale (Phase 1 Action A3). Robust/security findings use this directly to decide auto-fix vs report-only; conformance findings use it only for ordering.",
       "enum": ["Critical", "High", "Medium", "Low"]
     },
     "category": {
@@ -44,16 +44,16 @@
     },
     "fix_hint": {
       "type": "string",
-      "description": "Optional concrete patch suggestion from the upstream reviewer. safe-fix uses this as the starting point but is allowed to deviate if the gate rejects the suggested patch.",
+      "description": "Optional concrete patch suggestion from the upstream reviewer. impl-orchestrator uses this as the starting point but is allowed to deviate if the gate rejects the suggested patch.",
       "minLength": 1
     },
     "attack": {
       "type": "string",
-      "description": "Security findings only. Attack scenario for Critical / High severities. Mirrors the SEC-* output format from impl-orchestrator review-prompts.md."
+      "description": "Security findings only. Attack scenario for Critical / High severities. Mirrors the SEC-* output format from review-prompts.md."
     },
     "impact": {
       "type": "string",
-      "description": "Robustness findings only. Failure scenario the finding can produce. Mirrors the ROB-* output format from impl-orchestrator review-prompts.md."
+      "description": "Robustness findings only. Failure scenario the finding can produce. Mirrors the ROB-* output format from review-prompts.md."
     }
   },
   "examples": [

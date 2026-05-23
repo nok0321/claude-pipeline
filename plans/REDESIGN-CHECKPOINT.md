@@ -1,13 +1,16 @@
-# Redesign Checkpoint: Phase 6 進行中 (dogfooding 期間)
+# Redesign Checkpoint: Phase 6 Sub-V 確定 + ESCALATION-REDESIGN 実装中
 
-Updated: 2026-04-29 (Phase 6 session 2 完了、`~/.claude/skills/` 配置整備、dogfooding 本格化)
+Updated: 2026-05-23 (Phase 6 Sub-V Option A 確定 = safe-fix 廃止、ESCALATION-REDESIGN P1/P2/P3 適用、7 skill 構造へ)
 
 ## 現在地
 
-- ブランチ: `redesign/heavy` (main は触らない、dogfooding で効果実感後に 1 回マージ)
-- 計画書: [REDESIGN-PLAN.md](REDESIGN-PLAN.md)
-- **状態**: Phase 6 session 2 完了。`~/.claude/skills/` を新 8 skill 構成に整備済み (safe-fix 追加 + 旧 dropped 8 skill broken リンク削除)。dogfooding 体験フェーズ進行中。
-- 完了 commits (新しい順、Phase 6 session 1):
+- ブランチ: `redesign/heavy` (main は触らない、確認後に 1 回マージ)
+- 計画書: [REDESIGN-PLAN.md](REDESIGN-PLAN.md), [ESCALATION-REDESIGN.md](ESCALATION-REDESIGN.md)
+- **状態**: Phase 6 Sub-V Option A 確定。`safe-fix` skill を廃止 (`skills/safe-fix/` 削除、`~/.claude/skills/safe-fix` シンボリックリンク削除)、conformance/robust 修正ロジックを `skills/impl-orchestrator/references/conformance-fix.md` および `robust-fix.md` へ inline 化。`finding.schema.json` も `skills/impl-orchestrator/references/` に移動。ESCALATION-REDESIGN P1 (`technical-arbiter` subagent) は 2026-05-10 実装済み、P2 (`regression-judge` subagent) と P3 (Stop hook drift gate) を本ターンで追加。**現在 7 skill 構造**。
+- 完了 commits (新しい順):
+  - (本ターン commit pending) Phase 6 Sub-V Option A 確定 + ESCALATION-REDESIGN P2/P3 適用
+  - `978cf0c` Phase 6 Step 6 (Sub-X session 2): ~/.claude/skills/ 配置整備 + retroactive 観察ログ
+  - `97b007c` Phase 6 Step 5 (Sub-X): dogfooding log frame + session 1 progress in CHECKPOINT
   - `2a99134` Phase 6 Step 4: MIGRATION Phase 5 results + Sub-V options + Option C interim (Sub-U-3 + Sub-V)
   - `4cc5538` Phase 6 Step 3: ARCHITECTURE §11.1 Phase 5 evaluation table (Sub-U-2)
   - `e560e24` Phase 6 Step 2: rewrite README for new 8-skill structure (Sub-U-1)

@@ -9,14 +9,14 @@
   {"query": "new project from scratch, no design docs yet. generate them from plans/REQUIREMENTS.md with self audit", "should_trigger": true, "tag": "casual"},
   {"query": "Run /design-phase --from-scratch on the search component. plans/SEARCH.md has the requirements, no existing DESIGN/ doc yet for it.", "should_trigger": true, "tag": "explicit"},
   {"query": "I have requirements for 5 components and want all the design docs generated in one pass with self-audit. Use the existing format style (DESIGN/01_*.md) as the reference for headings and tables.", "should_trigger": true, "tag": "implicit"},
-  {"query": "Fix the divergence between DESIGN/03_order.md and src/order/. The implementation has 3 fields the spec doesn't mention. Sync them up using the heuristics.", "should_trigger": false, "tag": "near-miss-safe-fix"},
+  {"query": "Fix the divergence between DESIGN/03_order.md and src/order/. The implementation has 3 fields the spec doesn't mention. Sync them up using the heuristics.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
   {"query": "Update DESIGN/01_user.md to add a new field `lastLoginAt` to the User type. Just one small edit.", "should_trigger": false, "tag": "generic"},
   {"query": "DESIGN/05_inventory.md is finalized. Implement the component end-to-end with the 6-stage process — type checks, tests, parallel review.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
   {"query": "Help me design a database schema for a multi-tenant SaaS app — what's the recommended approach with row-level vs schema-level isolation?", "should_trigger": false, "tag": "generic"},
   {"query": "Audit the existing DESIGN/ docs for type name inconsistencies and API contract drift between docs.", "should_trigger": false, "tag": "near-miss-spec-audit"},
   {"query": "Convert this UML class diagram to a Mermaid diagram for the README.md.", "should_trigger": false, "tag": "generic"},
   {"query": "Write a small Python script that generates test data for the user registration flow — 1000 fake users with realistic email/name pairs.", "should_trigger": false, "tag": "generic"},
-  {"query": "spec-check found 8 Constraint violations between DESIGN/02_payment.md and src/payment/. Fix them — spec wins for type names, impl wins for behavior.", "should_trigger": false, "tag": "near-miss-safe-fix"},
+  {"query": "spec-check found 8 Constraint violations between DESIGN/02_payment.md and src/payment/. Fix them — spec wins for type names, impl wins for behavior.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
   {"query": "Add a new section to README.md describing the deployment process to staging and production.", "should_trigger": false, "tag": "generic"},
   {"query": "Edit DESIGN/01_user.md and add the email field to the User type. Single field, single doc.", "should_trigger": false, "tag": "generic"}
 ]

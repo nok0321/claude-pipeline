@@ -10,7 +10,7 @@
   {"query": "Audit the 6 design docs we just generated from design-phase as a batch. I want type, API contract, and DB schema inconsistencies surfaced before review.", "should_trigger": true, "tag": "explicit"},
   {"query": "We have a constant CONNECT_TIMEOUT_MS defined in DESIGN/01_gateway.md and DESIGN/05_worker.md but I'm seeing different values (3000 vs 5000). Can you sweep all design docs for this kind of constant mismatch?", "should_trigger": true, "tag": "explicit"},
   {"query": "Compare my implementation in src/auth/ against DESIGN/01_auth.md and tell me if anything is missing or diverged from the spec.", "should_trigger": false, "tag": "near-miss-spec-audit"},
-  {"query": "I have a list of 12 spec mismatches from the last spec-check run, can you fix the implementation to match the design?", "should_trigger": false, "tag": "near-miss-safe-fix"},
+  {"query": "I have a list of 12 spec mismatches from the last spec-check run, can you fix the implementation to match the design?", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
   {"query": "Generate a brand new design document for the payment retry workflow, we don't have one yet — start from plans/PAYMENT-RETRY.md.", "should_trigger": false, "tag": "near-miss-design-phase"},
   {"query": "Audit the security logs from last month for unauthorized access attempts to /admin endpoints. The logs are in /var/log/access.log", "should_trigger": false, "tag": "generic"},
   {"query": "Rename the variable getUserData to fetchUser across the codebase, including all .ts and .tsx files.", "should_trigger": false, "tag": "generic"},

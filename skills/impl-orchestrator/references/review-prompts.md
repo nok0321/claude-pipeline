@@ -83,7 +83,7 @@ Emit each finding as:
   Attack: {attack scenario, Critical/High only}
   Fix: {concrete patch}
 
-After the human-readable list, emit a single fenced code block tagged `json` containing the same findings as an array conforming to skills/safe-fix/references/finding.schema.json. Use finding_id prefix SEC-, populate `attack` for Critical/High, and use `description` for the issue text and `fix_hint` for the patch suggestion.
+After the human-readable list, emit a single fenced code block tagged `json` containing the same findings as an array conforming to skills/impl-orchestrator/references/finding.schema.json. Use finding_id prefix SEC-, populate `attack` for Critical/High, and use `description` for the issue text and `fix_hint` for the patch suggestion.
 ```
 
 ---
@@ -141,7 +141,7 @@ Emit each finding as:
   Impact: {failure scenario}
   Fix: {concrete patch}
 
-After the human-readable list, emit a single fenced code block tagged `json` containing the same findings as an array conforming to skills/safe-fix/references/finding.schema.json. Use finding_id prefix ROB-, populate `impact` for Critical/High, and use `description` for the issue text and `fix_hint` for the patch suggestion.
+After the human-readable list, emit a single fenced code block tagged `json` containing the same findings as an array conforming to skills/impl-orchestrator/references/finding.schema.json. Use finding_id prefix ROB-, populate `impact` for Critical/High, and use `description` for the issue text and `fix_hint` for the patch suggestion.
 ```
 
 ---
@@ -193,7 +193,7 @@ Emit each finding as:
   Code: {impl_file:line} — {actual state}
   Recommendation: {update spec / patch implementation / append to spec}
 
-After the human-readable list, emit a single fenced code block tagged `json` containing the same findings as an array conforming to skills/safe-fix/references/finding.schema.json. Use finding_id prefix SPEC-, populate `spec_ref` from the Spec line, set `severity` per the diff class (Missing/Diverged: High; Extra: Medium; Constraint: per CLAUDE.md), and put the recommendation in `fix_hint`.
+After the human-readable list, emit a single fenced code block tagged `json` containing the same findings as an array conforming to skills/impl-orchestrator/references/finding.schema.json. Use finding_id prefix SPEC-, populate `spec_ref` from the Spec line, set `severity` per the diff class (Missing/Diverged: High; Extra: Medium; Constraint: per CLAUDE.md), and put the recommendation in `fix_hint`.
 ```
 
 ---
@@ -206,5 +206,5 @@ Classify each finding via ARCHITECTURE.md §A. Apply CLAUDE.md
 | Tier                              | Action                                                                                                                                        |
 |-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
 | **Tier 1** (must escalate)        | Push to `escalation_queue`, mirror to `PIPELINE-STATE.md` (§B). **Do not block.** Continue handling other findings; report at end.            |
-| **Tier 2** (auto-fix + post-report) | Hand off to `safe-fix` via Agent (`--mode=robust` for SEC-*/ROB-*, `--mode=conformance` for SPEC-*/AUDIT-*). safe-fix re-runs the Stage 2 verification gate after each patch and reverts on failure. Log the auto-fix entry for the post-report. |
+| **Tier 2** (auto-fix + post-report) | Apply fix inline per [conformance-fix.md](conformance-fix.md) (SPEC-*/AUDIT-*) or [robust-fix.md](robust-fix.md) (SEC-*/ROB-*). Re-run the Stage 2 verification gate after each patch; revert on failure per the robust-fix per-edit policy. Log the auto-fix entry for the post-report. |
 | **Tier 3** (auto-fix silent)      | Same as Tier 2 but no log entry.                                                                                                              |

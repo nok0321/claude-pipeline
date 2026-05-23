@@ -75,6 +75,32 @@ For each spec in scope, extract: type definitions (struct / interface / enum / a
 6. **Terminology drift** — synonyms, language drift, abbreviation drift across specs.
 7. **Constant / configuration drift** — same named constant with different values.
 
+### Arbitration
+
+For findings in categories 1, 6, and 7 (naming/terminology/constant drift), invoke the `technical-arbiter` subagent before emitting the report. The arbiter takes the candidate values plus evidence and returns either a canonical recommendation (with confidence and reasoning) or a deferral with a specific user question. Categories 2, 3, 4, 5 skip arbitration — those resolve mechanically (merges, DFS) or require user-only judgement an arbiter cannot supply.
+
+Invocation (one call per affected finding; independent calls may be batched in parallel):
+
+```
+Task tool → subagent_type: technical-arbiter
+prompt: <JSON: drift_type, candidates[{value, evidence_locations[]}], context_files[]>
+```
+
+Incorporate the arbiter response into the finding's `Recommendation` field:
+
+| Arbiter response | Recommendation field |
+|---|---|
+| `confidence: high` or `medium` | `use <value> — <one-sentence reasoning from arbiter>` |
+| `deferred_to_user: true` | prepend the arbiter's `user_question`, then `pick one canonical value` |
+
+Append every arbiter call to `evals/arbiter-decisions.jsonl` (append-only, one JSON object per line):
+
+```json
+{"timestamp":"<ISO8601>","skill":"spec-audit","finding_id":"<AUDIT-n>","drift_type":"<type>","candidates":[{"value":"...","evidence_locations":["..."]}],"decision":{"value":"...","confidence":"...","reasoning":"..."},"deferred_to_user":false,"user_question":null}
+```
+
+When `deferred_to_user: true`, set `decision: null` and populate `user_question`. The log is the source of truth for arbiter behavior review during dogfooding.
+
 ---
 
 ## Mode B: Implementation conformance
@@ -184,8 +210,8 @@ When everything matches: report "specs are mutually consistent and aligned with 
 
 After the human-readable report, emit a single fenced code block tagged
 `json` containing every finding as an array conforming to
-[skills/safe-fix/references/finding.schema.json](../safe-fix/references/finding.schema.json).
-Conformance findings use `finding_id` prefix `SPEC-`, cross-spec findings use `AUDIT-`. Both modes must populate `spec_ref`. This block is the input contract for `safe-fix --mode=conformance`.
+[skills/impl-orchestrator/references/finding.schema.json](../impl-orchestrator/references/finding.schema.json).
+Conformance findings use `finding_id` prefix `SPEC-`, cross-spec findings use `AUDIT-`. Both modes must populate `spec_ref`. This block is the input contract for the orchestrator's inline conformance remediation (see [conformance-fix.md](../impl-orchestrator/references/conformance-fix.md)).
 
 ---
 
@@ -194,4 +220,4 @@ Conformance findings use `finding_id` prefix `SPEC-`, cross-spec findings use `A
 - **Standalone (cross mode)** — design review, or pre-flight on PRs that touch `DESIGN/*.md`.
 - **From `design-phase`** — run in cross mode as a self-check after generation. Critical contradictions trigger autonomous repair; domain-knowledge contradictions escalate to the user.
 - **From `impl-orchestrator` Stage 4 (Spec Compliance Reviewer)** — run in conformance mode. Findings convert to the orchestrator's unified format.
-- **Standalone (conformance mode)** — after the report, recommend `safe-fix` to apply repairs.
+- **Standalone (conformance mode)** — after the report, recommend invoking `impl-orchestrator` to drive remediation per [conformance-fix.md](../impl-orchestrator/references/conformance-fix.md), or apply patches manually using the JSON Findings block as a checklist.
