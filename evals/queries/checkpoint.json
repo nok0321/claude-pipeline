@@ -13,7 +13,7 @@
   {"query": "Initialize the pipeline state for the new task 'auth-rewrite'. Phase 0 starts now, components are oauth/session-mgmt/mfa.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
   {"query": "What's the difference between git stash and git checkout for saving work in progress?", "should_trigger": false, "tag": "generic"},
   {"query": "How do I create a snapshot in Postgres for backup purposes before a risky migration?", "should_trigger": false, "tag": "generic"},
-  {"query": "Fix the failing test in tests/auth.test.ts and verify the regression tests still pass after.", "should_trigger": false, "tag": "near-miss-safe-fix"},
+  {"query": "Fix the failing test in tests/auth.test.ts and verify the regression tests still pass after.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
   {"query": "Add a small comment to the formatDate function in src/utils/date.ts explaining the timezone handling.", "should_trigger": false, "tag": "generic"},
   {"query": "Run the full test suite for the release preflight check — integration and e2e included.", "should_trigger": false, "tag": "generic"},
   {"query": "Transition the pipeline to Phase 3 (test phase) and update PIPELINE-STATE.md accordingly.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},

@@ -1,9 +1,8 @@
-# Mode B: Robust (`robust-review` findings)
+# Stage 3 remediation: Robust / Security findings
 
-Detail for SKILL.md Mode B. Replaces the retired `robust-fix` skill.
-
-Findings stream in from `/robust-review` as `SEC-*` (security) or
-`ROB-*` (robustness) entries with severity tags.
+Detail for SKILL.md Stage 3-5 dispatch when the finding `finding_id`
+starts with `SEC-` or `ROB-` (output of `robust-review`). Inline
+replacement of the retired `safe-fix --mode=robust` flow.
 
 ---
 
@@ -42,12 +41,30 @@ are not patched. Promote to Critical / High in CLAUDE.md
 For Critical / High items that don't match a known pattern:
 
 1. Attempt the fix.
-2. **Skip and report when confidence is low** rather than emit unsafe
-   edits.
+2. **Skip and report when confidence is low** rather than emit unsafe edits.
 3. When a fix would require a design decision, surface it as a Tier 1
    escalation candidate (see ARCHITECTURE.md §A).
 
 The bias toward skipping is intentional: a hardening fix that breaks
 unrelated tests is worse than the original Critical — better to leave a
-"needs human review" entry than to ship a regression. (See SKILL.md
-"Common revert policy" for the matching three-strikes rule.)
+"needs human review" entry than to ship a regression.
+
+---
+
+## Per-edit verification and revert policy
+
+1. **One finding / one file at a time.** No batched edits — the gate
+   must attribute failures to a specific patch.
+2. Run the Stage 2 verification gate after each edit
+   ([gate-commands.md](gate-commands.md)).
+3. Failure attribution:
+   - **Failure caused by this patch** → revert via
+     `git checkout HEAD -- <file>` and skip with a report entry.
+   - **Pre-existing failure** (unrelated to the patch) → keep the patch,
+     report the pre-existing error separately.
+   - When attribution is ambiguous, call the `regression-judge` subagent
+     before escalating. See SKILL.md `### Regression attribution` for
+     the input/output contract.
+4. **Three consecutive failures on the same finding** → skip and surface
+   as Tier 1 escalation. Continued blind retries indicate the approach
+   itself is wrong.

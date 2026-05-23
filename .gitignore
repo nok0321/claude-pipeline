@@ -13,3 +13,8 @@ desktop.ini
 # Claude Code local state
 CHECKPOINT.md
 PIPELINE-STATE.md
+
+# Claude Code per-user settings (settings.json is tracked)
+.claude/settings.local.json
+.claude/commands/
+.claude/skills/

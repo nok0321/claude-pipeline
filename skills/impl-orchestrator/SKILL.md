@@ -9,23 +9,26 @@ model: claude-opus-4-7
 # Implementation orchestrator
 
 Drive the spec-to-shipped loop in 4 stages (Phase 2 P4 simplification —
-was 6 stages):
+was 6 stages; Phase 6 Sub-V Option A — safe-fix inlined into Stage 3):
 
 ```
 Stage 1: Setup
   → Stage 2: Implement & Verify (sonnet + gate)
-  → Stage 3: Review & Remediate (opus ×3 + safe-fix)
+  → Stage 3: Review & Remediate (opus ×3 + inline fix)
   → Stage 4: Iterate or Finalize
 ```
 
 The 4-stage shape merges the previous Stage 2+3 (implementation + gate
 as one pair with in-stage fix attempts) and Stage 4+5 (review feeds
-directly into safe-fix dispatch and escalation, no hand-off).
+directly into inline remediation and escalation, no hand-off).
 
 Detail references:
 - [implementer-prompt.md](references/implementer-prompt.md) — Stage 2 sonnet sub-agent prompt
 - [gate-commands.md](references/gate-commands.md) — Stage 2 gate command tables and failure handling
 - [review-prompts.md](references/review-prompts.md) — Stage 3 reviewer templates and dispatch table
+- [finding.schema.json](references/finding.schema.json) — formal Finding contract emitted by reviewers
+- [conformance-fix.md](references/conformance-fix.md) — Stage 3 remediation for SPEC-* / AUDIT-* findings
+- [robust-fix.md](references/robust-fix.md) — Stage 3 remediation for SEC-* / ROB-* findings
 - [final-report.md](references/final-report.md) — Stage 4 final report template
 
 ---
@@ -114,11 +117,11 @@ Populate `gate_results` per the schema in
 
 ---
 
-## Stage 3: Review & Remediate (opus reviewers ×3 + safe-fix)
+## Stage 3: Review & Remediate (opus reviewers ×3 + inline fix)
 
 After every gate passes, spawn three opus reviewers **simultaneously in
-a single message**, then dispatch findings to safe-fix and the
-escalation queue.
+a single message**, then remediate findings inline and surface the
+remainder via the escalation queue.
 
 ### 3-1: Prepare review prompts
 
@@ -141,13 +144,35 @@ continue with the remaining axes.
 Pull findings from all three outputs into `findings`. Deduplicate by
 file + line, keeping the higher severity.
 
-### 3-5: Dispatch via safe-fix and escalation
+### 3-5: Inline remediation and escalation
 
 Classify each finding via ARCHITECTURE.md §A (apply CLAUDE.md
 `## Escalation Overrides` first). The Tier 1/2/3 dispatch table is in
 [references/review-prompts.md](references/review-prompts.md).
 
-### 3-6: Design-change loop
+For Tier 2 / Tier 3 findings, apply the fix inline. Procedure depends on
+the finding prefix:
+
+| Prefix          | Reference                                       |
+|-----------------|-------------------------------------------------|
+| `SPEC-*` / `AUDIT-*` | [conformance-fix.md](references/conformance-fix.md) |
+| `SEC-*` / `ROB-*`    | [robust-fix.md](references/robust-fix.md)           |
+| `CR-*`               | Apply per the `fix_hint`; verify per Stage 2 gate   |
+
+### 3-6: Subagent-backed judgement (optional, pre-escalation)
+
+Two subagents absorb technical judgement before falling through to
+Tier 1. Full input / output contracts and decision logging are in
+[subagent-calls.md](references/subagent-calls.md).
+
+- **`technical-arbiter`** — Diverged conformance findings on naming /
+  type / constant / terminology / api_contract drift. Returns a
+  canonical value with confidence, or defers with a user question.
+- **`regression-judge`** — Ambiguous test-failure attribution after a
+  patch edit. Returns `fix_caused` / `pre_existing` / `uncertain` to
+  decide revert vs keep.
+
+### 3-7: Design-change loop
 
 If a review surfaces "spec is missing requirements" or "fundamental
 design issue": **first time**, update `DESIGN/*.md` and return to Stage
@@ -196,5 +221,5 @@ templated in [references/final-report.md](references/final-report.md).
 - DESIGN/*.md missing → fall back to `design-phase` via Agent (impl-orchestrator is the entry point per ARCHITECTURE.md §3.3).
 - Build / test commands come from CLAUDE.md `## Commands` first (auto-detect is fallback only).
 - Reviewers run on opus (judgment), implementers on sonnet (cost).
-- Design-change reverse flow caps at one iteration (Stage 3-6).
-- Tier classification uses ARCHITECTURE.md §A; remediation uses safe-fix.
+- Design-change reverse flow caps at one iteration (Stage 3-7).
+- Tier classification uses ARCHITECTURE.md §A; remediation is inline per [conformance-fix.md](references/conformance-fix.md) and [robust-fix.md](references/robust-fix.md), with `technical-arbiter` / `regression-judge` absorbing technical judgement pre-escalation (Stage 3-6).

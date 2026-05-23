@@ -7,7 +7,9 @@
 
 > **注 (Phase 2 / 2026-04-29)**: 旧 `escalation` skill と旧 `pipeline-state` skill は本ドキュメントの **§A 補章 (Escalation framework)** と **§B 補章 (Pipeline state file)** に吸収。各 skill は本ドキュメントを参照する形に変更された。
 >
-> **注 (Phase 5 完了 / 2026-04-29)**: 新 8 skill の trigger rate を再測定し 7/8 個別 M1 PASS、7-skill 平均 +36.3% (詳細: [evals/POST-DIFF.md](evals/POST-DIFF.md))。`safe-fix` のみ 0.000 で routing 構造由来 (Opus 4.7 が "fix" 動詞 query を Bash/Edit 直接呼びへ流す)、Phase 6 で構造再考予定 (§11.1 参照)。
+> **注 (Phase 5 完了 / 2026-04-29)**: 新 8 skill の trigger rate を再測定し 7/8 個別 M1 PASS、7-skill 平均 +36.3% (詳細: [evals/POST-DIFF.md](evals/POST-DIFF.md))。`safe-fix` のみ 0.000 で routing 構造由来 (Opus 4.7 が "fix" 動詞 query を Bash/Edit 直接呼びへ流す)。
+>
+> **注 (Phase 6 Sub-V 確定 / 2026-05-23)**: `safe-fix` skill を Option A で廃止し、conformance/robust 修正ロジックを `impl-orchestrator` Stage 3 へ inline 化。**現在 7 skill 構造**。`finding.schema.json` は `skills/impl-orchestrator/references/` に移動。Escalation 削減のため `technical-arbiter` / `regression-judge` subagent と Stop hook drift gate を追加 ([plans/ESCALATION-REDESIGN.md](plans/ESCALATION-REDESIGN.md) 参照)。
 
 ---
 
@@ -30,18 +32,23 @@
 ```
 [Layer 1: フェーズオーケストレーター]
   design-phase           ─── 設計フェーズ専任
-  impl-orchestrator      ─── 実装フェーズ専任 (4 ステージループ)、エントリーポイント兼任
+  impl-orchestrator      ─── 実装フェーズ専任 (4 ステージループ + inline 修正)、エントリーポイント兼任
 
-[Layer 2: 専門領域スキル (検査・修正)]
+[Layer 2: 専門領域スキル (検査)]
   spec-audit             ─── 仕様↔仕様 / 仕様↔実装 の二モード監査
   robust-review          ─── 堅牢性・セキュリティの深層レビュー
   code-review            ─── 軽量 PR 向け統合レビュー
   boundary-test          ─── 境界契約テスト
-  safe-fix               ─── conformance / robust / adhoc の三モード修正
 
 [Layer 3: ユーティリティ]
   checkpoint             ─── セッション継続管理
+
+[Layer 4: Technical-judgment subagents (agents/)]
+  technical-arbiter      ─── 命名/型/定数 drift の canonical 判定 (read-only)
+  regression-judge       ─── test failure の fix-related / pre-existing 判定
 ```
+
+修正フローは Phase 6 Sub-V Option A で `safe-fix` skill を廃止し、`impl-orchestrator` Stage 3 へ inline 化 ([skills/impl-orchestrator/references/conformance-fix.md](skills/impl-orchestrator/references/conformance-fix.md), [robust-fix.md](skills/impl-orchestrator/references/robust-fix.md))。
 
 **原則**: 上位層は下位層を呼ぶ。逆方向の呼び出しは禁止 (循環依存防止)。
 
@@ -60,7 +67,9 @@
 impl-orchestrator
   └─ Agent(prompt: "/spec-audit <component> --mode=conformance を実行...")
   └─ Agent(prompt: "/robust-review <files> を実行...")
-  └─ Agent(prompt: "/safe-fix --mode=conformance --loop 3 を実行...")
+  └─ (Stage 3 で findings を inline 修正、conformance-fix.md / robust-fix.md に従う)
+  └─ Agent(prompt: "<technical-arbiter prompt> ...")  // Diverged conformance findings 経由
+  └─ Agent(prompt: "<regression-judge prompt> ...")   // 曖昧な test failure attribution 経由
 ```
 
 ### 3.2 委譲の利点
@@ -86,7 +95,8 @@ impl-orchestrator
 | フェーズオーケストレーター | opus | 判断・分岐制御の精度が全体品質を左右 |
 | 実装エージェント | sonnet | コード生成量が多く、コスト効率重視。品質は後段ゲート + opus レビューで担保 |
 | レビューエージェント (security / robustness / spec) | opus | 見落としコストが大きく、判断力が品質に直結。入力中心・出力少量のためコスト許容範囲 |
-| ユーティリティ系スキル (checkpoint, safe-fix) | 親モデル継承 (明示なし) | 軽量タスク、呼び出し元のモデルで十分 |
+| ユーティリティ系スキル (checkpoint) | 親モデル継承 (明示なし) | 軽量タスク、呼び出し元のモデルで十分 |
+| Technical-judgment subagent (technical-arbiter, regression-judge) | sonnet 4.6 | 判定品質が下流に影響、呼び出し頻度は低 (drift / ambiguous failure 検出時のみ)。Phase 6 ESCALATION-REDESIGN §4.1 |
 
 **モデルバージョン**: 本リポジトリは Opus 4.7 (`claude-opus-4-7`) で統一。
 モデル更新時は `grep -r "claude-opus-4-N"` で全 SKILL.md と PLAN.md を一括更新する。
@@ -123,7 +133,7 @@ CLAUDE.md の `## Escalation Overrides` で promote/demote を上書き可能。
 | `## Component Mapping` | コンポーネント↔仕様書↔実装ディレクトリの対応 | impl-orchestrator, spec-audit, robust-review, boundary-test |
 | `## Critical Constraints` | 制約事項 (データ形式順序、アーキテクチャ制約等) | impl-orchestrator, robust-review, boundary-test, spec-audit |
 | `## Project-Specific Checks` | プロジェクト固有の追加チェック項目 | robust-review, spec-audit |
-| `## Commands` | build/test/lint コマンド | impl-orchestrator, boundary-test, safe-fix |
+| `## Commands` | build/test/lint コマンド | impl-orchestrator (Stage 2 ゲート + Stage 3 inline 修正の per-edit gate), boundary-test |
 | `## Escalation Overrides` | エスカレーション基準のオーバーライド | §A 補章で定義、impl-orchestrator が参照 |
 | `## Boundary Definitions` | プロジェクト固有の境界定義 | boundary-test |
 
@@ -210,9 +220,11 @@ CLAUDE.md の `## Escalation Overrides` で promote/demote を上書き可能。
 | マージ前の深層レビュー | `robust-review` | severity Critical/High/Medium/Low |
 | PR 前の軽量レビュー | `code-review` | severity Critical/High/Medium/Low |
 | 境界契約のテスト | `boundary-test` | API/WASM/DB/変換 |
-| spec-audit 結果の自動修正 | `safe-fix` | Mode A (`--mode=conformance`) |
-| robust-review 結果の自動修正 | `safe-fix` | Mode B (`--mode=robust`) |
-| 単発のバグ修正 (revert 保証付き) | `safe-fix` | Mode C (`--mode=adhoc`) |
+| spec-audit 結果の自動修正 | `impl-orchestrator` Stage 3 inline | `skills/impl-orchestrator/references/conformance-fix.md` (Phase 6 Sub-V Option A) |
+| robust-review 結果の自動修正 | `impl-orchestrator` Stage 3 inline | `skills/impl-orchestrator/references/robust-fix.md` (Phase 6 Sub-V Option A) |
+| 単発のバグ修正 | Claude 直接 (Edit + Bash gate) | skill 経由なし。impl-orchestrator は DESIGN/*.md 駆動のため adhoc は対象外 |
+| 命名/型 drift の canonical 判定 | `technical-arbiter` subagent | `agents/technical-arbiter.md` (Phase 6 P1) |
+| Test failure の fix-related / pre-existing 判定 | `regression-judge` subagent | `agents/regression-judge.md` (Phase 6 P2) |
 | 長時間セッションの区切り | `checkpoint` | `/clear` 前 |
 | Finding の Tier 分類 | (本ドキュメント §A 補章) | 各 skill が参照 |
 | パイプライン進捗の管理 | (本ドキュメント §B 補章) | impl-orchestrator が更新 |
@@ -254,9 +266,10 @@ Phase 6 dogfooding (1 週間) で実運用観察を加え、最終評価は dogf
 | Hook 4 種 | ✅ 全 4 種維持 | `hooks/{pre-bash-safety,post-edit-lint,stop-verify,session-start}.sh` 全稼働中。誤検出/無効化は Phase 6 dogfooding で観察 |
 | §A / §B 補章の粒度 | ✅ 維持 | §A ≈ 70 行 / §B ≈ 80 行。SKILL 復活粒度 (200 行) には至らず、補章として適切 |
 
-**保留事項 (Phase 6 で再考)**:
+**Phase 6 Sub-V 確定 (2026-05-23)**:
 
-- **safe-fix の構造**: Phase 5 で trigger 0.000 を観測。Opus 4.7 が "fix" 動詞 query を Skill 経由ではなく Bash/Edit/Glob 直接呼びでルーティングする structural pattern が確定。description 最適化 (Sub-S 2 iter) では覆せず。Phase 6 Sub-V で **Option A (impl-orchestrator inline 化) / Option B (process-findings リネーム + Mode C 削除) / Option C (現状維持)** を dogfooding ログを根拠に判断。詳細は [docs/MIGRATION.md](docs/MIGRATION.md) §Phase 6 Sub-V。
+- **safe-fix の構造**: Phase 5 で trigger 0.000 を観測。Opus 4.7 が "fix" 動詞 query を Skill 経由ではなく Bash/Edit/Glob 直接呼びでルーティングする structural pattern が確定。description 最適化 (Sub-S 2 iter) では覆せず。Phase 6 Sub-V dogfooding (5 retroactive セッション) でも impl-orchestrator → safe-fix Skill 委譲 0 件、systemic な現象を確認。**Option A 採用**: `safe-fix` skill を廃止し、conformance/robust 修正ロジックを `impl-orchestrator` Stage 3 へ inline 化。`finding.schema.json` は `skills/impl-orchestrator/references/` に移動。Mode C (adhoc) は廃止 (Claude 直接ハンドリングへ)。詳細は [docs/MIGRATION.md](docs/MIGRATION.md) §Phase 6 Sub-V。
+- **Escalation 削減**: Phase 6 観察で spec-audit / impl-orchestrator の Tier 1 率が 10〜20% と高く、technical-judgment 系は user 中断より subagent 委譲が品質も低下しないと判定。[plans/ESCALATION-REDESIGN.md](plans/ESCALATION-REDESIGN.md) P1/P2/P3 を採用 (technical-arbiter / regression-judge / Stop hook drift gate)。
 
 ---
 

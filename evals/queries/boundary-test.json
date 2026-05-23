@@ -9,7 +9,7 @@
   {"query": "We have unit conversion (cm→mm) happening in 3 places between the parser and the renderer. Detect any boundary contract violations in the conversion path src/parser/ → src/render/.", "should_trigger": true, "tag": "implicit"},
   {"query": "wasm <-> ts type contract check on the math module pls. just rebuilt geo.wasm and i bet something is off with the matrix layout", "should_trigger": true, "tag": "casual"},
   {"query": "Run all boundary tests after the API schema update — REST↔Frontend and DB↔App layers. I want type mismatches surfaced as a list with file:line refs.", "should_trigger": true, "tag": "explicit"},
-  {"query": "There's a bug in the formatDate function — it's returning UTC instead of local time. Fix it and verify the regression tests don't break.", "should_trigger": false, "tag": "near-miss-safe-fix"},
+  {"query": "There's a bug in the formatDate function — it's returning UTC instead of local time. Fix it and verify the regression tests don't break.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
   {"query": "Implement the inventory component end-to-end from DESIGN/05_inventory.md, including the boundary tests if needed.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
   {"query": "The login button on the homepage is misaligned on mobile breakpoint. Can you fix the CSS in src/components/Header.css?", "should_trigger": false, "tag": "generic"},
   {"query": "Help me write integration tests for the search endpoint using Playwright — UI flow validation.", "should_trigger": false, "tag": "generic"},
