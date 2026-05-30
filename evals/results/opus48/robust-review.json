@@ -1,0 +1,171 @@
+{
+  "skill_name": "robust-review",
+  "description": "Use this skill whenever the user wants a deep, dedicated security and robustness review on changed or specified code — looking for injection vectors, panic / crash sources, data-integrity issues, edge-case fragility, and concurrency hazards across two axes (Security and Robustness) with findings ranked Critical / High / Medium / Low. Trigger phrases include \"deep security review\", \"robustness review\", \"audit this code for vulnerabilities\", \"find injection vectors\", \"check for unwrap or panic sources\", \"pre-merge security pass\", \"release-readiness review\", or any explicit ask for a thorough hardening review beyond a lightweight PR check. Trigger even when the user does not say \"robust-review\" — phrases like \"what could break this in production?\", \"how safe is this code?\", or \"audit before release\" qualify.",
+  "results": [
+    {
+      "query": "Run robust-review on src/auth/ — full depth, S-Critical to S-Low. Pre-release gate, I need every injection vector and panic source surfaced before the merge.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Pre-merge security audit on the new payment integration (src/payment/). Authorization, session handling, race conditions — go deep, this is going to prod tomorrow.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Robust review on file src/handlers/checkout.ts. I want axis 1 (security) and axis 2 (robustness) findings — injection, unwrap, edge cases, concurrency.",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "deep sec review on src/api/ before release pls. dont miss anything — were getting audited next week",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "We're cutting a release tag tomorrow. Need a final security/robustness pass on the entire src/auth/ and src/payment/ trees with S-Critical/S-Low breakdown.",
+      "should_trigger": true,
+      "trigger_rate": 0.3333333333333333,
+      "triggers": 1,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "Run robust-review --all on the impl-orchestrator output for the inventory component. Stage 4 review — security/robustness/spec axes in parallel.",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Audit src/api/handlers/ for all the standard issues — SQL injection, command injection, XSS, panic sources, missing input validation, race conditions.",
+      "should_trigger": true,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": false
+    },
+    {
+      "query": "review src/auth deep, im paranoid about the new oauth flow and the new redirect logic in particular",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Robust review pass on glob 'src/**/*.ts' — flag S-Critical and S-High items for the release branch. I want to know what blocks the tag.",
+      "should_trigger": true,
+      "trigger_rate": 0.6666666666666666,
+      "triggers": 2,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Security/robustness deep dive on the new search query parser (src/search/parser.ts) before we ship it. Specifically injection via search terms.",
+      "should_trigger": true,
+      "trigger_rate": 1.0,
+      "triggers": 3,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Quick PR review on src/utils/format.ts — 5 min Critical/Warning/Info pass.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Compare src/order/ implementation against DESIGN/03_order.md — Missing/Diverged/Extra findings.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Auto-fix the S-Critical findings from the last robust-review on src/auth/. Standard patterns.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Help me write a regex for IPv6 addresses with abbreviated zero groups.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Fix the bug in handlers/order.ts:88 — race condition on inventory decrement. Verify with regression tests.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "How do I store API keys securely in a Node.js app — env vars, secret manager, vault?",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Light review on my last commit, just structure and naming. No deep audit needed.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "What's the OWASP Top 10? Need a quick reference for a security training session.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Implement the auth refactor from DESIGN/01_auth.md autonomously with the 6-stage process.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    },
+    {
+      "query": "Set up Snyk scanning in CI for vulnerability detection on the npm dependencies.",
+      "should_trigger": false,
+      "trigger_rate": 0.0,
+      "triggers": 0,
+      "runs": 3,
+      "pass": true
+    }
+  ],
+  "summary": {
+    "total": 20,
+    "passed": 18,
+    "failed": 2
+  }
+}
