@@ -3,7 +3,7 @@ name: impl-orchestrator
 description: Use this skill whenever the user wants to autonomously implement one or more components from their `DESIGN/*.md` specs — running the full loop of code generation (sonnet) → verification gate (build / type / test) → parallel review (security / robustness / spec compliance, opus ×3) → finding remediation, repeated up to three iterations. Trigger phrases include "implement the auth component from the spec", "build out DESIGN/03_payment.md", "autonomously implement the backend", "drive the implementation phase", "Phase 2 of the pipeline", "implement based on the design docs", or any spec-driven implementation request. Trigger even when the user does not say "impl-orchestrator" — phrases like "build this from the design doc", "make the code match DESIGN/", or "ship the component end to end" qualify when DESIGN/*.md exists.
 argument-hint: "[component-name or 'all']"
 allowed-tools: Read, Write, Edit, MultiEdit, Bash, Grep, Glob, Agent
-model: claude-opus-4-7
+model: claude-opus-4-8
 ---
 
 # Implementation orchestrator

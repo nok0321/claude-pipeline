@@ -3,7 +3,7 @@ name: spec-audit
 description: Use this skill whenever the user wants a unified design-spec audit — either detecting inconsistencies BETWEEN design documents under `DESIGN/` (type / field drift, divergent API contracts, dependency cycles, DB-schema disagreements, terminology and constant drift) OR comparing design documents AGAINST the implementation (Missing / Diverged / Extra / Constraint). Trigger phrases include "audit our design docs", "do the spec markdowns line up", "API contract drift across designs", "scan DESIGN/*.md for mismatches" (cross-spec mode), as well as "check spec vs implementation", "does the code match DESIGN/01_auth.md?", "verify implementation matches the spec", "list missing items from the design doc", "find diverged signatures between spec and code" (conformance mode). Trigger even when the user does not say "spec-audit" — implicit phrases like "did the design docs drift?", "is the implementation behind the spec?", "anything off between these markdowns?", or "compare what we built against what we designed" qualify.
 argument-hint: "[component-name or 'all'] [--mode=cross|conformance|both]"
 allowed-tools: Read, Grep, Glob, Bash
-model: claude-opus-4-7
+model: claude-opus-4-8
 context: fork
 ---
 

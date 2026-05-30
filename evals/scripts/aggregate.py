@@ -9,7 +9,7 @@ results directory and produces aggregated metrics:
 
 Usage:
     python evals/scripts/aggregate.py evals/results/baseline > evals/BASELINE.json
-    python evals/scripts/aggregate.py evals/results/post --phase post --model claude-opus-4-7
+    python evals/scripts/aggregate.py evals/results/post --phase post --model claude-opus-4-8
 """
 
 import argparse
@@ -75,7 +75,7 @@ def main():
                         help="Directory with query JSONs (default: ../../queries relative to results_dir)")
     parser.add_argument("--phase", default="baseline",
                         help="Phase label (baseline | phase1 | post)")
-    parser.add_argument("--model", default="claude-opus-4-7",
+    parser.add_argument("--model", default="claude-opus-4-8",
                         help="Model used for the run")
     parser.add_argument("--threshold", type=float, default=0.7,
                         help="Pass-rate threshold for summary count")

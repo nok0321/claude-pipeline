@@ -89,7 +89,7 @@ python "$SKILL_CREATOR_DIR/scripts/run_eval.py" \
   --runs-per-query 3 \
   --num-workers 10 \
   --timeout 30 \
-  --model claude-opus-4-7 \
+  --model claude-opus-4-8 \
   --verbose \
   > evals/results/baseline/spec-audit.json
 ```
