@@ -98,8 +98,8 @@ impl-orchestrator
 | ユーティリティ系スキル (checkpoint) | 親モデル継承 (明示なし) | 軽量タスク、呼び出し元のモデルで十分 |
 | Technical-judgment subagent (technical-arbiter, regression-judge) | sonnet 4.6 | 判定品質が下流に影響、呼び出し頻度は低 (drift / ambiguous failure 検出時のみ)。Phase 6 ESCALATION-REDESIGN §4.1 |
 
-**モデルバージョン**: 本リポジトリは Opus 4.8 (`claude-opus-4-8`) で統一。
-モデル更新時は `grep -r "claude-opus-4-N"` で全 SKILL.md と PLAN.md を一括更新する。
+**モデルバージョン**: judgment 系は dated ID をピンする — opus 役 (6 SKILL) = `claude-opus-4-8`、sonnet 系 subagent (technical-arbiter / regression-judge / Stop drift gate) = `claude-sonnet-4-6`。実装者のみ bare `sonnet` エイリアスで意図的に float する (cost 最適化 + downstream 担保のため、reproducibility より最新 cost-effective sonnet 追従を優先。[implementer-prompt.md](skills/impl-orchestrator/references/implementer-prompt.md) 参照)。
+モデル更新時は `grep -rE "claude-(opus|sonnet)-4-[0-9]"` で全 SKILL.md / agents/*.md / .claude/settings.json / PLAN.md の pin を一括更新する (**opus だけの grep では sonnet pin が漏れる**点に注意)。
 
 ---
 
@@ -270,6 +270,40 @@ Phase 6 dogfooding (1 週間) で実運用観察を加え、最終評価は dogf
 
 - **safe-fix の構造**: Phase 5 で trigger 0.000 を観測。Opus 4.7 が "fix" 動詞 query を Skill 経由ではなく Bash/Edit/Glob 直接呼びでルーティングする structural pattern が確定。description 最適化 (Sub-S 2 iter) では覆せず。Phase 6 Sub-V dogfooding (5 retroactive セッション) でも impl-orchestrator → safe-fix Skill 委譲 0 件、systemic な現象を確認。**Option A 採用**: `safe-fix` skill を廃止し、conformance/robust 修正ロジックを `impl-orchestrator` Stage 3 へ inline 化。`finding.schema.json` は `skills/impl-orchestrator/references/` に移動。Mode C (adhoc) は廃止 (Claude 直接ハンドリングへ)。詳細は [docs/MIGRATION.md](docs/MIGRATION.md) §Phase 6 Sub-V。
 - **Escalation 削減**: Phase 6 観察で spec-audit / impl-orchestrator の Tier 1 率が 10〜20% と高く、technical-judgment 系は user 中断より subagent 委譲が品質も低下しないと判定。[plans/ESCALATION-REDESIGN.md](plans/ESCALATION-REDESIGN.md) P1/P2/P3 を採用 (technical-arbiter / regression-judge / Stop hook drift gate)。
+
+### 11.2 Opus 4.8 移行時 (2026-05-30) 見直し
+
+commit `589da78` (Opus 4.7→4.8 bump) を機に §11 チェックリストを再評価。
+手法: `claude-code-guide` subagent で Claude Code 機能の最新仕様を調査 → 高リスク項目は公式 docs を直接取得して**一次検証** → 設計判断は general-purpose subagent と**協議** → トリガー eval を 4.8 で**再ベースライン** ([evals/OPUS48-DIFF.md](evals/OPUS48-DIFF.md))。
+
+#### 修正した項目
+
+| 項目 | 内容 | 根拠 |
+|------|------|------|
+| Stop drift gate スキーマ | agent-type hook は `{"ok":true}` / `{"ok":false,"reason"}` を返す仕様 (公式 hooks-guide #agent-based-hooks)。commit `3b672fc` は agent hook へ切替えつつ command-hook の `{"decision":"block"}` を残しており、矛盾検出時に**実際には block しなかった**。`ok`/`reason` へ修正。`$ARGUMENTS` での入力受取は正しいので維持 | 一次検証 |
+| §10 ヘッダ陳腐化 | 「計 8 skill」→ 現行 7 skill (Phase 6 Sub-V 以降) | — |
+| subagent-call cross-ref | conformance-fix / robust-fix / subagent-calls が存在しない SKILL.md アンカー (`### Arbitration` 等) を参照 → 実体のある subagent-calls.md (Stage 3-6 dispatch) へ修正 | — |
+| モデル bump process | §4 の grep が opus のみで sonnet pin (technical-arbiter / regression-judge / drift gate) を取りこぼし silent rot する不具合。grep を `claude-(opus\|sonnet)-4-N` へ拡張し scope に agents/*.md・settings.json を追加 | subagent 協議 |
+
+#### 設計判断 (subagent 協議のうえ確定)
+
+- **実装者モデルは bare `sonnet` エイリアスを維持** (pin しない)。当初は repo 統一のため pin する案だったが、(i) 「全て pin」前提が誤り (`agents/curriculum-comparator.md` は `model: opus` エイリアス、且つ本パイプライン外)、(ii) sonnet ID を増やすと opus-only の grep-bump が取りこぼす staleness が悪化、(iii) implementer は cost 最適化 + downstream 担保される唯一の役割で float が適切。**原則: 出力品質を機械的に検証できない所 (opus judgment 役) は pin、できる所 (implementer) は float**。意図を implementer-prompt.md と §4 に明記。
+- **`effort` frontmatter は採用見送り (文書化のみ)**。Opus 4.8 の新レバー (`low`〜`max`、セッション effort を上書き) だが、(i) コスト意識 (G5) に反して**測定済みコストを未測定便益に払う**、(ii) 4.8 default effort が既に高ければ no-op、(iii) trigger eval は review 品質を測定できない。**採用条件 (gate)**: seeded-bug review-quality eval — 各 reviewer 軸 (injection / panic / spec-divergence) に既知欠陥を仕込んだ corpus で default vs `effort: high` を測り、catch-rate 差が run 分散を超えた skill のみ採用。この eval を作るまで採用しない、を**完結した end-state**とする (eval 構築を約束するものではない)。
+
+#### "今も妥当" と確認できた設計 (最新仕様で検証)
+
+- **skill→skill 直接呼び出しは今も不可、Agent fan-out が唯一の合成手段** — §3 の前提は最新仕様でも有効 (`skills:` は subagent 専用 frontmatter で skill には付かない)。§11 の問い「Agent 委譲のオーバーヘッドに代わる手段が Claude Code の進化で出ていないか」に明確な答 (出ていない) が付いた。
+- **モデルは全て現行世代** — opus-4-8 / sonnet-4-6。
+- **§A/§B 補章サイズ** (~70/~80 行) は skill 復活閾値 (200 行) 未満、補章のまま妥当。
+- **トリガー品質** — 4.8 で 7 skill 横ばい〜微改善、過剰発火ゼロ、全 skill pass。description 作り直し不要。
+- **routing 前提** — fix 動詞は 4.8 でも skill にルーティングされず、Sub-V Option A (safe-fix inline 化) の妥当性維持。
+
+#### 監視項目 / 将来検討 (今回は対応せず)
+
+- spec-audit (trigger -0.183) / boundary-test (-0.133) の 4.8 微減。RUNS=3 分散域のため description 改変せず、次回 bump 再測定で傾向継続なら対応。
+- 新 frontmatter (`disable-model-invocation`, `user-invocable`, `disallowed-tools`, `paths`, `agent:`, `hooks:`) は利用可能だが現構成で必要性なし。orchestrator/leaf の invocation 制御や autonomous loop の tool 制限が将来必要になれば検討。
+
+**総括**: G1-G5 / 3層 / Agent 委譲 / モデル配分 / 検証ゲート順序 / Hook / §A§B 粒度 のいずれも「No」化の兆候なし。全体再設計の時期ではない。
 
 ---
 

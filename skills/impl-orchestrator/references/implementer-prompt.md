@@ -30,6 +30,13 @@ Agent(
 )
 ```
 
+The bare `sonnet` alias (not a pinned date like the opus roles) is
+**deliberate**: the implementer is cost-optimized and high-volume, and its
+output is backstopped by the Stage 2 gate + Stage 3 opus review — so
+auto-tracking the latest cost-effective Sonnet is preferred over pinning for
+reproducibility here. (Pin where output quality can't be mechanically
+verified; float where it can — see ARCHITECTURE.md §4.)
+
 The agent's reported file list feeds into `impl_files`, which becomes
 `{target_files}` for the Stage 3 reviewers
 (see [review-prompts.md](review-prompts.md)).
