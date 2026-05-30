@@ -3,7 +3,7 @@ name: robust-review
 description: Use this skill whenever the user wants a deep, dedicated security and robustness review on changed or specified code — looking for injection vectors, panic / crash sources, data-integrity issues, edge-case fragility, and concurrency hazards across two axes (Security and Robustness) with findings ranked Critical / High / Medium / Low. Trigger phrases include "deep security review", "robustness review", "audit this code for vulnerabilities", "find injection vectors", "check for unwrap or panic sources", "pre-merge security pass", "release-readiness review", or any explicit ask for a thorough hardening review beyond a lightweight PR check. Trigger even when the user does not say "robust-review" — phrases like "what could break this in production?", "how safe is this code?", or "audit before release" qualify.
 argument-hint: "[file-path, glob-pattern, or 'all']"
 allowed-tools: Read, Grep, Glob, Bash
-model: claude-opus-4-7
+model: claude-opus-4-8
 context: fork
 ---
 

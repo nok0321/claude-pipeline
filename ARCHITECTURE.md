@@ -98,7 +98,7 @@ impl-orchestrator
 | ユーティリティ系スキル (checkpoint) | 親モデル継承 (明示なし) | 軽量タスク、呼び出し元のモデルで十分 |
 | Technical-judgment subagent (technical-arbiter, regression-judge) | sonnet 4.6 | 判定品質が下流に影響、呼び出し頻度は低 (drift / ambiguous failure 検出時のみ)。Phase 6 ESCALATION-REDESIGN §4.1 |
 
-**モデルバージョン**: 本リポジトリは Opus 4.7 (`claude-opus-4-7`) で統一。
+**モデルバージョン**: 本リポジトリは Opus 4.8 (`claude-opus-4-8`) で統一。
 モデル更新時は `grep -r "claude-opus-4-N"` で全 SKILL.md と PLAN.md を一括更新する。
 
 ---
@@ -259,7 +259,7 @@ Phase 6 dogfooding (1 週間) で実運用観察を加え、最終評価は dogf
 | G1〜G5 の設計目標 | ✅ 合致 | 7/8 個別 M1 PASS、7-skill 平均 +36.3% trigger rate 改善が G1 (後追いループ排除) と G4 (コンテキスト爆発回避) を間接支持 |
 | 3 層構造 | ✅ 維持 | 新 8 skill 全てが Layer 1/2/3 に収まる。dev-pipeline drop による旧 Layer 0 廃止以外、新規逸脱なし |
 | Agent 委譲モデル | ✅ 許容範囲 | Phase 4 で `context: fork` を 5 skill に適用後もオーバーヘッド許容。Phase 5 eval (76min, 8 skill × 20 query × 3 run) は rate-limit 0 件 |
-| モデル配分 | ✅ Opus 4.7 統一 | Phase 5 measure 時点で全 skill が `claude-opus-4-7`。コスト/性能再評価は Phase 6 dogfooding で観察予定 |
+| モデル配分 | ✅ Opus 4.8 統一 | 全 skill が `claude-opus-4-8`（Phase 5 measure 時点では `claude-opus-4-7`、Opus 4.8 リリースで更新）。コスト/性能再評価は dogfooding で観察予定 |
 | CLAUDE.md 動的読み取り | ⏳ dogfooding で確認 | claude-pipeline 自体は skill リポジトリのため CLAUDE.md なし。対象プロジェクト側の運用度は Phase 6 dogfooding で実例観察 |
 | PIPELINE-STATE / CHECKPOINT / memory 役割分離 | ⏳ dogfooding で確認 | CHECKPOINT.md は Phase 0〜5 で機能。memory も active 利用中。PIPELINE-STATE.md は実プロジェクト稼働時に分離維持を観察 |
 | 検証ゲート→レビュー の順序 | ⏳ dogfooding で確認 | impl-orchestrator Stage 2 → Stage 3 順序を Phase 4 で formalize。実バグ追いループ防止効果は dogfooding 期間中の実装で測定 |

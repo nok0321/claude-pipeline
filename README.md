@@ -202,7 +202,7 @@ bash evals/scripts/run_baseline.sh
 python evals/scripts/run_eval_compat.py \
   --eval-set evals/queries/<skill>.json \
   --skill-path skills/<skill> \
-  --runs-per-query 3 --num-workers 3 --timeout 30 --model claude-opus-4-7
+  --runs-per-query 3 --num-workers 3 --timeout 30 --model claude-opus-4-8
 
 # 結果集計 (per-skill JSON → 集計 JSON)
 python evals/scripts/aggregate.py evals/results/<phase>/ > evals/<PHASE>.json

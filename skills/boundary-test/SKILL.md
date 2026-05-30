@@ -3,7 +3,7 @@ name: boundary-test
 description: Use this skill whenever the user wants to detect contracts at the boundaries between components — REST API ↔ frontend, WASM ↔ TypeScript, DB ↔ application, or unit / coordinate / encoding conversion functions — and auto-generate or run boundary contract tests for them. Surfaces type mismatches and conversion errors mechanically rather than relying on review judgment. Trigger phrases include "test the API/frontend contract", "WASM type-mismatch test", "round-trip test for the converter", "DB schema vs ORM mismatch", "boundary contract test", "test the conversion functions for round-trip", "post-impl-orchestrator final gate", or any conversion / contract test request after API / DB / WASM schema changes. Trigger even when the user does not say "boundary-test" — phrases like "make sure the JSON shape matches what the front end expects" qualify.
 argument-hint: "[detect | generate | run | all] [component-name]"
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
-model: claude-opus-4-7
+model: claude-opus-4-8
 context: fork
 ---
 

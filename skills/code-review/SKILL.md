@@ -3,7 +3,7 @@ name: code-review
 description: Use this skill whenever the user wants a lightweight integrated code review for a small-to-medium change — typically right after editing code, before opening a PR, or as a sanity pass before commit. Covers static analysis, security spot-check, robustness spot-check, structure smells, and test-coverage gaps in one report ranked Critical / High / Medium / Low. Trigger phrases include "review my changes", "look over this PR", "give me a code review", "check this diff", "spot-check this commit", or any pre-PR / pre-commit review request. Trigger even when the user does not say "code-review" — implicit phrases like "anything wrong with this?", "anything to fix here?", or "ready to ship?" qualify when the context is a code diff. For deeper pre-merge security audits use `robust-review` instead.
 argument-hint: "[file-path or git-range]"
 allowed-tools: Read, Grep, Glob, Bash
-model: claude-opus-4-7
+model: claude-opus-4-8
 context: fork
 ---
 
