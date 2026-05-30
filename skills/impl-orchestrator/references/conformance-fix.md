@@ -29,7 +29,7 @@ Findings carry one of four classes: Missing / Diverged / Extra / Constraint.
 
 For naming / type / constant / terminology / api_contract drift in the
 Diverged class, call the `technical-arbiter` subagent before falling
-through to Tier 1 escalation. See SKILL.md `### Arbitration` for the
+through to Tier 1 escalation. See [subagent-calls.md](subagent-calls.md) (Stage 3-6 dispatch) for the
 input/output contract.
 
 ---
