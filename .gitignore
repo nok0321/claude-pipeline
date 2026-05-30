@@ -18,3 +18,8 @@ PIPELINE-STATE.md
 .claude/settings.local.json
 .claude/commands/
 .claude/skills/
+
+# Eval run/debug byproducts (per-skill *.json results are tracked; logs are not)
+evals/results/*-run.log
+evals/results/**/*.stderr.log
+evals/results/**/probe-debug.jsonl
