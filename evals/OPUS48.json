@@ -1,0 +1,126 @@
+{
+  "phase": "opus48",
+  "model": "claude-opus-4-8",
+  "timestamp": "2026-05-30T03:24:36.310113+00:00",
+  "skills": {
+    "boundary-test": {
+      "trigger_rate_overall": 0.367,
+      "should_trigger_rate": 0.733,
+      "should_not_trigger_rate": 1.0,
+      "passed": 18,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.733,
+        "implicit": 0.889,
+        "casual": 0.5,
+        "near-miss-impl-orchestrator": 0.0,
+        "generic": 0.0,
+        "near-miss-spec-audit": 0.0,
+        "near-miss-robust-review": 0.0,
+        "near-miss-code-review": 0.0
+      }
+    },
+    "checkpoint": {
+      "trigger_rate_overall": 0.5,
+      "should_trigger_rate": 1.0,
+      "should_not_trigger_rate": 1.0,
+      "passed": 20,
+      "total": 20,
+      "by_tag": {
+        "explicit": 1.0,
+        "implicit": 1.0,
+        "casual": 1.0,
+        "near-miss-impl-orchestrator": 0.0,
+        "generic": 0.0
+      }
+    },
+    "code-review": {
+      "trigger_rate_overall": 0.367,
+      "should_trigger_rate": 0.733,
+      "should_not_trigger_rate": 1.0,
+      "passed": 18,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.417,
+        "implicit": 0.917,
+        "casual": 1.0,
+        "near-miss-robust-review": 0.0,
+        "near-miss-spec-audit": 0.0,
+        "near-miss-impl-orchestrator": 0.0,
+        "generic": 0.0
+      }
+    },
+    "design-phase": {
+      "trigger_rate_overall": 0.483,
+      "should_trigger_rate": 0.967,
+      "should_not_trigger_rate": 1.0,
+      "passed": 20,
+      "total": 20,
+      "by_tag": {
+        "explicit": 1.0,
+        "implicit": 1.0,
+        "casual": 0.833,
+        "near-miss-impl-orchestrator": 0.0,
+        "generic": 0.0,
+        "near-miss-spec-audit": 0.0
+      }
+    },
+    "impl-orchestrator": {
+      "trigger_rate_overall": 0.483,
+      "should_trigger_rate": 0.967,
+      "should_not_trigger_rate": 1.0,
+      "passed": 20,
+      "total": 20,
+      "by_tag": {
+        "explicit": 1.0,
+        "implicit": 0.917,
+        "casual": 1.0,
+        "near-miss-design-phase": 0.0,
+        "near-miss-fix-only": 0.0,
+        "near-miss-robust-review": 0.0,
+        "near-miss-code-review": 0.0,
+        "generic": 0.0,
+        "near-miss-spec-audit": 0.0
+      }
+    },
+    "robust-review": {
+      "trigger_rate_overall": 0.35,
+      "should_trigger_rate": 0.7,
+      "should_not_trigger_rate": 1.0,
+      "passed": 18,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.75,
+        "implicit": 0.583,
+        "casual": 0.833,
+        "near-miss-code-review": 0.0,
+        "near-miss-spec-audit": 0.0,
+        "near-miss-impl-orchestrator": 0.0,
+        "generic": 0.0
+      }
+    },
+    "spec-audit": {
+      "trigger_rate_overall": 0.4,
+      "should_trigger_rate": 0.8,
+      "should_not_trigger_rate": 1.0,
+      "passed": 19,
+      "total": 20,
+      "by_tag": {
+        "explicit": 0.733,
+        "implicit": 0.889,
+        "casual": 0.833,
+        "near-miss-spec-audit": 0.0,
+        "near-miss-impl-orchestrator": 0.0,
+        "near-miss-design-phase": 0.0,
+        "generic": 0.0,
+        "near-miss-robust-review": 0.0
+      }
+    }
+  },
+  "summary": {
+    "total_skills": 7,
+    "avg_trigger_rate": 0.421,
+    "avg_pass_rate": 0.95,
+    "skills_above_pass_threshold_0.7": 7
+  }
+}
