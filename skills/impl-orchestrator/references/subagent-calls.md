@@ -1,6 +1,6 @@
 # Stage 3 subagent calls
 
-Detail for SKILL.md `### Arbitration` and `### Regression attribution`.
+Detail for SKILL.md Stage 3-6 (Subagent-backed judgement).
 Two subagents may be invoked from Stage 3 to absorb technical
 judgement before Tier 1 escalation.
 

@@ -63,7 +63,7 @@ unrelated tests is worse than the original Critical — better to leave a
    - **Pre-existing failure** (unrelated to the patch) → keep the patch,
      report the pre-existing error separately.
    - When attribution is ambiguous, call the `regression-judge` subagent
-     before escalating. See SKILL.md `### Regression attribution` for
+     before escalating. See [subagent-calls.md](subagent-calls.md) (Stage 3-6 dispatch) for
      the input/output contract.
 4. **Three consecutive failures on the same finding** → skip and surface
    as Tier 1 escalation. Continued blind retries indicate the approach

@@ -209,7 +209,7 @@ CLAUDE.md の `## Escalation Overrides` で promote/demote を上書き可能。
 
 ## 10. スキル責務マトリクス
 
-似た名前のスキルが多いため、選択指針を一覧化する (Phase 2 後の構成、計 8 skill)。
+似た名前のスキルが多いため、選択指針を一覧化する (Phase 6 Sub-V 以降の現行構成、計 7 skill + technical-judgment subagents)。
 
 | やりたいこと | 使うスキル | 補足 |
 |-------------|-----------|------|
