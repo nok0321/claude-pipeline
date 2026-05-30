@@ -18,7 +18,7 @@
 #   bash evals/scripts/run_baseline.sh [output-dir]
 #
 # Environment overrides:
-#   MODEL              Model id (default: claude-opus-4-7)
+#   MODEL              Model id (default: claude-opus-4-8)
 #   WORKERS            Parallel workers per skill (default: 10, drop to
 #                      3 if rate-limit artifacts (0.0 trigger) appear)
 #   TIMEOUT            Per-query timeout in seconds (default: 30)
@@ -33,7 +33,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 RUN_EVAL_SCRIPT="$REPO_ROOT/evals/scripts/run_eval_compat.py"
 QUERIES_DIR="$REPO_ROOT/evals/queries"
 RESULTS_DIR="${1:-$REPO_ROOT/evals/results/baseline}"
-MODEL="${MODEL:-claude-opus-4-7}"
+MODEL="${MODEL:-claude-opus-4-8}"
 WORKERS="${WORKERS:-10}"
 TIMEOUT="${TIMEOUT:-30}"
 RUNS="${RUNS:-3}"

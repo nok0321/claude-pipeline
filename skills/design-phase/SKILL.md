@@ -3,7 +3,7 @@ name: design-phase
 description: Use this skill whenever the user wants to autonomously generate or update design documents under `DESIGN/` — new specs from a plan summary, multi-component design generation, format learning from existing specs, and self-validation via `spec-audit`. Trigger phrases include "generate the design docs", "write DESIGN/03_payment.md from scratch", "create specs for the components in this plan", "draft DESIGN markdowns from PLAN.md", "design the backend / frontend / core layer", "design phase for the new feature", "update the design docs to match the plan", or any spec-creation request driven by a plan summary or requirement description. Trigger even when the user does not say "design-phase" — phrases like "let's start designing", "I need a spec for the payment retry workflow", or "draft the architecture docs" qualify.
 argument-hint: "[component-name or 'all'] [--from-scratch | --update]"
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent
-model: claude-opus-4-7
+model: claude-opus-4-8
 ---
 
 # Design phase automation

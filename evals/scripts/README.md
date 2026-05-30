@@ -68,7 +68,7 @@ Other env overrides:
 
 | Var | Default | Purpose |
 |-----|---------|---------|
-| `MODEL` | `claude-opus-4-7` | Model for `claude -p` subprocess |
+| `MODEL` | `claude-opus-4-8` | Model for `claude -p` subprocess |
 | `WORKERS` | `10` | Parallel workers per skill (within `run_eval_compat.py`). Drop to `3` if you hit rate limits |
 | `TIMEOUT` | `30` | Per-query timeout (seconds) |
 | `RUNS` | `3` | Runs per query for variance smoothing |
