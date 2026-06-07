@@ -1,0 +1,22 @@
+[
+  {"query": "Plan this feature before we build it — break the notifications system into ordered tasks with dependencies and pick the queue tech.", "should_trigger": true, "tag": "explicit"},
+  {"query": "How should we approach building a multi-tenant billing module? Decompose it into buildable pieces and review the plan before any code.", "should_trigger": true, "tag": "implicit"},
+  {"query": "Split this goal into tasks I can implement one at a time, and capture the shared types between them so they don't drift.", "should_trigger": true, "tag": "explicit"},
+  {"query": "let's plan before coding — what's the task breakdown for the realtime chat feature and which datastore makes sense", "should_trigger": true, "tag": "casual"},
+  {"query": "Decompose the import pipeline into a dependency-ordered task list and have an agent review the plan for risks and simpler approaches.", "should_trigger": true, "tag": "explicit"},
+  {"query": "Pick the tech and lay out the build order for an offline-first sync feature. I want the plan reviewed before we start.", "should_trigger": true, "tag": "implicit"},
+  {"query": "what's the plan for the search revamp — tasks, deps, and the cross-task contract please", "should_trigger": true, "tag": "casual"},
+  {"query": "Turn this goal into a buildable plan: ordered tasks, tech choices with rationale, and the shared interface between tasks.", "should_trigger": true, "tag": "explicit"},
+  {"query": "Before we implement, review my proposed approach for the payment retry workflow and break it into tasks.", "should_trigger": true, "tag": "implicit"},
+  {"query": "plan out the migration into stages we can ship independently and flag anything that needs a decision from me", "should_trigger": true, "tag": "casual"},
+  {"query": "Generate the DESIGN/*.md specs for these components from the plan summary.", "should_trigger": false, "tag": "near-miss-design-phase"},
+  {"query": "Write DESIGN/03_payment.md from scratch with the public API signatures and type definitions.", "should_trigger": false, "tag": "near-miss-design-phase"},
+  {"query": "Implement the auth component from DESIGN/01_auth.md and run the verification gate.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
+  {"query": "Audit our design docs for type and API contract drift between components.", "should_trigger": false, "tag": "near-miss-spec-audit"},
+  {"query": "What's the best message queue for a high-throughput event system — give me a comparison?", "should_trigger": false, "tag": "generic"},
+  {"query": "Create a Gantt chart for the Q3 roadmap with milestones and owners.", "should_trigger": false, "tag": "generic"},
+  {"query": "Estimate how many story points the checkout rewrite will take.", "should_trigger": false, "tag": "generic"},
+  {"query": "Commit these changes and open a PR against main.", "should_trigger": false, "tag": "near-miss-ship"},
+  {"query": "Refactor the UserService class to extract the validation logic into a helper.", "should_trigger": false, "tag": "generic"},
+  {"query": "Explain the tradeoffs between microservices and a monolith in general terms.", "should_trigger": false, "tag": "generic"}
+]

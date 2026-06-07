@@ -38,7 +38,7 @@ Detail references:
 ```
 component:        <target component name>
 iteration:        1 / 3
-design_files:     []     # corresponding DESIGN/*.md
+design_files:     []     # corresponding DESIGN/*.md (spec mode) OR SHARED-CONTRACT.md + tasks (goal mode)
 impl_files:       []     # implementation files
 gate_results:     {}     # verification gate output
 findings:         []     # accumulated review findings
@@ -60,14 +60,25 @@ From CLAUDE.md:
 4. **Project-Specific Checks** — extra checks.
 5. **Escalation Overrides** — applied per ARCHITECTURE.md §A when present.
 
-### 1-2: Read the specs
+### 1-2: Resolve the implementation input (spec mode or goal mode)
 
-Load every `DESIGN/*.md` corresponding to the target component.
+Both modes run the same Stage 2-4 loop; only the input source differs.
 
-- Argument `all` → process every component in the mapping in dependency order.
-- No explicit ordering → infer from each spec's dependency section.
-- DESIGN/*.md absent → fall back to `design-phase` via Agent delegation
-  (entry-point fallback per ARCHITECTURE.md §3.3).
+- **Spec mode (design-first)**: load every `DESIGN/*.md` for the target.
+- **Goal mode (goal-driven)**: load the Tasks section + `SHARED-CONTRACT.md`
+  referenced from `PIPELINE-STATE.md`; build each task against the contract.
+
+Resolution order:
+1. DESIGN/*.md present → spec mode.
+2. Tasks + SHARED-CONTRACT.md present → goal mode.
+3. Only a goal present (no specs, no tasks) → delegate to `task-planner` via
+   Agent, then proceed in goal mode (front-end fallback, same pattern as the
+   design-phase fallback below).
+4. None of the above → fall back to `design-phase` via Agent (R4 fallback,
+   ARCHITECTURE.md §3.3).
+
+Ordering: argument `all` processes every unit in dependency order (spec
+dependency section, or task `Depends on`).
 
 ### 1-3: Check PIPELINE-STATE.md
 
@@ -218,8 +229,10 @@ templated in [references/final-report.md](references/final-report.md).
 ## Constraints
 
 - Component Mapping missing → escalate at Stage 1 and stop.
-- DESIGN/*.md missing → fall back to `design-phase` via Agent (impl-orchestrator is the entry point per ARCHITECTURE.md §3.3).
+- Input is DESIGN/*.md (spec mode) or Tasks + SHARED-CONTRACT.md (goal mode); only a goal present → `task-planner` fallback, neither → `design-phase` fallback (impl-orchestrator is the entry point per ARCHITECTURE.md §3.3, Stage 1-2).
+- Goal mode: the spec-compliance reviewer (Stage 3) checks against SHARED-CONTRACT.md + the task summary instead of DESIGN/*.md; at finalize, optionally generate docs via `design-phase --reverse` when documentation is required. A contract change needed mid-build is a public-interface change → Tier 1 (§A).
 - Build / test commands come from CLAUDE.md `## Commands` first (auto-detect is fallback only).
 - Reviewers run on opus (judgment), implementers on sonnet (cost).
 - Design-change reverse flow caps at one iteration (Stage 3-7).
 - Tier classification uses ARCHITECTURE.md §A; remediation is inline per [conformance-fix.md](references/conformance-fix.md) and [robust-fix.md](references/robust-fix.md), with `technical-arbiter` / `regression-judge` absorbing technical judgement pre-escalation (Stage 3-6).
+- Reversible, git-managed steps (edits, commits, PR preparation) within an approved scope proceed **without per-step confirmation**; only destructive / irreversible / unrequested-external / out-of-scope actions pause (ARCHITECTURE.md §A 進行確認の原則). Do not ask for a rubber stamp after recommending a reversible step.

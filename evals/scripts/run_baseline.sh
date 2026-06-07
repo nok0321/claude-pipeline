@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Run trigger-rate eval for the 7 surviving custom skills and save results.
+# Run trigger-rate eval for the 10 custom skills (Pipeline v2) and save results.
 #
-# Skill set is the post-Phase-6-Sub-V lineup (7 skills). Phase 0 / Phase 1
+# Skill set is the Pipeline v2 lineup (10 skills = post-Sub-V 7 + ship /
+# skill-authoring / task-planner). Phase 0 / Phase 1
 # ran 15 skills; Phase 2 dropped 7 (dev-pipeline, escalation,
 # fix-with-verify, pipeline-state, quick-test, robust-fix, spec-check,
 # spec-fix) and added safe-fix. Phase 6 Sub-V Option A retired safe-fix
@@ -62,7 +63,10 @@ ALL_SKILLS=(
   design-phase
   impl-orchestrator
   robust-review
+  ship
+  skill-authoring
   spec-audit
+  task-planner
 )
 
 if [ -n "${ONLY_SKILLS:-}" ]; then

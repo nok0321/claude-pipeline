@@ -1,0 +1,22 @@
+[
+  {"query": "Add a new skill to the pipeline for generating changelogs, and register it in ARCHITECTURE and the eval queue following our conventions.", "should_trigger": true, "tag": "explicit"},
+  {"query": "We should turn this repeated review step into a proper skill in the repo — make it match the house style and wire it into the docs.", "should_trigger": true, "tag": "implicit"},
+  {"query": "Scaffold a claude-pipeline skill called 'release-notes' with the right frontmatter, layer placement, and 20 eval queries.", "should_trigger": true, "tag": "explicit"},
+  {"query": "new skill for the repo: it should triage flaky tests. set it up the right way with the description triggers and registration", "should_trigger": true, "tag": "casual"},
+  {"query": "Bring the existing boundary-test skill up to house style — check the model pin, the description triggers, and that it's registered everywhere.", "should_trigger": true, "tag": "explicit"},
+  {"query": "I want to author a new skill here the proper way — english body, japanese meta, layer 2, registered in the matrix.", "should_trigger": true, "tag": "implicit"},
+  {"query": "make this into a skill for the pipeline and don't forget to add it to the architecture doc and readme", "should_trigger": true, "tag": "casual"},
+  {"query": "Harden the design-phase skill to conform to our conventions and add it to the skill count if it's missing.", "should_trigger": true, "tag": "explicit"},
+  {"query": "Create a repo skill that wraps our deploy steps, following the same structure as the other skills and registering it.", "should_trigger": true, "tag": "implicit"},
+  {"query": "let's make a new skill for dependency audits, do it the house-style way", "should_trigger": true, "tag": "casual"},
+  {"query": "Optimize the trigger description of an existing skill to improve its eval pass rate — just the wording, nothing else.", "should_trigger": false, "tag": "near-miss-skill-creator"},
+  {"query": "Run the trigger eval for the spec-audit skill and report the rate against baseline.", "should_trigger": false, "tag": "near-miss-skill-creator"},
+  {"query": "Implement the auth component from DESIGN/01_auth.md and run the verification gate.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
+  {"query": "Commit these changes and open a PR against main.", "should_trigger": false, "tag": "near-miss-ship"},
+  {"query": "How do Claude Code skills get discovered and loaded from ~/.claude/skills?", "should_trigger": false, "tag": "generic"},
+  {"query": "What's the difference between a skill, a subagent, and a hook in Claude Code?", "should_trigger": false, "tag": "generic"},
+  {"query": "Write a Python script that generates boilerplate React components from a template.", "should_trigger": false, "tag": "generic"},
+  {"query": "Explain how YAML frontmatter works in markdown files.", "should_trigger": false, "tag": "generic"},
+  {"query": "Review my changes for security issues before I merge.", "should_trigger": false, "tag": "near-miss-robust-review"},
+  {"query": "Set up a new npm package with TypeScript and a build script.", "should_trigger": false, "tag": "generic"}
+]

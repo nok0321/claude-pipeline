@@ -8,6 +8,8 @@ Claude Code 向け自律開発パイプラインのスキル集。
 
 > **注 (2026-05-23 / Phase 6 Sub-V 確定)**: 旧 15 skill 構造 → Phase 2 で 8 skill → Phase 6 Sub-V Option A で `safe-fix` 廃止 (impl-orchestrator Stage 3 inline 化)、**現在 7 skill 構造**。Phase 5 POST eval 結果は 7/8 個別 M1 PASS、7-skill 平均 trigger rate +36.3% 改善 (safe-fix 除く、詳細: [evals/POST-DIFF.md](evals/POST-DIFF.md))。Escalation 削減のため `technical-arbiter` / `regression-judge` subagent (`agents/`) と Stop hook drift gate を追加 ([plans/ESCALATION-REDESIGN.md](plans/ESCALATION-REDESIGN.md))。
 
+> **注 (2026-06-07 / Pipeline v2 着手)**: goal 駆動リデザイン ([plans/PIPELINE-V2-PLAN.md](plans/PIPELINE-V2-PLAN.md))。`task-planner` / `ship` / `skill-authoring` の 3 skill と `tech-comparator` subagent を追加し **現在 10 skill 構造**。design-phase に `--reverse`、impl-orchestrator に goal mode、前進自動化 hook `stop-ship-suggest.sh` を追加 ([docs/event-automation.md](docs/event-automation.md))。
+
 ---
 
 ## 構成
@@ -16,20 +18,25 @@ Claude Code 向け自律開発パイプラインのスキル集。
 claude-pipeline/
 ├── skills/                    # Claude Code スキル群（~/.claude/skills/ へシンボリックリンク）
 │   ├── impl-orchestrator/     # 実装フェーズ専任 + エントリーポイント (4 ステージループ + inline 修正)
-│   ├── design-phase/          # 設計書自動生成 (plans/*.md → DESIGN/*.md)
+│   ├── task-planner/          # goal 駆動の計画フェーズ (技術選定→計画→共有契約→計画レビュー)
+│   ├── design-phase/          # 設計書自動生成 (plans/*.md → DESIGN/*.md、--reverse で実装→doc)
 │   ├── spec-audit/            # 仕様書間矛盾検出 + 仕様↔実装差分検出 (Mode A/B)
 │   ├── robust-review/         # 深層セキュリティ・堅牢性レビュー
 │   ├── code-review/           # 軽量 PR レビュー (5 軸統合)
 │   ├── boundary-test/         # 境界契約テスト (API/WASM/DB/変換)
-│   └── checkpoint/            # セッション継続管理 (/clear 前の状態保存)
+│   ├── checkpoint/            # セッション継続管理 (/clear 前の状態保存)
+│   ├── ship/                  # git デリバリ (commit/PR/任意merge、branch 保護対応)
+│   └── skill-authoring/       # skill 著作の house-style 強制＋登録 (skill-creator ラッパ)
 ├── agents/                    # Claude Code Subagents（~/.claude/agents/ へシンボリックリンク）
 │   ├── technical-arbiter.md   # 命名/型 drift の technical-judgment 委譲 (sonnet 4.6, read-only)
 │   ├── regression-judge.md    # test failure の fix-related / pre-existing 判定 (sonnet 4.6)
+│   ├── tech-comparator.md     # 技術選定肢の多軸比較→ランク付け (sonnet 4.6, read-only)
 │   └── curriculum-comparator.md # (educational curriculum 比較用、本パイプライン外)
 ├── hooks/                     # Claude Code Hook スクリプト集（settings.json から参照）
 │   ├── pre-bash-safety.sh     # PreToolUse(Bash): 破壊的コマンドブロック
 │   ├── post-edit-lint.sh      # PostToolUse(Write/Edit): 編集毎の lint/型チェック
 │   ├── stop-verify.sh         # Stop: タスク完了時の検証ゲート（差分言語自動検出）
+│   ├── stop-ship-suggest.sh   # Stop: 配信可能コミットがあれば /ship を非ブロッキング提案
 │   └── session-start.sh       # SessionStart: プロジェクト種別・ツールチェーン検出
 ├── .claude/settings.json      # プロジェクトレベル設定 (Stop hook drift gate を含む)
 ├── evals/                     # トリガー評価フレームワーク (skill-creator ベース)
@@ -50,6 +57,7 @@ claude-pipeline/
 ## エントリーポイント
 
 ```
+/task-planner <goal>               # goal をタスク計画に分解 (技術選定 + 共有契約 + 計画レビュー)
 /impl-orchestrator <component>     # 実装パイプラインを起動
                                    # DESIGN/*.md 不在時は自動的に design-phase へフォールバック
                                    # Stage 3 で findings を inline 修正、technical-arbiter / regression-judge を活用
@@ -60,6 +68,8 @@ claude-pipeline/
 /code-review <files>               # PR 前の軽量レビュー
 /boundary-test <component>         # 境界契約テスト生成
 /checkpoint save | restore         # セッション継続管理
+/ship [--merge]                    # commit→PR→(任意)merge、branch 保護を検出して対応
+/skill-authoring new <name>        # house-style 準拠で skill を新設＋登録
 ```
 
 旧 `/dev-pipeline` (フェーズ統合エントリ) は Phase 2 で廃止、`impl-orchestrator` が DESIGN/*.md 不在時に design-phase を Agent 委譲する形に統合。
@@ -150,6 +160,7 @@ chmod +x <project>/.claude/hooks/*.sh
 - **pre-bash-safety.sh**: `rm -rf /`, `git push --force main`, `DROP DATABASE`, `cargo/npm publish` 等を検出して exit 2 でブロック
 - **post-edit-lint.sh**: 編集ファイルの拡張子から `cargo clippy` / `tsc --noEmit` / `svelte-check` / `ruff` / `go vet` を自動選択して実行。エラーだけを additionalContext として返す。旧 `quick-test` skill の差分ベース確認はこちらに吸収済み
 - **stop-verify.sh**: `git diff` で変更言語を検出し、該当する検証ツールを一括実行。エラーがあれば `decision: block` で完了を止める
+- **stop-ship-suggest.sh**: origin の既定ブランチに未反映のコミットがあり作業ツリーが clean なら、`systemMessage` で `/ship` を提案（非ブロッキング、Stop を阻害しない）。イベント発火の詳細は [docs/event-automation.md](docs/event-automation.md)
 - **session-start.sh**: Git ブランチ・未コミット数・Rust/Node/Python/Go/Java/Docker のバージョンを 1 行で表示
 
 ---
@@ -195,7 +206,7 @@ chmod +x <project>/.claude/hooks/*.sh
 skill-creator の `run_eval.py` を Windows 互換に port した独自フレームワーク。詳細は [evals/README.md](evals/README.md) と [evals/scripts/README.md](evals/scripts/README.md)。
 
 ```bash
-# 全 7 skill の trigger rate を測定 (Phase 0/5 用 wrapper、~30-70 分、WORKERS=3 で並列)
+# 全 10 skill の trigger rate を測定 (Phase 0/5 用 wrapper、~40-90 分、WORKERS=3 で並列)
 bash evals/scripts/run_baseline.sh
 
 # 単一 skill の測定 (debug 用)
