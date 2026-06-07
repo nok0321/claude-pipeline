@@ -9,7 +9,8 @@ model: claude-opus-4-8
 # Design phase automation
 
 Generate `DESIGN/*.md` from a plan summary, then auto-detect and resolve
-cross-spec contradictions.
+cross-spec contradictions. In `--reverse` mode, generate the specs *from the
+implementation* instead — the goal-driven flow's "docs after code" step.
 
 For the default DESIGN template, the sub-agent generation prompt, and the
 final output format, see [references/templates.md](references/templates.md).
@@ -25,6 +26,7 @@ For the audit prompt and contradiction-resolution rules, see
 /design-phase backend        # Generate the spec for one component
 /design-phase --from-scratch # Ignore existing DESIGN/*.md and regenerate (with confirmation)
 /design-phase --update       # Diff-update existing DESIGN/*.md against the plan
+/design-phase --reverse      # Generate DESIGN/*.md FROM the implementation (goal-driven: docs after code)
 ```
 
 ---
@@ -181,6 +183,22 @@ The full output template is in
 [references/templates.md](references/templates.md).
 
 ---
+
+## Reverse mode (`--reverse`)
+
+In the goal-driven pipeline (`task-planner` → `impl-orchestrator`), specs are
+deferred and generated from the finished implementation, so the doc describes
+reality and cannot drift from it.
+
+- **Source**: the implementation code (per CLAUDE.md `## Component Mapping`),
+  not a plan summary. Skip Step 1-1; keep Step 2 (learn the format from any
+  existing specs) and Step 3 generation, but each sub-agent reads the code and
+  documents the actual public API, types, and behavior.
+- **Audit (Step 4)**: still useful — contradictions across reverse-generated
+  specs reflect real cross-component inconsistencies; surface them.
+- **Position**: optional finalize step; run only when documentation is
+  required. SHARED-CONTRACT.md already holds the cross-task contract, so
+  reverse docs are for humans, not for driving the build.
 
 ## Pipeline integration
 

@@ -9,6 +9,11 @@
             "prompt": "You are a drift gate for the claude-pipeline repo. The hook input JSON is in $ARGUMENTS (fields include cwd, transcript_path, stop_hook_active, last_assistant_message). If stop_hook_active is true, output exactly {\"ok\": true} and stop — do not re-evaluate. Otherwise, using your read-only tools (Bash for `git diff` / `git status`, plus Read / Grep / Glob), inspect the edits made in this working tree against the authoritative spec: DESIGN/*.md if present, otherwise the skills/*/SKILL.md set (this repo has no DESIGN/, so SKILL.md frontmatter + body is the spec). Decide ONLY whether an edit CLEARLY contradicts the spec — a removed public surface, a renamed field that breaks a documented schema, or a constant / value drift. Output ONLY one JSON object as your entire response, with no prose, markdown, or code fences: when there is no clear contradiction output exactly {\"ok\": true} ; when there is one output {\"ok\": false, \"reason\": \"<one sentence naming the contradiction>\"}.",
             "model": "claude-sonnet-4-6",
             "timeout": 60
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/hooks/stop-ship-suggest.sh\"",
+            "timeout": 10000
           }
         ]
       }

@@ -1,0 +1,22 @@
+[
+  {"query": "Ship this — commit the working tree and open a PR. We just finished the auth refactor and the gates are green.", "should_trigger": true, "tag": "explicit"},
+  {"query": "Commit these changes and open a pull request against main. Don't merge yet, I want to look at it first.", "should_trigger": true, "tag": "explicit"},
+  {"query": "Let's get this landed — push it up and create a PR, then merge it since CI is passing.", "should_trigger": true, "tag": "explicit"},
+  {"query": "put up a PR for this please, branch off main, the change is the payment retry fix", "should_trigger": true, "tag": "casual"},
+  {"query": "I'm done with the feature. Take it to a pull request for me — the repo needs PRs, you can't push to main directly.", "should_trigger": true, "tag": "implicit"},
+  {"query": "deliver this change. commit, branch, push, PR. merge if it's clean", "should_trigger": true, "tag": "casual"},
+  {"query": "Open a pull request for the current diff and merge it with rebase, delete the branch after.", "should_trigger": true, "tag": "explicit"},
+  {"query": "Can you get these edits merged? main is protected so it'll need to go through a PR.", "should_trigger": true, "tag": "implicit"},
+  {"query": "Create a PR for the work on this branch and then merge to main once it's up.", "should_trigger": true, "tag": "explicit"},
+  {"query": "wrap this up into a pull request — the staging fix is ready to go out", "should_trigger": true, "tag": "casual"},
+  {"query": "Save a checkpoint before I /clear — task is half done, capture what files are dirty and the next steps.", "should_trigger": false, "tag": "near-miss-checkpoint"},
+  {"query": "Review my changes before I open a PR — anything wrong with this diff?", "should_trigger": false, "tag": "near-miss-code-review"},
+  {"query": "Implement the auth component from DESIGN/01_auth.md and run the verification gate.", "should_trigger": false, "tag": "near-miss-impl-orchestrator"},
+  {"query": "What's the difference between git merge and git rebase for integrating a feature branch?", "should_trigger": false, "tag": "generic"},
+  {"query": "How do I configure branch protection rules and required status checks on a GitHub repo?", "should_trigger": false, "tag": "generic"},
+  {"query": "Resolve the merge conflict in src/server.ts between my branch and main.", "should_trigger": false, "tag": "generic"},
+  {"query": "Do a deep security review of the changed files before release.", "should_trigger": false, "tag": "near-miss-robust-review"},
+  {"query": "Squash the last three commits on this branch into one with a cleaner message.", "should_trigger": false, "tag": "generic"},
+  {"query": "Set up a GitHub Actions workflow that runs tests on every pull request.", "should_trigger": false, "tag": "generic"},
+  {"query": "Explain what a fast-forward merge is and when git can't do one.", "should_trigger": false, "tag": "generic"}
+]
