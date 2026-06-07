@@ -94,9 +94,16 @@ Create `evals/queries/<name>.json` — ~20 entries: triggerable
 
 ## Step 6: Verify symlink truth-source
 
-The repo is the only source of truth; `~/.claude/skills/<name>` must resolve
-to it. New skill directories are picked up via the existing junction — confirm
-the skill is visible, do not copy files into `~/.claude/`.
+The repo is the only source of truth — never copy files into `~/.claude/`.
+`~/.claude/skills` is a real directory holding a **per-skill junction**, so a
+new skill needs its **own junction created** — it is NOT auto-picked-up
+(without it `/<name>` is "Unknown command"):
+
+`New-Item -ItemType Junction -Path "$HOME\.claude\skills\<name>" -Target "<repo>\skills\<name>"` (no admin needed)
+
+Agents differ — `~/.claude/agents` is a single directory junction, so a new
+agent file appears automatically. After creating the junction, confirm the
+skill shows up in the skill list.
 
 ---
 
